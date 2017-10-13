@@ -142,10 +142,31 @@ PMP_OID_WRITE MPQMUX_FindOIDRequest
                }
                break;
             }
+            case QMINAS_SYS_INFO_IND:
+            {
+               bMatchFound = FALSE;
+               if ((currentOID->Oid == OID_WWAN_REGISTER_STATE ||
+                    currentOID->Oid == OID_WWAN_PACKET_SERVICE) &&
+                    currentOID->OidType == fMP_SET_OID)
+               {
+                  bMatchFound = TRUE;
+               }
+               break;
+            }
             case QMIWDS_GET_PKT_SRVC_STATUS_IND:
             {
                bMatchFound = FALSE;
                if ((currentOID->Oid == OID_WWAN_CONNECT) &&
+                   (currentOID->OidType == fMP_SET_OID))
+               {
+                  bMatchFound = TRUE;
+               }
+               break;
+            }
+            case QMIWMS_EVENT_REPORT_IND:
+            {
+               bMatchFound = FALSE;
+               if ((currentOID->Oid == OID_WWAN_SMS_READ) &&
                    (currentOID->OidType == fMP_SET_OID))
                {
                   bMatchFound = TRUE;
@@ -936,6 +957,12 @@ VOID MPQMI_ProcessInboundQMUXResponse
          MPQMI_ProcessInboundQDFSResponse(pAdapter, qmi, TotalDataLength);
          break;
       }
+      case QMUX_TYPE_UIM:
+      {
+         MPQMI_ProcessInboundQUIMResponse(pAdapter, qmi, TotalDataLength);
+         break;
+      }
+      
       default:
       {
          QCNET_DbgPrint
@@ -976,6 +1003,11 @@ VOID MPQMI_ProcessInboundQMUXIndication
       case QMUX_TYPE_WMS:
       {
          MPQMI_ProcessInboundQWMSIndication(pAdapter, qmi, TotalDataLength);
+         break;
+      }
+      case QMUX_TYPE_UIM:
+      {
+         MPQMI_ProcessInboundQUIMIndication(pAdapter, qmi, TotalDataLength);
          break;
       }
       //case QMUX_TYPE_QOS:
@@ -1518,9 +1550,16 @@ VOID MPQMI_ProcessInboundQWDSIndication
                   
                   if (pAdapter->DeregisterIndication == 1)
                   {
+                     if (pAdapter->IsNASSysInfoPresent == FALSE)
+                     {
                      MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
                                             QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
-                     
+                     }
+                     else
+                     {
+                         MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
+                                                         QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                     }
                   }
                }
 #endif
@@ -1594,6 +1633,10 @@ VOID MPQMI_ProcessInboundQWDSIndication
                    
                    MPQMUX_ProcessWdsEventReportInd(pAdapter, pIocDev, qmux_msg);
                 }
+                else
+                {
+                   MPQMUX_ProcessWdsEventReportInd(pAdapter, pAdapter, qmux_msg);
+                }
              }
              else
              {
@@ -1647,8 +1690,16 @@ VOID MPQMI_ProcessInboundQWDSIndication
                      {
                         //Disconnected - Set MBDunCallOn so that indications are sent
                         pAdapter->MBDunCallOn = 0;
+                        if (pAdapter->IsNASSysInfoPresent == FALSE)
+                        {
                         MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
                                                QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+                     }
+                        else
+                        {
+                            MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
+                                                            QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                        }
                      }
                      else if (pDunCallInfo->ConnectionStatus == 0x02)
                      {
@@ -1918,8 +1969,16 @@ VOID MPQMUX_ProcessWdsEventReportInd
                    ("<%s> WDS_EVENT_REPORT_IND: data bearer 0x%x\n", pAdapter->PortName, 
                    pDataBearer->DataBearer)
                 );
+                if (pAdapter->IsNASSysInfoPresent == FALSE)
+                {
                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
                                        QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+                }
+                else
+                {
+                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
+                                                    QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                }
                 
                 break;
              }
@@ -2440,6 +2499,350 @@ VOID MPQMI_ProcessInboundQDMSIndication
    );
 }
 
+
+VOID MPQMI_ProcessInboundQUIMResponse
+(
+   PMP_ADAPTER pAdapter,
+   PQCQMI      qmi,
+   ULONG       TotalDataLength
+)
+{
+   PQCQMUX         qmux;
+   PQMUX_MSG       qmux_msg;  // TLV's
+   PMPIOC_DEV_INFO pIocDev;
+   BOOLEAN         bCompound     = FALSE;
+   PMP_OID_WRITE   pMatchOID     = NULL;
+   NDIS_STATUS     ndisStatus    = NDIS_STATUS_SUCCESS;
+   USHORT          totalLength   = QCQMI_HDR_SIZE + QCQMUX_HDR_SIZE;
+   PUCHAR          pDataLocation = &qmi->SDU;
+   ULONG           dataLength    = 0;
+   BOOLEAN         bDone         = FALSE;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> -->ProcessQUIMRsp\n", pAdapter->PortName)
+   );
+
+   if (qmi->ClientId == QMUX_BROADCAST_CID)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+         ("<%s> ProcessQUIMRsp: broadcast rsp not supported\n", pAdapter->PortName)
+      );
+      return;
+   }
+
+   qmux         = (PQCQMUX)&qmi->SDU;
+   qmux_msg     = (PQMUX_MSG)&qmux->Message;
+
+   // Now we handle QMI-OID mapping for internal client
+
+   if (qmux->CtlFlags & QMUX_CTL_FLAG_MASK_COMPOUND)
+   {
+      bCompound = TRUE;
+   }
+
+   // point to the first QMUX message
+   // (QMI->SDU)    (advance to QMUX Payload/Message)
+   pDataLocation += QCQMUX_HDR_SIZE;
+   pMatchOID = MPQMI_FindRequest(pAdapter, qmi);
+   // Also get the matching QMI request from the queue
+   // Process and fill the responce message for the OID.
+
+   // Convert QMI to OID and process the OID queue in pAdapter
+   while (bDone == FALSE)
+   {
+      switch (qmux_msg->QMUXMsgHdr.Type)
+      {
+         case QMIUIM_READ_TRANSPARENT_RESP:
+         {
+            MPQMUX_ProcessUimReadTransparantResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_READ_TRANSPARENT_RESP
+
+         case QMIUIM_READ_RECORD_RESP:
+         {
+            MPQMUX_ProcessUimReadRecordResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_READ_RECORD_RESP
+
+         case QMIUIM_WRITE_TRANSPARENT_RESP:
+         {
+            MPQMUX_ProcessUimWriteTransparantResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_WRITE_TRANSPARENT_RESP
+
+         case QMIUIM_WRITE_RECORD_RESP:
+         {
+            MPQMUX_ProcessUimWriteRecordResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_WRITE_RECORD_RESP
+
+         case QMIUIM_SET_PIN_PROTECTION_RESP:
+         {
+            MPQMUX_ProcessUimSetPinProtectionResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_SET_PIN_PROTECTION_RESP
+
+         case QMIUIM_VERIFY_PIN_RESP:
+         {
+            MPQMUX_ProcessUimVerifyPinResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_VERIFY_PIN_RESP
+
+         case QMIUIM_UNBLOCK_PIN_RESP:
+         {
+            MPQMUX_ProcessUimUnblockPinResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_UNBLOCK_PIN_RESP
+         
+         case QMIUIM_CHANGE_PIN_RESP:
+         {
+            MPQMUX_ProcessUimChangePinResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_CHANGE_PIN_RESP
+         
+         case QMIUIM_DEPERSONALIZATION_RESP:
+         {
+            MPQMUX_ProcessUimUnblockPinResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_DEPERSONALIZATION_RESP
+
+         case QMIUIM_EVENT_REG_RESP:
+         {
+            MPQMUX_ProcessUimSetEventReportResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_EVENT_REG_RESP
+
+         case QMIUIM_GET_CARD_STATUS_RESP:
+         {
+            MPQMUX_ProcessUimGetCardStatusResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }  // QMIUIM_GET_CARD_STATUS_RESP
+
+         default:
+         {
+            QCNET_DbgPrint
+            (
+               MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
+               ("<%s> ProcessUim: type not supported 0x%x\n", pAdapter->PortName,
+                qmux_msg->QMUXMsgHdr.Type)
+            );
+            break;
+         }
+      }  // switch
+
+      totalLength += (QCQMUX_MSG_HDR_SIZE + qmux_msg->QMUXMsgHdr.Length);
+
+      if (totalLength >= qmi->Length)
+      {
+         bCompound = FALSE;
+      }
+      else
+      {
+         // point to the next QMUX message
+         pDataLocation += (QCQMUX_MSG_HDR_SIZE + qmux_msg->QMUXMsgHdr.Length);
+         qmux_msg = (PQMUX_MSG)pDataLocation;
+      }
+
+      if (bCompound == FALSE)
+      {
+         bDone = TRUE;
+      }
+   }  // while (bCompound == TRUE)
+
+   // Now we need to have generic buffer data and generic data length
+   // so we call MPQMI_FillOID here!
+
+   // if ((pMatchOID != NULL) && (dataLength > 0) && (pDataBuffer != NULL))
+   if (pMatchOID != NULL)
+   {
+      NdisAcquireSpinLock(&pAdapter->OIDLock);
+
+      if (IsListEmpty(&pMatchOID->QMIQueue))
+      {
+         RemoveEntryList(&pMatchOID->List);
+         NdisReleaseSpinLock(&pAdapter->OIDLock);
+
+         QCNET_DbgPrint
+         (
+            MP_DBG_MASK_OID_QMI,
+            MP_DBG_LEVEL_DETAIL,
+            ("<%s> _ProcessInboundQUIMResponse: finish OID (0x%p, 0x%x) nBusyOID=%d\n",
+              pAdapter->PortName, pMatchOID->OidReference, pMatchOID->Oid, pAdapter->nBusyOID)
+         );
+         
+         if (pMatchOID->OIDAsyncType == NDIS_STATUS_PENDING)
+         {
+            MPOID_CompleteOid(pAdapter, pMatchOID->OIDStatus, pMatchOID, pMatchOID->OidType, FALSE);
+         }
+         else
+         {
+            //NDIS_STATUS_INDICATION_REQUIRED process
+            MPOID_ResponseIndication(pAdapter, pMatchOID->OIDStatus, pMatchOID);
+         }
+         
+         NdisAcquireSpinLock( &pAdapter->OIDLock );
+         
+         MPOID_CleanupOidCopy(pAdapter, pMatchOID);
+         InsertTailList( &pAdapter->OIDFreeList, &pMatchOID->List );
+         InterlockedDecrement(&(pAdapter->nBusyOID));
+         
+         NdisReleaseSpinLock( &pAdapter->OIDLock );
+      }
+      else
+      {
+         QCNET_DbgPrint
+         (
+            MP_DBG_MASK_OID_QMI,
+            MP_DBG_LEVEL_DETAIL,
+            ("<%s> _ProcessInboundQUIMResponse: QMIQueue, OID pending (0x%p, 0x%x) nBusyOID=%d\n",
+              pAdapter->PortName, pMatchOID->OidReference, pMatchOID->Oid, pAdapter->nBusyOID)
+         );
+         NdisReleaseSpinLock(&pAdapter->OIDLock);
+      }
+   }
+}  // MPQMI_ProcessInboundQDMSResponse
+
+
+
+VOID MPQMI_ProcessInboundQUIMIndication
+(
+   PMP_ADAPTER pAdapter,
+   PQCQMI      qmi,
+   ULONG       TotalDataLength
+)
+{
+   PQCQMUX         qmux;
+   PQMUX_MSG       qmux_msg; // TLV's
+   PMPIOC_DEV_INFO pIocDev;
+   BOOLEAN         bCompound     = FALSE;
+   NDIS_STATUS     ndisStatus    = NDIS_STATUS_SUCCESS;
+   USHORT          totalLength   = QCQMI_HDR_SIZE + QCQMUX_HDR_SIZE;
+   PUCHAR          pDataLocation = &qmi->SDU;
+   ULONG           dataLength    = 0;
+   BOOLEAN         bDone         = FALSE;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> QMUX: -->ProcessQUIMInd\n\n", pAdapter->PortName)
+   );
+
+   qmux         = (PQCQMUX)&qmi->SDU;
+   qmux_msg     = (PQMUX_MSG)&qmux->Message;
+
+   // Now we handle QMI-OID mapping for internal client
+
+   if (qmux->CtlFlags & QMUX_CTL_FLAG_MASK_COMPOUND)
+   {
+      bCompound = TRUE;
+   }
+
+   // point to the first QMUX message
+   // (QMI->SDU)    (advance to QMUX Payload/Message)
+   pDataLocation += QCQMUX_HDR_SIZE;
+
+   // Convert QMI to OID and process the OID queue in pAdapter
+   while (bDone == FALSE)
+   {
+      switch (qmux_msg->QMUXMsgHdr.Type)
+      {
+         case QMIUIM_READ_TRANSPARENT_IND:
+         {
+            MPQMUX_ProcessUimReadTransparantInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_READ_TRANSPARENT_IND
+
+         case QMIUIM_READ_RECORD_IND:
+         {
+            MPQMUX_ProcessUimReadRecordInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_READ_RECORD_IND
+
+         case QMIUIM_WRITE_TRANSPARENT_IND:
+         {
+            MPQMUX_ProcessUimWriteTransparantInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_WRITE_TRANSPARENT_IND
+
+         case QMIUIM_WRITE_RECORD_IND:
+         {
+            MPQMUX_ProcessUimWriteRecordInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_WRITE_RECORD_IND
+
+         case QMIUIM_SET_PIN_PROTECTION_IND:
+         {
+            MPQMUX_ProcessUimSetPinProtectionInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_SET_PIN_PROTECTION_IND
+
+         case QMIUIM_VERIFY_PIN_IND:
+         {
+            MPQMUX_ProcessUimVerifyPinInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_VERIFY_PIN_IND
+
+         case QMIUIM_UNBLOCK_PIN_IND:
+         {
+            MPQMUX_ProcessUimUnblockPinInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_UNBLOCK_PIN_IND
+
+         case QMIUIM_CHANGE_PIN_IND:
+         {
+            MPQMUX_ProcessUimChangePinInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_CHANGE_PIN_IND
+
+         case QMIUIM_STATUS_CHANGE_IND:
+         {
+            MPQMUX_ProcessUimEventReportInd( pAdapter, qmux_msg, NULL);
+            break;
+         }  // QMIUIM_STATUS_CHANGE_IND
+         
+         default:
+         {
+            QCNET_DbgPrint
+            (
+               MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+               ("<%s> ProcessQUIMInd: ind type not supported 0x%x\n", pAdapter->PortName,
+                 qmux_msg->QMUXMsgHdr.Type)
+            );
+            break;
+         }
+      }  // switch
+   
+      totalLength += (QCQMUX_MSG_HDR_SIZE + qmux_msg->QMUXMsgHdr.Length);
+
+      if (totalLength >= qmi->Length)
+      {
+         bCompound = FALSE;
+      }
+      else
+      {
+         // point to the next QMUX message
+         pDataLocation += (QCQMUX_MSG_HDR_SIZE + qmux_msg->QMUXMsgHdr.Length);
+         qmux_msg = (PQMUX_MSG)pDataLocation;
+      }
+
+      if (bCompound == FALSE)
+      {
+         bDone = TRUE;
+      }
+   }  // while (bCompound == TRUE)
+
+         QCNET_DbgPrint
+         (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> QMUX: <--ProcessQUIMInd\n\n", pAdapter->PortName)
+         );
+   }
+   
+
 VOID MPQMI_ProcessInboundQWMSResponse
 (
    PMP_ADAPTER pAdapter,
@@ -2500,61 +2903,61 @@ VOID MPQMI_ProcessInboundQWMSResponse
          {
             MPQMUX_ProcessWmsGetMessageProtocolResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          case QMIWMS_GET_SMSC_ADDRESS_RESP:
          {
             MPQMUX_ProcessWmsGetSMSCAddressResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          case QMIWMS_SET_SMSC_ADDRESS_RESP:
          {
             MPQMUX_ProcessWmsSetSMSCAddressResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          case QMIWMS_GET_STORE_MAX_SIZE_RESP:
          {
             MPQMUX_ProcessWmsGetStoreMaxSizeResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          case QMIWMS_LIST_MESSAGES_RESP:
          {
             MPQMUX_ProcessWmsListMessagesResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          case QMIWMS_RAW_READ_RESP:
          {
             MPQMUX_ProcessWmsRawReadResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
-         
+         }
+
          case QMIWMS_SET_EVENT_REPORT_REQ:
          {
             MPQMUX_ProcessWmsSetEventReportResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
-         
+         }
+
          case QMIWMS_DELETE_REQ:
          {
             MPQMUX_ProcessWmsDeleteResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          case QMIWMS_RAW_SEND_RESP:
          {
             MPQMUX_ProcessWmsRawSendResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          case QMIWMS_MODIFY_TAG_RESP:
          {
             MPQMUX_ProcessWmsModifyTagResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }  
+         }
 
          default:
          {
@@ -2688,7 +3091,13 @@ VOID MPQMI_ProcessInboundQWMSIndication
       {
          case QMIWMS_EVENT_REPORT_IND:
          {
-            MPQMUX_ProcessWmsEventReportInd( pAdapter, qmux_msg, pMatchOID );
+#ifdef NDIS620_MINIPORT            
+            pMatchOID = MPQMUX_FindOIDRequest(pAdapter, QMIWMS_EVENT_REPORT_IND);
+#endif
+            if (pMatchOID == NULL)
+            {
+               MPQMUX_ProcessWmsEventReportInd( pAdapter, qmux_msg, pMatchOID );
+            }
             break;
          }
          default:
@@ -2725,7 +3134,7 @@ VOID MPQMI_ProcessInboundQWMSIndication
    // if ((pMatchOID != NULL) && (dataLength > 0) && (pDataBuffer != NULL))
    if (pMatchOID != NULL)
    {
-      NdisAcquireSpinLock(&pAdapter->OIDLock);
+      NdisAcquireSpinLock(&pAdapter->OIDLock); 
 
       if (IsListEmpty(&pMatchOID->QMIQueue))
       {
@@ -2907,6 +3316,18 @@ VOID MPQMI_ProcessInboundQNASResponse
             break;
          }
 
+         case QMINAS_SET_SYSTEM_SELECTION_PREF_RESP:
+         {
+            retVal = MPQMUX_ProcessNasSetSystemSelPrefResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }
+
+         case QMINAS_GET_SYS_INFO_RESP:
+         {
+            retVal = MPQMUX_ProcessNasGetSysInfoResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }
+         
          case QMINAS_GET_RF_BAND_INFO_RESP:
          {
             retVal = MPQMUX_ProcessNasGetRFBandInfoResp( pAdapter, qmux_msg, pMatchOID);
@@ -2917,7 +3338,7 @@ VOID MPQMI_ProcessInboundQNASResponse
          {
             retVal = MPQMUX_ProcessNasGetPLMNResp( pAdapter, qmux_msg, pMatchOID);
             break;
-         }
+         }  
 
          default:
          {
@@ -3011,7 +3432,7 @@ VOID MPQMI_ProcessInboundQNASIndication
 )
 {
    PQCQMUX         qmux;
-   PQMUX_MSG       qmux_msg; // TLV's
+   PQMUX_MSG       qmux_msg;  // TLV's
    PMPIOC_DEV_INFO pIocDev;
    BOOLEAN         bCompound     = FALSE;
    PMP_OID_WRITE   pMatchOID     = NULL;
@@ -3026,7 +3447,7 @@ VOID MPQMI_ProcessInboundQNASIndication
    (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
       ("<%s> QMUX: -->ProcessQNASInd\n\n", pAdapter->PortName)
-   );
+      );
 
    qmux         = (PQCQMUX)&qmi->SDU;
    qmux_msg     = (PQMUX_MSG)&qmux->Message;
@@ -3063,18 +3484,27 @@ VOID MPQMI_ProcessInboundQNASIndication
             retVal = MPQMUX_ProcessNasServingSystemInd( pAdapter, qmux_msg, pMatchOID );
             break;
          }
+         case QMINAS_SYS_INFO_IND:
+         {
+#ifdef NDIS620_MINIPORT            
+            pMatchOID = MPQMUX_FindOIDRequest(pAdapter, QMINAS_SYS_INFO_IND);
+#endif
+            retVal = MPQMUX_ProcessNasSysInfoInd( pAdapter, qmux_msg, pMatchOID );
+            break;
+         }  
+
          default:
          {
             QCNET_DbgPrint
             (
-               MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+               MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
                ("<%s> ProcessQNASInd: ind type not supported 0x%x\n", pAdapter->PortName,
-                 qmux_msg->QMUXMsgHdr.Type)
+                qmux_msg->QMUXMsgHdr.Type)
             );
             break;
          }
       }  // switch
-   
+
       totalLength += (QCQMUX_MSG_HDR_SIZE + qmux_msg->QMUXMsgHdr.Length);
 
       if (totalLength >= qmi->Length)
@@ -3097,7 +3527,7 @@ VOID MPQMI_ProcessInboundQNASIndication
    // if ((pMatchOID != NULL) && (dataLength > 0) && (pDataBuffer != NULL))
    if (pMatchOID != NULL && retVal != QMI_SUCCESS_NOT_COMPLETE)
    {
-      NdisAcquireSpinLock(&pAdapter->OIDLock); 
+      NdisAcquireSpinLock(&pAdapter->OIDLock);
 
       if (IsListEmpty(&pMatchOID->QMIQueue))
       {
@@ -3142,7 +3572,7 @@ VOID MPQMI_ProcessInboundQNASIndication
          NdisReleaseSpinLock(&pAdapter->OIDLock);
       }
    }
-   
+
    QCNET_DbgPrint
    (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
@@ -3152,12 +3582,12 @@ VOID MPQMI_ProcessInboundQNASIndication
 
 VOID MPQMI_ProcessInboundQQOSResponse
 (
-   PMP_ADAPTER pAdapter,
+   PMP_ADAPTER      pAdapter,
    PQCQMI      qmi,
    ULONG       TotalDataLength
 )
 {
-   PQCQMUX         qmux;
+   PQCQMUX      qmux;
    PQMUX_MSG       qmux_msg;  // TLV's
    PMPIOC_DEV_INFO pIocDev;
    BOOLEAN         bCompound     = FALSE;
@@ -3176,11 +3606,11 @@ VOID MPQMI_ProcessInboundQQOSResponse
 
    if (qmi->ClientId == QMUX_BROADCAST_CID)
    {
-      QCNET_DbgPrint
-      (
+     QCNET_DbgPrint
+     (
          MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
          ("<%s> ProcessQQOSRsp: broadcast rsp not supported\n", pAdapter->PortName)
-      );
+     );
       return;
    }
 
@@ -3205,15 +3635,15 @@ VOID MPQMI_ProcessInboundQQOSResponse
    while (bDone == FALSE)
    {
       switch (qmux_msg->QMUXMsgHdr.Type)
-      {
+   {
          case QMI_QOS_BIND_DATA_PORT_RESP:
-         {
+      {
             MPQMUX_ProcessQMUXBindMuxDataPortResp( pAdapter, qmux_msg, pMatchOID );
             break;
-         }  
+      }
 
          default:
-         {
+      {
             QCNET_DbgPrint
             (
                MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
@@ -3221,26 +3651,26 @@ VOID MPQMI_ProcessInboundQQOSResponse
                 qmux_msg->QMUXMsgHdr.Type)
             );
             break;
-         }
+   }
       }  // switch
-
+   
       totalLength += (QCQMUX_MSG_HDR_SIZE + qmux_msg->QMUXMsgHdr.Length);
 
       if (totalLength >= qmi->Length)
-      {
+   {
          bCompound = FALSE;
-      }
+   }
       else
-      {
+   {
          // point to the next QMUX message
          pDataLocation += (QCQMUX_MSG_HDR_SIZE + qmux_msg->QMUXMsgHdr.Length);
          qmux_msg = (PQMUX_MSG)pDataLocation;
-      }
+   }
 
       if (bCompound == FALSE)
-      {
+   {
          bDone = TRUE;
-      }
+   }
    }  // while (bCompound == TRUE)
 
    // Now we need to have generic buffer data and generic data length
@@ -3248,24 +3678,24 @@ VOID MPQMI_ProcessInboundQQOSResponse
 
    // if ((pMatchOID != NULL) && (dataLength > 0) && (pDataBuffer != NULL))
    if (pMatchOID != NULL)
-   {
+{
       NdisAcquireSpinLock(&pAdapter->OIDLock);
 
       if (IsListEmpty(&pMatchOID->QMIQueue))
-      {
+   {
          RemoveEntryList(&pMatchOID->List);
          NdisReleaseSpinLock(&pAdapter->OIDLock);
 
-         QCNET_DbgPrint
-         (
+   QCNET_DbgPrint
+   (
             MP_DBG_MASK_OID_QMI,
             MP_DBG_LEVEL_DETAIL,
             ("<%s> _ProcessInboundQQOSResponse: finish OID (0x%p, 0x%x) nBusyOID=%d\n",
               pAdapter->PortName, pMatchOID->OidReference, pMatchOID->Oid, pAdapter->nBusyOID)
-         );
-         
+   );
+
          if (pMatchOID->OIDAsyncType == NDIS_STATUS_PENDING)
-         {
+   {
             MPOID_CompleteOid(pAdapter, pMatchOID->OIDStatus, pMatchOID, pMatchOID->OidType, FALSE);
          }
          else
@@ -3281,9 +3711,9 @@ VOID MPQMI_ProcessInboundQQOSResponse
          InterlockedDecrement(&(pAdapter->nBusyOID));
          
          NdisReleaseSpinLock( &pAdapter->OIDLock );
-      }
+         }
       else
-      {
+         {
          QCNET_DbgPrint
          (
             MP_DBG_MASK_OID_QMI,
@@ -3298,7 +3728,7 @@ VOID MPQMI_ProcessInboundQQOSResponse
 
 VOID MPQMI_ProcessInboundQDFSResponse
 (
-   PMP_ADAPTER pAdapter,
+   PMP_ADAPTER   pAdapter,
    PQCQMI      qmi,
    ULONG       TotalDataLength
 )
@@ -5051,8 +5481,16 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
                     
                     pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateInitialized;
                     pAdapter->DeviceReadyState = DeviceWWanOn;
+                    if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                    {
                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                        QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
+                 }
+                 else
+                 {
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                           QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+                    }
                  }
                  else
                  {
@@ -5060,7 +5498,8 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
                      pAdapter->DeviceReadyState = DeviceWWanOff;
                      MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                             QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
-                     
+                     MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                            QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                  }
                  
               }
@@ -5095,8 +5534,16 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
                     );
                     pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateInitialized;
                     pAdapter->DeviceReadyState = DeviceWWanOn;
+                    if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                    {
                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                            QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
+                 }
+                 else
+                 {
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                           QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+                    }
                  }
                  else
                  {
@@ -5104,8 +5551,16 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
                     {
                        pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateInitialized;
                        pAdapter->DeviceReadyState = DeviceWWanOn;
+                       if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                       {
                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                               QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
+                    }
+                       else
+                       {
+                           MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                              QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+                       }
                     }
                  }
               }        
@@ -5144,18 +5599,36 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
                     RtlStringCbCopyW(pNdisReadyInfo->ReadyInfo.SubscriberId , WWAN_SUBSCRIBERID_LEN*sizeof(WCHAR), L"000000000000000");
                     pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateInitialized;
                     pAdapter->DeviceReadyState = DeviceWWanOn;
+                    if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                    {
                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                            QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
                  }
+                    else
+                    {
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                           QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+                    }
+                 }
                  MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                         QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                        QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
               }
               else if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
               {
                  pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateInitialized;
                  pAdapter->DeviceReadyState = DeviceWWanOn;
+                 if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                 {
                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                         QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
+                 }
+                 else
+                 {
+                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                        QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+                 }
 
                  //Start a 15 seconds timer to get MSISDN
                  if (pAdapter->MsisdnTimerCount < 4)
@@ -5219,8 +5692,16 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
               pAdapter->ReadyInfo.ReadyInfo.CdmaShortMsgSize = WWAN_CDMA_SHORT_MSG_SIZE_MAX - 1;
               
               pAdapter->DeviceReadyState = DeviceWWanOn;
-              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+              if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+              {
+                 MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                      QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
+           }
+              else
+              {
+                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                     QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+              }
            }
         }
         else if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
@@ -5252,8 +5733,16 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
                    pAdapter->DeviceIMSI)
               );
               pAdapter->DeviceReadyState = DeviceWWanOn;
-              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+              if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+              {
+                 MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                      QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
+           }
+              else
+              {
+                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                     QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+              }
            }
         }        
      }  
@@ -5262,8 +5751,16 @@ ULONG MPQMUX_ProcessDmsGetDeviceMSISDNResp
         if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
         {
            pAdapter->DeviceReadyState = DeviceWWanOn;
-           MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+           if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+           {
+              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                   QMIDMS_UIM_GET_ICCID_REQ, NULL, TRUE );
+           }
+           else
+           {
+               MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                  QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+           }
 
            //Start a 15 seconds timer to get MSISDN
            if (pAdapter->MsisdnTimerCount < 4)
@@ -5416,6 +5913,8 @@ ULONG MPQMUX_ProcessDmsUIMGetIMSIResp
                     pAdapter->DeviceReadyState = DeviceWWanOff;
                     MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                            QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                           QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                  }
               }        
            }
@@ -5465,6 +5964,8 @@ ULONG MPQMUX_ProcessDmsUIMGetIMSIResp
                        pAdapter->DeviceReadyState = DeviceWWanOff;
                        MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                               QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                       MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                              QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                     }
                  }
                  else
@@ -5964,6 +6465,8 @@ ULONG MPQMUX_ProcessDmsGetActivatedStatusResp
                    pAdapter->DeviceReadyState = DeviceWWanNoServiceActivated;
                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                           QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                          QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                 }
                 else
                 {
@@ -5977,6 +6480,8 @@ ULONG MPQMUX_ProcessDmsGetActivatedStatusResp
                 pAdapter->DeviceReadyState = DeviceWWanNoServiceActivated;
                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                        QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                       QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
              }
              break;
           }
@@ -6062,6 +6567,8 @@ ULONG MPQMUX_ProcessDmsGetOperatingModeResp
                    pAdapter->DeviceReadyState = DeviceWWanOff;
                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                           QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                          QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                 }
                 else
                 {
@@ -6071,9 +6578,16 @@ ULONG MPQMUX_ProcessDmsGetOperatingModeResp
                    {
                       if (pAdapter->CDMAUIMSupport == 1)
                       {
-                         
+                         if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                         {
                          MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                 QMIDMS_UIM_GET_STATE_REQ, NULL, TRUE );
+                      }
+                      else
+                      {
+                             MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                         QMIUIM_GET_CARD_STATUS_REQ, NULL, TRUE );                     
+                         }
                       }
                       else
                       {
@@ -6083,8 +6597,17 @@ ULONG MPQMUX_ProcessDmsGetOperatingModeResp
                    }
                    else if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
                    {
+                      if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                      {
                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                              QMIDMS_UIM_GET_STATE_REQ, NULL, TRUE );
+                   }
+                      else
+                      {
+                          MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                      QMIUIM_GET_CARD_STATUS_REQ, NULL, TRUE );                     
+                      }
+                      
                    }
                 }
              }
@@ -6094,6 +6617,8 @@ ULONG MPQMUX_ProcessDmsGetOperatingModeResp
                 pAdapter->DeviceReadyState = DeviceWWanOff;
                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                        QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                       QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
              }
              break;
           }
@@ -6113,6 +6638,8 @@ ULONG MPQMUX_ProcessDmsGetOperatingModeResp
                    pAdapter->DeviceRadioState = DeviceWwanRadioUnknown;
                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                           QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                          QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                 }
                 else
                 {
@@ -6220,6 +6747,8 @@ ULONG MPQMUX_ProcessDmsGetOperatingModeResp
                 pAdapter->DeviceRadioState = DeviceWwanRadioUnknown;
                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                        QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                       QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
              }
              break;
           }
@@ -6382,8 +6911,17 @@ ULONG MPQMUX_ProcessDmsSetOperatingModeResp
                 }
                 else if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
                 {
+                   if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                   {
                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                           QMIDMS_UIM_GET_STATE_REQ, NULL, TRUE );
+                }
+                   else
+                   {
+                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                   QMIUIM_GET_CARD_STATUS_REQ, NULL, TRUE );                     
+                   }
+                   
                 }
              }
              else
@@ -6392,6 +6930,8 @@ ULONG MPQMUX_ProcessDmsSetOperatingModeResp
                 pAdapter->DeviceReadyState = DeviceWWanOff;
                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                        QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                       QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
              }
              break;
           }
@@ -6552,6 +7092,8 @@ ULONG MPQMUX_ProcessDmsGetICCIDResp
               );
               MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                      QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                     QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
            }
            else
            {
@@ -6562,6 +7104,8 @@ ULONG MPQMUX_ProcessDmsGetICCIDResp
               }
               MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                      QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                     QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
            }
         }
         break;
@@ -6591,6 +7135,8 @@ ULONG MPQMUX_ProcessDmsGetICCIDResp
                ("<%s> GetICCID %s\n", pAdapter->PortName, pAdapter->ICCID)
             );
 
+            if (pAdapter->nBusyOID == 0)
+            {
             if (pAdapter->DeviceReadyState == DeviceWWanOn)
             {
                MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateInitialized);
@@ -6599,8 +7145,11 @@ ULONG MPQMUX_ProcessDmsGetICCIDResp
             {
                MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateDeviceLocked);
             }
+            }
             MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                    QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+            MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                   QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
          }      
       }
       else
@@ -6617,6 +7166,8 @@ ULONG MPQMUX_ProcessDmsGetICCIDResp
             }
             MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                    QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+            MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                   QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
          }
       }
          
@@ -7098,8 +7649,16 @@ ULONG MPQMUX_ProcessDmsUIMGetStateResp
                 }
                 else if (qmux_msg->UIMGetStateResp.UIMState == 0x01)
                 {
+                   if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                   {
                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                           QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );
+                }
+                   else
+                   {
+                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                   QMIUIM_GET_CARD_STATUS_REQ, NULL, TRUE );                     
+                   }
                 }
                 else if (qmux_msg->UIMGetStateResp.UIMState == 0x02 ||
                          qmux_msg->UIMGetStateResp.UIMState == 0xFF)
@@ -7108,6 +7667,8 @@ ULONG MPQMUX_ProcessDmsUIMGetStateResp
                    pAdapter->DeviceReadyState = DeviceWWanNoSim;
                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                           QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                          QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                 }
              }
              else
@@ -7116,6 +7677,8 @@ ULONG MPQMUX_ProcessDmsUIMGetStateResp
                 pAdapter->DeviceReadyState = DeviceWWanNoSim;
                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                        QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                       QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
              }
              break;
           }
@@ -7140,6 +7703,7 @@ ULONG MPQMUX_ProcessDmsUIMGetStateResp
                   pAdapter->CkFacility = 0;
                   MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                          QMIDMS_UIM_GET_CK_STATUS_REQ, MPQMUX_GetDmsUIMGetCkStatusReq, TRUE );
+                  
                }
             }
             else
@@ -7628,6 +8192,8 @@ ULONG MPQMUX_ProcessDmsUIMGetPinStatusResp
                   pAdapter->DeviceReadyState = DeviceWWanBadSim;
                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                          QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                  MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                         QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                }
             }        
          }
@@ -7996,6 +8562,8 @@ ULONG MPQMUX_ProcessDmsUIMGetCkStatusResp
                pAdapter->DeviceReadyState = DeviceWWanBadSim;
                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                       QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+               MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                      QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
             }
          }
       }
@@ -8793,6 +9361,8 @@ USHORT MPQMUX_SendDmsSetEventReportReq
    }
    if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
    {
+      if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+      {
       // Pin State
       {
          PPIN_STATUS pPinState = (PPIN_STATUS)(pPayload);
@@ -8814,6 +9384,7 @@ USHORT MPQMUX_SendDmsSetEventReportReq
          pUimState->UIMState = 0x01;
       }         
    }
+   }
    else
    {
       // Activation State
@@ -8826,6 +9397,8 @@ USHORT MPQMUX_SendDmsSetEventReportReq
          pActivationState->TLVLength = 0x01;
          pActivationState->ActivationState = 0x01;
       }
+      if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+      {
       if (pAdapter->CDMAUIMSupport == 1)
       {
          // Pin State
@@ -8850,7 +9423,10 @@ USHORT MPQMUX_SendDmsSetEventReportReq
          }         
       }
    }
+   }
 #else
+   if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+   {
    // UIM State
    {
       PUIM_STATE pUimState = (PUIM_STATE)(pPayload);
@@ -8861,6 +9437,7 @@ USHORT MPQMUX_SendDmsSetEventReportReq
       pUimState->TLVLength = 0x01;
       pUimState->UIMState = 0x01;
    }         
+   }
 #endif
 
    qmux_len = qmux_msg->DmsSetEventReportReq.Length;
@@ -9030,8 +9607,16 @@ ULONG MPQMUX_ProcessDmsEventReportInd
                   {
                      if (pUIMState == NULL)                   
                      {
-                        MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                        if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                        {
+                            MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                QMIDMS_UIM_GET_STATE_REQ, NULL, TRUE );
+                     }
+                        else
+                        {
+                            MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                        QMIUIM_GET_CARD_STATUS_REQ, NULL, TRUE );                     
+                        }
                      }
                   }
                   else
@@ -9048,8 +9633,17 @@ ULONG MPQMUX_ProcessDmsEventReportInd
                {
                   if (pUIMState == NULL)               
                   {
-                     MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                     if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                     {
+                         MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                             QMIDMS_UIM_GET_STATE_REQ, NULL, TRUE );
+                     }
+                     else
+                     {
+                         MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_GET_CARD_STATUS_REQ, NULL, TRUE );                     
+                     }
+                     
                      return retVal;
                   }
                }
@@ -9138,8 +9732,16 @@ ULONG MPQMUX_ProcessDmsEventReportInd
       }
    }
 #else
+   if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+   {
    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                        QMIDMS_UIM_GET_IMSI_REQ, NULL, TRUE );
+   }
+   else
+   {
+      MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                        QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+   }
 #endif   
    return retVal;
 }
@@ -10500,6 +11102,8 @@ VOID MPQMUX_GetDeviceInfo
 #ifndef NDIS620_MINIPORT
    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                           QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                       QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
 #endif
 }  // MPQMUX_GetDeviceInfo
 
@@ -10663,8 +11267,16 @@ ULONG MPQMUX_ProcessWdsGetDataBearerResp
       else
       {
          pAdapter->nDataBearer = qmux_msg->GetDataBearerResp.Technology;
+         if (pAdapter->IsNASSysInfoPresent == FALSE)
+         {
          MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
                                 QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+      }
+         else
+         {
+             MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
+                                             QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+         }
       }
    }
    return RetVal;
@@ -11361,8 +11973,16 @@ ULONG MPQMUX_ProcessWdsStartNwInterfaceResp
                     &&( pAdapter->IPType != 0x06))
                 {
                    pAdapter->IPType = 0x06;
+                    if (pAdapter->IsNASSysInfoPresent == FALSE)
+                    {
                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                      QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+                }
+                else
+                 {
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                                        QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                    }
                 }
                 else
                  {
@@ -11377,8 +11997,17 @@ ULONG MPQMUX_ProcessWdsStartNwInterfaceResp
                       &&( pAdapter->IPType != 0x06))
                  {
                     pAdapter->IPType = 0x06;
+                    if (pAdapter->IsNASSysInfoPresent == FALSE)
+                    {
                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                      QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+                 }
+                 else
+                 {
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                                        QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                    }
+                    
                  }
                  else
                  {
@@ -11414,8 +12043,17 @@ ULONG MPQMUX_ProcessWdsStartNwInterfaceResp
                    &&( pAdapter->IPType != 0x06))
               {
                  pAdapter->IPType = 0x06;
+                 if (pAdapter->IsNASSysInfoPresent == FALSE)
+                 {
                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                   QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+              }
+                 else
+                 {
+                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                                     QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                 }
+                 
               }
            }
            pContextState->uStatus = pOID->OIDStatus;
@@ -11474,8 +12112,16 @@ ULONG MPQMUX_ProcessWdsStopNwInterfaceResp
                    &&( pAdapter->IPType != 0x06) && (pAdapter->ConnectIPv6Handle != 0))
               {
                  pAdapter->IPType = 0x06;
+                 if (pAdapter->IsNASSysInfoPresent == FALSE)
+                 {
                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                   QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+              }
+                 else
+                 {
+                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                                     QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                 }
               }
            }
            else
@@ -11484,8 +12130,16 @@ ULONG MPQMUX_ProcessWdsStopNwInterfaceResp
                    &&( pAdapter->IPType != 0x06) && (pAdapter->ConnectIPv6Handle != 0))
               {
                  pAdapter->IPType = 0x06;
+                 if (pAdapter->IsNASSysInfoPresent == FALSE)
+                 {
                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+              }
+              else
+              {
+                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                                     QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                 }
               }
               else
               {
@@ -14952,13 +15606,630 @@ VOID ParseAvailableDataClass( PMP_ADAPTER pAdapter, UCHAR *DataCapList, ULONG *A
 
 #endif
 
+
+BOOLEAN ParseNasGetSysInfo
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   UCHAR *pnRoamingInd,
+   CHAR *pszProviderID,
+   CHAR *pszProviderName,
+   CHAR *RadioIfList,
+   ULONG *DataCapList,
+   CHAR *RegState,
+   CHAR *CSAttachedState,
+   CHAR *PSAttachedState,
+   CHAR *RegisteredNetwork,
+   USHORT *MCC,
+   USHORT *MNC
+)
+{
+   LONG remainingLen;
+   PSERVICE_STATUS_INFO pServiceStatusInfo;
+   int i;
+   int DataCapIndex = 0;
+   int RadioIfIndex = 0;
+
+#ifdef NDIS620_MINIPORT
+
+   if (pnRoamingInd == NULL      || 
+       pszProviderID == NULL     || 
+       pszProviderName == NULL   ||
+       RadioIfList == NULL       ||
+       RegState == NULL          ||
+       CSAttachedState == NULL   ||
+       PSAttachedState == NULL   ||
+       RegisteredNetwork == NULL 
+)
+{
+      return FALSE;
+   }
+   
+   *pnRoamingInd      = 0xFF;
+   pszProviderID[0]   = 0;
+   pszProviderName[0] = 0;
+
+   pServiceStatusInfo = (PSERVICE_STATUS_INFO)(((PCHAR)&qmux_msg->GetSysInfoResp) + QCQMUX_MSG_HDR_SIZE);
+   remainingLen = qmux_msg->GetSysInfoResp.Length;
+
+   while (remainingLen > 0)
+   {
+      switch (pServiceStatusInfo->TLVType)
+      {
+        case 0x10:             //CDMA
+        {
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pServiceStatusInfo->SrvStatus, pServiceStatusInfo->TLVType)
+   );
+           if (pServiceStatusInfo->SrvStatus == 0x02)
+           {
+              *RegState = QMI_NAS_REGISTERED;
+              *DataCapList = WWAN_DATA_CLASS_1XRTT|
+                                              WWAN_DATA_CLASS_1XEVDO|
+                                              WWAN_DATA_CLASS_1XEVDO_REVA|
+                                              WWAN_DATA_CLASS_1XEVDV|
+                                              WWAN_DATA_CLASS_1XEVDO_REVB;
+              RadioIfList[RadioIfIndex++] = DEVICE_CLASS_CDMA;
+           }
+           break;
+        }
+        case 0x11:              //HDR
+   {
+      QCNET_DbgPrint
+      (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pServiceStatusInfo->SrvStatus, pServiceStatusInfo->TLVType)
+      );
+           if (pServiceStatusInfo->SrvStatus == 0x02)  
+           {
+              *RegState = QMI_NAS_REGISTERED;
+              *DataCapList = WWAN_DATA_CLASS_3XRTT|
+                                            WWAN_DATA_CLASS_UMB;
+              RadioIfList[RadioIfIndex++] = DEVICE_CLASS_CDMA;
+           }
+           break;
+        }
+        case 0x12:            //GSM
+        {
+           QCNET_DbgPrint
+           (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pServiceStatusInfo->SrvStatus, pServiceStatusInfo->TLVType)
+           );
+           if (pServiceStatusInfo->SrvStatus == 0x02)
+           {
+              *RegState = QMI_NAS_REGISTERED;
+              *DataCapList = WWAN_DATA_CLASS_GPRS|
+                                              WWAN_DATA_CLASS_EDGE;
+              RadioIfList[RadioIfIndex++] = DEVICE_CLASS_GSM;
+           }
+           break;
+   }
+        case 0x13:           //WCDMA
+        {
+           QCNET_DbgPrint
+           (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pServiceStatusInfo->SrvStatus, pServiceStatusInfo->TLVType)
+           );
+           if (pServiceStatusInfo->SrvStatus == 0x02)
+   {
+              *RegState = QMI_NAS_REGISTERED;
+              *DataCapList = WWAN_DATA_CLASS_UMTS;
+              RadioIfList[RadioIfIndex++] = DEVICE_CLASS_GSM;
+           }
+           break;
+        }
+        case 0x14:           //LTE
+     {
+           QCNET_DbgPrint
+           (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pServiceStatusInfo->SrvStatus, pServiceStatusInfo->TLVType)
+           );
+           if (pServiceStatusInfo->SrvStatus == 0x02)
+        {
+              *RegState = QMI_NAS_REGISTERED;
+              *DataCapList = WWAN_DATA_CLASS_LTE;
+              RadioIfList[RadioIfIndex++] = DEVICE_CLASS_GSM;
+           }
+           break;
+        }
+        case 0x15:           //CDMA
+            {
+           // CDMA_SYSTEM_INFO
+           PCDMA_SYSTEM_INFO pSystemInfo = (PCDMA_SYSTEM_INFO)pServiceStatusInfo;
+           QCNET_DbgPrint
+               ( 
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pSystemInfo->SrvDomain, pSystemInfo->TLVType)
+               );
+           if (pSystemInfo->SrvDomainValid == 0x01)
+               {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvDomain == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvDomain == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvDomain == 0x03)
+                  {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+                  }
+           if (pSystemInfo->SrvCapabilityValid == 0x01)
+           {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvCapability == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvCapability == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvCapability == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+               }
+            }
+           if (pSystemInfo->RoamStatusValid == 0x01)
+            {
+              *pnRoamingInd = pSystemInfo->RoamStatus;
+            }
+           if (pSystemInfo->NetworkIdValid == 0x01)
+           {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+              ULONG value;
+              int i;
+              CHAR temp[10];
+              
+              strncpy(pszProviderID, pSystemInfo->MCC, 3);
+              pszProviderID[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (pszProviderID[i] == 0xFF)
+                    pszProviderID[i] = '\0';
+              strcpy(temp, pszProviderID);
+
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MCC)
+        {
+                 *MCC = (USHORT)value;
+                 pAdapter->MCC = *MCC;
+              }
+
+              strncpy(temp, pSystemInfo->MNC, 3);
+              temp[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (temp[i] == 0xFF)
+                    temp[i] = '\0';
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MNC)
+              {
+                 *MNC = (USHORT)value;
+                 pAdapter->MNC = *MNC;
+              }
+              strcat(pszProviderID, temp);
+              }
+              break;
+           }           
+        case 0x16:           //HDR
+        {
+           // HDR_SYSTEM_INFO
+           PHDR_SYSTEM_INFO pSystemInfo = (PHDR_SYSTEM_INFO)pServiceStatusInfo;
+           QCNET_DbgPrint
+           (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pSystemInfo->SrvDomain, pSystemInfo->TLVType)
+           );
+           if (pSystemInfo->SrvDomainValid == 0x01)
+           {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvDomain == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvDomain == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvDomain == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+              }
+           if (pSystemInfo->SrvCapabilityValid == 0x01)
+              {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvCapability == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvCapability == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvCapability == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+              }
+           if (pSystemInfo->RoamStatusValid == 0x01)
+              {
+              *pnRoamingInd = pSystemInfo->RoamStatus;
+                 }
+           if (pSystemInfo->is856SysIdValid == 0x01)
+                 {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+              ULONG value;
+              strcpy(pszProviderID, pSystemInfo->is856SysId);
+                 }
+           break;
+              }
+        case 0x17:           //GSM
+              {
+           // GSM_SYSTEM_INFO
+           PGSM_SYSTEM_INFO pSystemInfo = (PGSM_SYSTEM_INFO)pServiceStatusInfo;
+           QCNET_DbgPrint
+                          (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pSystemInfo->SrvDomain, pSystemInfo->TLVType)
+                          );
+           if (pSystemInfo->SrvDomainValid == 0x01)
+           {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvDomain == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvDomain == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvDomain == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+                 }
+           if (pSystemInfo->SrvCapabilityValid == 0x01)
+           {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvCapability == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvCapability == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvCapability == 0x03)
+                 {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+                 }
+              }
+           if (pSystemInfo->RoamStatusValid == 0x01)
+           {
+              *pnRoamingInd = pSystemInfo->RoamStatus;
+           }
+           if (pSystemInfo->NetworkIdValid == 0x01)
+           {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+              ULONG value;
+              int i;
+              CHAR temp[10];
+              
+              strncpy(pszProviderID, pSystemInfo->MCC, 3);
+              pszProviderID[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (pszProviderID[i] == 0xFF)
+                    pszProviderID[i] = '\0';
+              strcpy(temp, pszProviderID);
+              
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MCC)
+              {
+                 *MCC = (USHORT)value;
+                 pAdapter->MCC = *MCC;
+              }
+
+              strncpy(temp, pSystemInfo->MNC, 3);
+              temp[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (temp[i] == 0xFF)
+                    temp[i] = '\0';
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MNC)
+              {
+                 *MNC = (USHORT)value;
+                 pAdapter->MNC = *MNC;
+              }
+              strcat(pszProviderID, temp);
+           }
+           break;
+              }
+        case 0x18:           //WCDMA
+              {
+           // WCDMA_SYSTEM_INFO
+           PWCDMA_SYSTEM_INFO pSystemInfo = (PWCDMA_SYSTEM_INFO)pServiceStatusInfo;
+           QCNET_DbgPrint
+           (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pSystemInfo->SrvDomain, pSystemInfo->TLVType)
+           );
+           if (pSystemInfo->SrvDomainValid == 0x01)
+              {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvDomain == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvDomain == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvDomain == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+           }
+           if (pSystemInfo->SrvCapabilityValid == 0x01)
+           {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvCapability == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvCapability == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvCapability == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+              }
+           if (pSystemInfo->RoamStatusValid == 0x01)
+              {
+              *pnRoamingInd = pSystemInfo->RoamStatus;
+              }
+           if (pSystemInfo->NetworkIdValid == 0x01)
+           {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+              ULONG value;
+              int i;
+              CHAR temp[10];
+              
+              strncpy(pszProviderID, pSystemInfo->MCC, 3);
+              pszProviderID[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (pszProviderID[i] == 0xFF)
+                    pszProviderID[i] = '\0';
+              strcpy(temp, pszProviderID);
+              
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MCC)
+              {
+                 *MCC = (USHORT)value;
+                 pAdapter->MCC = *MCC;
+              }
+
+              strncpy(temp, pSystemInfo->MNC, 3);
+              temp[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (temp[i] == 0xFF)
+                    temp[i] = '\0';
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MNC)
+              {
+                 *MNC = (USHORT)value;
+                 pAdapter->MNC = *MNC;
+              }
+              strcat(pszProviderID, temp);
+           }
+           break;
+              }
+        case 0x19:           //LTE
+              {
+           // LTE_SYSTEM_INFO
+           PLTE_SYSTEM_INFO pSystemInfo = (PLTE_SYSTEM_INFO)pServiceStatusInfo;
+           QCNET_DbgPrint
+           (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pSystemInfo->SrvDomain, pSystemInfo->TLVType)
+           );
+           if (pSystemInfo->SrvDomainValid == 0x01)
+              {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvDomain == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvDomain == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvDomain == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+              }
+           if (pSystemInfo->SrvCapabilityValid == 0x01)
+              {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvCapability == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvCapability == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvCapability == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+              }
+           }
+           if (pSystemInfo->RoamStatusValid == 0x01)
+           {
+              *pnRoamingInd = pSystemInfo->RoamStatus;
+           }
+           if (pSystemInfo->NetworkIdValid == 0x01)
+           {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+              ULONG value;
+              int i;
+              CHAR temp[10];
+
+              strncpy(pszProviderID, pSystemInfo->MCC, 3);
+              pszProviderID[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (pszProviderID[i] == 0xFF)
+                    pszProviderID[i] = '\0';
+              strcpy(temp, pszProviderID);
+
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MCC)
+              {
+                 *MCC = (USHORT)value;
+                 pAdapter->MCC = *MCC;
+              }
+                 
+              strncpy(temp, pSystemInfo->MNC, 3);
+              temp[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (temp[i] == 0xFF)
+                    temp[i] = '\0';
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MNC)
+                 {
+                 *MNC = (USHORT)value;
+                 pAdapter->MNC = *MNC;
+                    }
+              strcat(pszProviderID, temp);
+                    }
+           break;
+                    }
+        case 0x24:           //TDSCDMA
+                    {
+           // TDSCDMA_SYSTEM_INFO
+           PTDSCDMA_SYSTEM_INFO pSystemInfo = (PTDSCDMA_SYSTEM_INFO)pServiceStatusInfo;
+           QCNET_DbgPrint
+                                (
+              MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+              ("<%s> QMUX: serving system 0x%x TLVType 0x%x\n", pAdapter->PortName,
+              pSystemInfo->SrvDomain, pSystemInfo->TLVType)
+                                );
+           if (pSystemInfo->SrvDomainValid == 0x01)
+           {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvDomain == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvDomain == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvDomain == 0x03)
+              {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+                       }
+                    }
+           if (pSystemInfo->SrvCapabilityValid == 0x01)
+           {
+              *CSAttachedState = 0x00;
+              *PSAttachedState = 0x00;
+              if (pSystemInfo->SrvCapability == 0x01)
+                *CSAttachedState = 0x01;
+              else if(pSystemInfo->SrvCapability == 0x02)
+                *PSAttachedState = 0x01;               
+              else if(pSystemInfo->SrvCapability == 0x03)
+                    {
+                *CSAttachedState = 0x01;
+                *PSAttachedState = 0x01;               
+                    }
+                 }
+           if (pSystemInfo->RoamStatusValid == 0x01)
+                 {
+              *pnRoamingInd = pSystemInfo->RoamStatus;
+                 }
+           if (pSystemInfo->NetworkIdValid == 0x01)
+           {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+              ULONG value;
+              int i;
+              CHAR temp[10];
+              
+              strncpy(pszProviderID, pSystemInfo->MCC, 3);
+              pszProviderID[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (pszProviderID[i] == 0xFF)
+                    pszProviderID[i] = '\0';
+              strcpy(temp, pszProviderID);
+              
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MCC)
+              {
+                 *MCC = (USHORT)value;
+                 pAdapter->MCC = *MCC;
+              }
+
+              strncpy(temp, pSystemInfo->MNC, 3);
+              temp[3] = '\0';
+              for (i = 0; i < 4; i++)
+                if (temp[i] == 0xFF)
+                    temp[i] = '\0';
+              RtlInitAnsiString( &ansiStr, temp);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+              if (MNC)
+              {
+                 *MNC = (USHORT)value;
+                 pAdapter->MNC = *MNC;
+              }
+              strcat(pszProviderID, temp);
+           }
+           break;
+                 }
+              }
+      remainingLen -= (pServiceStatusInfo->TLVLength + 3);
+      pServiceStatusInfo = (PSERVICE_STATUS_INFO)((PCHAR)&pServiceStatusInfo->TLVLength + pServiceStatusInfo->TLVLength + sizeof(USHORT));
+           }
+
+   if (MCC && MNC)
+           {
+      *MCC = pAdapter->MCC;
+      *MNC = pAdapter->MNC;                     
+   }
+#endif
+              
+   return TRUE;
+                 }
+
 ULONG MPQMUX_ProcessNasGetServingSystemResp
 (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,
    PMP_OID_WRITE pOID
 )
-{
+                 {
    UCHAR retVal = 0;
    UCHAR nRoamingInd = 0;
    CHAR szProviderID[32] = {0, };
@@ -14977,7 +16248,7 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
    );
 
    if (qmux_msg->GetServingSystemResp.QMUXResult != QMI_RESULT_SUCCESS)
-   {
+                    {
       QCNET_DbgPrint
       (
          MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
@@ -14988,20 +16259,20 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
       retVal = 0xFF;
    }
    if (pOID != NULL)
-   {
+                       {
      pOID->OIDStatus = NDIS_STATUS_SUCCESS;
      switch(pOID->Oid)
-     {
+                       {
               
 #ifdef NDIS620_MINIPORT
         case OID_WWAN_HOME_PROVIDER:
-        {
+              {
             PNDIS_WWAN_HOME_PROVIDER pHomeProvider = (PNDIS_WWAN_HOME_PROVIDER)pOID->pOIDResp;
             UNICODE_STRING unicodeStr;               
             ANSI_STRING ansiStr;
 
             if (retVal != 0xFF)
-            {
+                 {
                ParseNasGetServingSystem
                ( 
                   pAdapter, 
@@ -15021,37 +16292,37 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
 #if 0               
                // if home serving system, use provider name and imsi
                if (nRoamingInd == 1)
-               {
+                 {
                   RtlInitAnsiString( &ansiStr, szProviderID );
                   RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
                   RtlStringCbCopyW(pHomeProvider->Provider.ProviderId, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
                   RtlFreeUnicodeString( &unicodeStr );
                   if (szProviderName[0])
-                  {
+                    {
                      RtlInitAnsiString( &ansiStr, szProviderName );
                      RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
                      RtlStringCbCopyW(pHomeProvider->Provider.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
                      RtlFreeUnicodeString( &unicodeStr );
                   }
-               }
+                    }
 #endif               
-            }
+                 }
 #if 0            
             // tried to get providerid from qmi and getserving system and failed. so spoof it.
             if (nRoamingInd != 1)
-            {
+                 {
                RtlInitAnsiString( &ansiStr, "000000" );
                RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
                RtlStringCbCopyW(pHomeProvider->Provider.ProviderId, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
                RtlFreeUnicodeString( &unicodeStr );
-            }
-#endif            
+                 }
+#endif
             pHomeProvider->Provider.ProviderState = WWAN_PROVIDER_STATE_HOME;
             MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                    QMINAS_GET_HOME_NETWORK_REQ, NULL, TRUE );
             pHomeProvider->uStatus = pOID->OIDStatus;
-        }
-        break;
+           }
+           break;
 
         case OID_WWAN_PACKET_SERVICE:
         {
@@ -15072,7 +16343,7 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
               }
               break;
            }           
-           
+
            if (retVal == 0xFF)
            {
               pOID->OIDStatus = WWAN_STATUS_FAILURE;
@@ -15144,7 +16415,7 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
            else
            {
               INT i;
-              
+
               ParseNasGetServingSystem
               ( 
                  pAdapter, 
@@ -15161,34 +16432,34 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
                  NULL, 
                  NULL
               );
-              
+
               if (PSAttachedState == 1)
               {
                  pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateAttached;
-              }
+               }
               else if (PSAttachedState == 2)
-              {
+               {        
                  pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
-              }
-              else
-              {
+               }
+               else
+               {
                  pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateUnknown;
-              }
+               }
 
               if (CSAttachedState == 1)
               {
                  pAdapter->DeviceCircuitState = DeviceWWanPacketAttached;
               }
               else
-              {
+               {
                  pAdapter->DeviceCircuitState = DeviceWWanPacketDetached;
-              }
-
+               }
+              
               ParseAvailableDataClass( pAdapter, DataCapList, &(pWwanServingState->PacketService.AvailableDataClass));
               
            }
            if ( pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
-           {
+               {
               if (pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO_REVB)
               {
                  pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO_REVB;
@@ -15226,24 +16497,24 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
                  pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSUPA;
               }
               else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_UMTS)
-              {
+               {
                  pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_UMTS;
-              }
+               }
               else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_EDGE)
-              {
+               {
                  pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_EDGE;
-              }
+               }
               else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_GPRS)
-              {
+               {
                  pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_GPRS;
               }
-           }
+               }
            // use current data bearer if connected
            if (pAdapter->DeviceContextState == DeviceWWanContextAttached)
            {
               pWwanServingState->PacketService.CurrentDataClass = GetDataClass(pAdapter);
-           }
-
+               }
+               
            if ((RegState == QMI_NAS_REGISTERED) &&
                (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateAttached) && 
                (pWwanServingState->PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE) &&
@@ -15253,12 +16524,12 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
               pAdapter->DevicePacketState = DeviceWWanPacketAttached;
            }
            else
-           {
+               {
               pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
               pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
               pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
               pAdapter->DevicePacketState = DeviceWWanPacketDetached;
-           }
+               }
            pWwanServingState->uStatus = pOID->OIDStatus;
 
            if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
@@ -15286,45 +16557,45 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
                        pWwanServingState->uStatus = WWAN_STATUS_NOT_REGISTERED;
                     }
                     else if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateDetached)
-                    {
+               {
                        pAdapter->RegisterRetryCount += 1;
 
                        if (pAdapter->RegisterRetryCount < 20)
-                       {
+                  {
                           LARGE_INTEGER timeoutValue;
                           KeClearEvent(&pAdapter->DeviceInfoReceivedEvent);
                           // wait for signal
                           timeoutValue.QuadPart = -(10 * 1000 * 1000); // 1.0 sec
                           KeWaitForSingleObject
-                                (
+                     (
                                    &pAdapter->DeviceInfoReceivedEvent,
                                    Executive,
                                    KernelMode,
                                    FALSE,
                                    &timeoutValue
-                                );
+                     );
                           MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                                  QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
                        }
                        pWwanServingState->uStatus = WWAN_STATUS_FAILURE;                    
-                    }
+                  }
                     else
-                    {
+                  {
                        pAdapter->CDMAPacketService = DeviceWWanPacketAttached;
-                    }
-                 }
+                  }
+               }
                  else
                  {
                     pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
                     pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
                     pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
                     pAdapter->CDMAPacketService = DeviceWWanPacketDetached;
-                 }
+            }
               }
               else
-              {
+            {
                  if (pAdapter->CDMAPacketService == DeviceWWanPacketDetached)
-                 {
+               {  
                     pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
                     pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
                     pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
@@ -15333,19 +16604,19 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
            }
 
            if (pOID->OidType == fMP_SET_OID && pAdapter->DeviceClass == DEVICE_CLASS_GSM)
-           {
+                 {
               PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = 
                                     (PNDIS_WWAN_SET_PACKET_SERVICE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
-              
+                    
               if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach)
-              {
+                    {
                  if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
-                 {
+                       {
                     pWwanServingState->uStatus = WWAN_STATUS_RADIO_POWER_OFF;
                  }
                  else
                  {
-
+                          
                     if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateDetached)
                     {
                        if (pAdapter->DeviceRegisterState != QMI_NAS_REGISTERED)                       
@@ -15356,11 +16627,11 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
                        {
                           pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
                        }
+                          }
+                       }
                     }
-                 }
-              }
-              else
-              {
+                    else
+                    {
                  pAdapter->RegisterRetryCount += 1;
 
 #if SPOOF_PS_ONLY_DETACH                  
@@ -15368,27 +16639,38 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
                  if (pAdapter->DeviceCircuitState == DeviceWWanPacketDetached)
                  {
                     pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
-                 }
+                    }
                  else
                  {
                     if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateAttached)
                     {
                        pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
                     }
-                 }
+                  }
                  if (pAdapter->IsLTE == TRUE)
                  {
                     pWwanServingState->uStatus = WWAN_STATUS_SUCCESS;
-                 }
+               }
 #endif
                  pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
                  pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
                  pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
                  pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+            }
+            }     
+           else
+           {
+#if SPOOF_PS_ONLY_DETACH                  
+              if (pAdapter->DevicePacketState == DeviceWWanPacketDetached)
+              {
+                  pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                  pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+                  pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
               }
-           }
+#endif              
+              }
            break;
-        }
+           }
         case OID_WWAN_REGISTER_STATE:
         {
            UNICODE_STRING unicodeStr;
@@ -15399,20 +16681,20 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
               pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
               pNdisRegisterState->RegistrationState.RegisterMode = pAdapter->RegisterMode;
               if (pOID->OidType == fMP_QUERY_OID)
-              {
+            {
                  pNdisRegisterState->uStatus = NDIS_STATUS_SUCCESS;
                  pOID->OIDStatus = NDIS_STATUS_SUCCESS;
-              }
+            }
               else
               {
                  pNdisRegisterState->uStatus = WWAN_STATUS_FAILURE;
                  pOID->OIDStatus = WWAN_STATUS_FAILURE;
-              }
-              break;
+        }
+        break;
            }           
 
            if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
-           {
+        {
               pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateRoaming;
               pNdisRegisterState->RegistrationState.RegisterMode = pAdapter->RegisterMode;
               pAdapter->DeviceRegisterState = QMI_NAS_REGISTERED;
@@ -15420,7 +16702,7 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
               pOID->OIDStatus = NDIS_STATUS_SUCCESS;
               break;
            }
-           
+
            if (retVal == 0xFF)
            {
               pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
@@ -16411,6 +17693,7 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
                 MNC = 0;
       
          DEVICE_REGISTER_STATE previousRegisterState;
+         ULONG previousCurrentDataClass;
       
          NDIS_WWAN_PACKET_SERVICE_STATE WwanServingState;
          NDIS_WWAN_REGISTRATION_STATE NdisRegisterState;
@@ -17262,10 +18545,2337 @@ ULONG MPQMUX_ProcessNasServingSystemInd
    return retVal;
 }  
 
-ULONG MPQMUX_ProcessNasSetPreferredNetworkResp
+ULONG MPQMUX_ProcessNasGetSysInfoResp
 (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+   UCHAR nRoamingInd = 0;
+   CHAR szProviderID[32] = {0, };
+   CHAR szProviderName[255] = {0, };
+   UCHAR RadioIfList[32] = {0, };
+   ULONG DataCapList;
+   CHAR RegState = 0;
+   CHAR CSAttachedState = 0;
+   CHAR PSAttachedState = 0;
+   CHAR RegisteredNetwork = 0;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> GetSysInfo resp %d\n", pAdapter->PortName, pAdapter->RegisterRetryCount)
+   );
+
+   if (qmux_msg->GetSysInfoResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+         ("<%s> QMUX: GetSysInfo result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->GetSysInfoResp.QMUXResult,
+         qmux_msg->GetSysInfoResp.QMUXError)
+      );
+      retVal = 0xFF;
+}  
+   if (pOID != NULL)
+   {
+     pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+     switch(pOID->Oid)
+     {
+
+#ifdef NDIS620_MINIPORT
+        case OID_WWAN_HOME_PROVIDER:
+{
+            PNDIS_WWAN_HOME_PROVIDER pHomeProvider = (PNDIS_WWAN_HOME_PROVIDER)pOID->pOIDResp;
+            UNICODE_STRING unicodeStr;               
+            ANSI_STRING ansiStr;
+            USHORT MCC = 0, 
+                   MNC = 0;
+
+            if (retVal != 0xFF)
+   {
+               ParseNasGetSysInfo
+      (
+                  pAdapter, 
+                  qmux_msg,
+                  &nRoamingInd,
+                  szProviderID,
+                  szProviderName,
+                  RadioIfList,
+                  &DataCapList,
+                  &RegState,
+                  &CSAttachedState,
+                  &PSAttachedState,
+                  &RegisteredNetwork,
+                  &MCC, 
+                  &MNC
+      );
+#if 0               
+               // if home serving system, use provider name and imsi
+               if (nRoamingInd == 1)
+               {
+                  RtlInitAnsiString( &ansiStr, szProviderID );
+                  RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                  RtlStringCbCopyW(pHomeProvider->Provider.ProviderId, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                  RtlFreeUnicodeString( &unicodeStr );
+                  if (szProviderName[0])
+                  {
+                     RtlInitAnsiString( &ansiStr, szProviderName );
+                     RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                     RtlStringCbCopyW(pHomeProvider->Provider.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                     RtlFreeUnicodeString( &unicodeStr );
+                  }
+               }
+#endif               
+            }
+#if 0            
+            // tried to get providerid from qmi and getserving system and failed. so spoof it.
+            if (nRoamingInd != 1)
+            {
+               RtlInitAnsiString( &ansiStr, "000000" );
+               RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+               RtlStringCbCopyW(pHomeProvider->Provider.ProviderId, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+               RtlFreeUnicodeString( &unicodeStr );
+            }
+#endif            
+            pHomeProvider->Provider.ProviderState = WWAN_PROVIDER_STATE_HOME;
+            if ((MCC != 0x00)||(MNC != 0x00))
+            {
+               RtlInitAnsiString( &ansiStr, szProviderID );
+               RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+               RtlStringCbCopyW(pHomeProvider->Provider.ProviderId, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+               RtlFreeUnicodeString( &unicodeStr );
+               MPQMUX_ComposeNasGetPLMNReqSend( pAdapter, pOID, MCC, MNC );
+            }
+            else
+            {
+                MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                              QMINAS_GET_HOME_NETWORK_REQ, NULL, TRUE );
+   }
+            pHomeProvider->uStatus = pOID->OIDStatus;
+}  
+        break;
+
+        case OID_WWAN_PACKET_SERVICE:
+{
+           PNDIS_WWAN_PACKET_SERVICE_STATE pWwanServingState = (PNDIS_WWAN_PACKET_SERVICE_STATE)pOID->pOIDResp;
+
+           if (pAdapter->MBDunCallOn == 1)
+           {
+              pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+              pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+              pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+              if (pOID->OidType == fMP_QUERY_OID)
+   {
+                  pWwanServingState->uStatus = NDIS_STATUS_SUCCESS;
+   }
+              else
+   {
+                 pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
+              }
+              break;
+           }           
+           
+           if (retVal == 0xFF)
+           {
+              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+              if (pAdapter->DeviceReadyState == DeviceWWanOff)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+              }
+              else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+              {
+                 if (pOID->OidType == fMP_QUERY_OID)
+                 {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                    pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                    pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+                    pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+                    pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+                 }
+                 else
+                 {
+                 pOID->OIDStatus = WWAN_STATUS_RADIO_POWER_OFF;
+              }
+              }
+              else if(qmux_msg->GetServingSystemResp.QMUXError == 0x4A)
+              {
+                 if (pAdapter->DeviceReadyState == DeviceWWanOn && 
+                     pOID->OidType == fMP_SET_OID)
+                 {
+                    LARGE_INTEGER timeoutValue;
+                    KeClearEvent(&pAdapter->DeviceInfoReceivedEvent);
+                    // wait for signal
+                    timeoutValue.QuadPart = -(50 * 1000 * 1000); // 5.0 sec
+                    KeWaitForSingleObject
+                          (
+                             &pAdapter->DeviceInfoReceivedEvent,
+                             Executive,
+                             KernelMode,
+                             FALSE,
+                             &timeoutValue
+                          );
+                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                           QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                 }
+                 else
+                 {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                    pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                    pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+                    pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+                    pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+                 }
+              }
+           }
+           else
+           {
+                             INT i;
+
+              ParseNasGetSysInfo
+              ( 
+                 pAdapter, 
+                 qmux_msg,
+                 &nRoamingInd,
+                 szProviderID,
+                 szProviderName,
+                 RadioIfList,
+                 &DataCapList,
+                 &RegState,
+                 &CSAttachedState,
+                 &PSAttachedState,
+                 &RegisteredNetwork,
+                 NULL, 
+                 NULL
+              );
+
+              if (PSAttachedState == 1)
+                             {
+                 pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateAttached;
+              }
+              else if (PSAttachedState == 2)
+                                {
+                 pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                                   }
+                                   else
+                                   {
+                 pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateUnknown;
+                                   }                       
+
+              if (CSAttachedState == 1)
+              {
+                 pAdapter->DeviceCircuitState = DeviceWWanPacketAttached;
+                                }
+              else
+                                {
+                 pAdapter->DeviceCircuitState = DeviceWWanPacketDetached;
+                                }
+
+              pWwanServingState->PacketService.AvailableDataClass = DataCapList;
+              
+           }
+           if ( pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+           {
+              if (pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO_REVB)
+                                {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO_REVB;
+                                }
+              else if (pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO_REVA)
+                                {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO_REVA;
+                                }
+              else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO)
+                                {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO;
+                                }
+              else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XRTT)
+                                {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XRTT;
+              }
+           }
+           else
+           { 
+              if (pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_LTE)
+              {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_LTE;
+              }
+              else if ((pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSDPA) &&
+                  (pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSUPA))
+              {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSDPA|WWAN_DATA_CLASS_HSUPA;
+              }
+              else if (pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSDPA)
+              {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSDPA;
+              }
+              else if (pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSUPA)
+              {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSUPA;
+                                }
+              else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_UMTS)
+                                {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_UMTS;
+                                }
+              else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_EDGE)
+                                {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_EDGE;
+                                }
+              else if(pWwanServingState->PacketService.AvailableDataClass & WWAN_DATA_CLASS_GPRS)
+              {
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_GPRS;
+                             }
+                          }
+           // use current data bearer if connected
+           if (pAdapter->DeviceContextState == DeviceWWanContextAttached)
+                          {
+              pWwanServingState->PacketService.CurrentDataClass = GetDataClass(pAdapter);
+           }
+
+           if ((RegState == QMI_NAS_REGISTERED) &&
+               (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateAttached) && 
+               (pWwanServingState->PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE) &&
+               (pWwanServingState->PacketService.CurrentDataClass != WWAN_DATA_CLASS_NONE) ) 
+                             {
+              pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateAttached;
+              pAdapter->DevicePacketState = DeviceWWanPacketAttached;
+                             }
+                             else
+                             {
+              pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+              pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+              pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+              pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+           }
+           pWwanServingState->uStatus = pOID->OIDStatus;
+
+           if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+           {
+
+              if (pOID->OidType == fMP_SET_OID)
+              {
+                 PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = 
+                                       (PNDIS_WWAN_SET_PACKET_SERVICE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+                 
+                 if ((pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach) ||
+                     (pAdapter->DeviceContextState == DeviceWWanContextAttached))
+                 {
+                    if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionDetach)
+                    {
+                       pOID->OIDStatus = WWAN_STATUS_FAILURE;           
+                       pWwanServingState->uStatus = pOID->OIDStatus;
+                             }
+                    if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+                    {
+                       pWwanServingState->uStatus = WWAN_STATUS_RADIO_POWER_OFF;
+                          }
+                    else if (pAdapter->DeviceRegisterState != QMI_NAS_REGISTERED)                       
+                          {
+                       pWwanServingState->uStatus = WWAN_STATUS_NOT_REGISTERED;
+                    }
+                    else if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateDetached)
+                             {
+                       pAdapter->RegisterRetryCount += 1;
+
+                       if (pAdapter->RegisterRetryCount < 20)
+                                {
+                          LARGE_INTEGER timeoutValue;
+                          KeClearEvent(&pAdapter->DeviceInfoReceivedEvent);
+                          // wait for signal
+                          timeoutValue.QuadPart = -(10 * 1000 * 1000); // 1.0 sec
+                          KeWaitForSingleObject
+                                   (
+                                   &pAdapter->DeviceInfoReceivedEvent,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   &timeoutValue
+                                   );
+                          MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                                 QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                       }
+                       pWwanServingState->uStatus = WWAN_STATUS_FAILURE;                    
+                    }
+                    else
+                    {
+                       pAdapter->CDMAPacketService = DeviceWWanPacketAttached;
+                    }
+                 }
+                 else
+                                   {
+                    pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                    pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+                    pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+                    pAdapter->CDMAPacketService = DeviceWWanPacketDetached;
+                 }
+                                   }
+                                   else
+                                   {
+                 if (pAdapter->CDMAPacketService == DeviceWWanPacketDetached)
+                 {
+                    pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                    pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+                    pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+                 }
+              }
+                                   }                           
+
+           if (pOID->OidType == fMP_SET_OID && pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+                                   {
+              PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = 
+                                    (PNDIS_WWAN_SET_PACKET_SERVICE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+              if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach)
+              {
+                 if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+                 {
+                    pWwanServingState->uStatus = WWAN_STATUS_RADIO_POWER_OFF;
+                 }
+                 else
+                 {
+
+                    if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateDetached)
+                                      {
+                       if (pAdapter->DeviceRegisterState != QMI_NAS_REGISTERED)                       
+                                         {
+                          pWwanServingState->uStatus = WWAN_STATUS_NOT_REGISTERED;
+                                            }
+                                            else
+                                            {
+                          pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
+                       }
+                                            }
+                                         }
+                                      }
+              else
+              {
+                 pAdapter->RegisterRetryCount += 1;
+
+#if SPOOF_PS_ONLY_DETACH                  
+                 /* Fail the PS tetach when CS is not attached */
+                 if (pAdapter->DeviceCircuitState == DeviceWWanPacketDetached)
+                 {
+                    pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
+                                   }
+                 else
+                 {
+                    if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateAttached)
+                    {
+                       pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
+                                }
+                             }
+                 if (pAdapter->IsLTE == TRUE)
+                 {
+                    pWwanServingState->uStatus = WWAN_STATUS_SUCCESS;
+                          }
+#endif
+                 pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                 pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+                 pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+                 pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+                    }
+                 }
+           break;
+              }
+        case OID_WWAN_REGISTER_STATE:
+        {
+           UNICODE_STRING unicodeStr;
+           ANSI_STRING ansiStr;
+           PNDIS_WWAN_REGISTRATION_STATE pNdisRegisterState = (PNDIS_WWAN_REGISTRATION_STATE)pOID->pOIDResp;
+           if (pAdapter->MBDunCallOn == 1)
+           {
+              pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+              pNdisRegisterState->RegistrationState.RegisterMode = pAdapter->RegisterMode;
+              if (pOID->OidType == fMP_QUERY_OID)
+              {
+                 pNdisRegisterState->uStatus = NDIS_STATUS_SUCCESS;
+                 pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+           }
+              else
+              {
+                 pNdisRegisterState->uStatus = WWAN_STATUS_FAILURE;
+                 pOID->OIDStatus = WWAN_STATUS_FAILURE;
+        }
+        break;
+   }
+
+           if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
+           {
+              pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateRoaming;
+              pNdisRegisterState->RegistrationState.RegisterMode = pAdapter->RegisterMode;
+              pAdapter->DeviceRegisterState = QMI_NAS_REGISTERED;
+              pNdisRegisterState->uStatus = NDIS_STATUS_SUCCESS;
+              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+              break;
+}  
+
+           if (retVal == 0xFF)
+           {
+              pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+              if (pAdapter->DeviceReadyState == DeviceWWanOff)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+{
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+              }
+              else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+              {
+                 if (pOID->OidType == fMP_QUERY_OID)
+                 {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                 }
+                 else
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                 }
+              }
+              else if(qmux_msg->GetServingSystemResp.QMUXError == 0x4A)
+              {
+                 if (pAdapter->DeviceReadyState == DeviceWWanOn && 
+                     pOID->OidType == fMP_SET_OID)
+   {
+                    LARGE_INTEGER timeoutValue;
+                    KeClearEvent(&pAdapter->DeviceInfoReceivedEvent);
+                    // wait for signal
+                    timeoutValue.QuadPart = -(50 * 1000 * 1000); // 5.0 sec
+                    KeWaitForSingleObject
+     (
+                             &pAdapter->DeviceInfoReceivedEvent,
+                             Executive,
+                             KernelMode,
+                             FALSE,
+                             &timeoutValue
+     );
+                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                           QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                 }
+                 else
+                 {
+                    pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+                    pNdisRegisterState->RegistrationState.RegisterMode = pAdapter->RegisterMode;
+                    pNdisRegisterState->uStatus = NDIS_STATUS_SUCCESS;
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                 }
+              }
+              if (pOID->OIDStatus == WWAN_STATUS_FAILURE)
+              {
+                 pNdisRegisterState->RegistrationState.uNwError = pAdapter->nwRejectCause;
+              }
+   }
+           else
+{
+              USHORT MCC = 0, 
+                     MNC = 0;
+
+              ParseNasGetSysInfo
+   (
+                 pAdapter, 
+                 qmux_msg,
+                 &nRoamingInd,
+                 szProviderID,
+                 szProviderName,
+                 RadioIfList,
+                 &DataCapList,
+                 &RegState,
+                 &CSAttachedState,
+                 &PSAttachedState,
+                 &RegisteredNetwork,
+                 &MCC, 
+                 &MNC
+   );
+
+              pNdisRegisterState->RegistrationState.RegisterMode = pAdapter->RegisterMode;
+
+              switch (RegState)
+              {
+                 case QMI_NAS_NOT_REGISTERED:
+                     pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+                     break;
+                 case QMI_NAS_REGISTERED:
+                     pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateHome;
+                     break;
+                 case QMI_NAS_NOT_REGISTERED_SEARCHING:
+                     pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateSearching;
+                     break;
+                 case QMI_NAS_REGISTRATION_DENIED:
+                     pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDenied;
+                     break;
+                 case QMI_NAS_REGISTRATION_UNKNOWN:
+                     pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateUnknown;
+                     break;
+               }
+               // workaround to get VAN UI to show device when service not activated
+               if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
+   {
+                  pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateRoaming;
+                  pAdapter->DeviceRegisterState = QMI_NAS_REGISTERED;
+   }
+   else
+   {
+                  pAdapter->DeviceRegisterState = RegState;
+               }
+      
+               if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+               {
+                  CHAR temp[1024];
+                  RtlStringCchPrintfExA( temp, 
+                                         1024,
+                                         NULL,
+                                         NULL,
+                                         STRSAFE_IGNORE_NULLS,
+                                         "%05d", 
+                                         WWAN_CDMA_DEFAULT_PROVIDER_ID);
+                  RtlInitAnsiString( &ansiStr, temp);
+                  RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                  RtlStringCbCopyW(pNdisRegisterState->RegistrationState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                  RtlFreeUnicodeString( &unicodeStr );
+               }
+
+               RtlInitAnsiString( &ansiStr, pAdapter->CurrentCarrier);
+               RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+               RtlStringCbCopyW(pNdisRegisterState->RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+               RtlFreeUnicodeString( &unicodeStr );
+
+               QCNET_DbgPrint
+               (
+                  MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                  ("<%s> QMUX: serving system RoamingIndicator 0x%x\n", pAdapter->PortName,
+                  nRoamingInd
+                  )
+               );
+     
+               if (pAdapter->DeviceRegisterState == QMI_NAS_REGISTERED)
+      {
+               if (nRoamingInd == 0)
+         {
+                  pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateHome;
+         }
+               if (nRoamingInd == 1)
+         {
+                  pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateRoaming;
+         }
+               if (nRoamingInd == 2)
+      {
+                  pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStatePartner;
+      }
+   }
+
+               // workaround to get VAN UI to show device when service not activated
+               if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
+               {
+                  pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateRoaming;
+} 
+
+               if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+               {
+                  RtlInitAnsiString( &ansiStr, szProviderID);
+                  RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                  RtlStringCbCopyW(pNdisRegisterState->RegistrationState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                  RtlFreeUnicodeString( &unicodeStr );
+
+                  if (strlen(szProviderName) > 0 &&
+                      strlen(szProviderName) < WWAN_PROVIDERNAME_LEN)
+                  {
+                     CHAR tempStr[WWAN_PROVIDERNAME_LEN];
+                     RtlZeroMemory
+                     (
+                        tempStr,
+                        WWAN_PROVIDERNAME_LEN
+                     );
+                     RtlCopyMemory
+(
+                        tempStr,
+                        szProviderName,
+                        strlen(szProviderName)
+                     );
+
+                     RtlInitAnsiString( &ansiStr, (PCSZ)tempStr);
+                     RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                     RtlStringCbCopyW(pNdisRegisterState->RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                     RtlFreeUnicodeString( &unicodeStr );
+                  }
+                  if (pAdapter->DeviceRegisterState == QMI_NAS_REGISTERED)
+   {
+                     MPQMUX_ComposeNasGetPLMNReqSend( pAdapter, pOID, MCC, MNC );
+                  }
+               }
+   }
+            pNdisRegisterState->uStatus = pOID->OIDStatus;
+            if (pOID->OidType == fMP_SET_OID)
+            {
+               //if( pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+               //{                    
+               //   pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;               
+               //   pNdisRegisterState->uStatus = WWAN_STATUS_FAILURE;                    
+               //}                 
+               //else
+               {  
+                 PNDIS_WWAN_SET_REGISTER_STATE pNdisSetRegisterState = 
+                                       (PNDIS_WWAN_SET_REGISTER_STATE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+                 if (pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateDeregistered ||
+                     pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateSearching ||
+                     pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateDenied ||
+                     pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateUnknown)
+   {
+                    pNdisRegisterState->uStatus = NDIS_STATUS_FAILURE;
+
+                    if (pNdisSetRegisterState->SetRegisterState.RegisterAction != WwanRegisterActionAutomatic)
+                    {
+                       if ( ((pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_GPRS)  ||
+                            (pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_EDGE)) &&
+                            (pAdapter->RegisterRadioAccess != 0x04))
+                       {
+                          pAdapter->RegisterRadioAccess = 0x04;
+                          MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                                 QMINAS_INITIATE_NW_REGISTER_REQ, MPQMUX_ComposeNasInitiateNwRegisterReqSend, TRUE );
+   
+   }
+   else
+   {
+                          RtlStringCbCopyW(pNdisRegisterState->RegistrationState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), pNdisSetRegisterState->SetRegisterState.ProviderId);
+                          pNdisRegisterState->uStatus = WWAN_STATUS_PROVIDER_NOT_VISIBLE;
+                          pNdisRegisterState->RegistrationState.uNwError = pAdapter->nwRejectCause;
+                          if (pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateSearching ||
+                              pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateUnknown)
+                          {
+                             pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+   }
+                       }
+                    }
+                    else
+                    {
+                       pNdisRegisterState->RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+                       pNdisRegisterState->uStatus = WWAN_STATUS_FAILURE;   
+                    }
+                    pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+                    // Indicate packet detach
+                    {
+                       NDIS_WWAN_PACKET_SERVICE_STATE WwanServingState;
+                       NdisZeroMemory( &WwanServingState, sizeof(NDIS_WWAN_PACKET_SERVICE_STATE));
+                       WwanServingState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+                       WwanServingState.Header.Revision = NDIS_WWAN_PACKET_SERVICE_STATE_REVISION_1;
+                       WwanServingState.Header.Size = sizeof(NDIS_WWAN_PACKET_SERVICE_STATE);
+                       WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+                       WwanServingState.PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+                       WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+                       MyNdisMIndicateStatus
+                       (
+                          pAdapter->AdapterHandle,
+                          NDIS_STATUS_WWAN_PACKET_SERVICE,
+                          (PVOID)&WwanServingState,
+                          sizeof(NDIS_WWAN_PACKET_SERVICE_STATE)
+                       );
+                    }
+                  }
+               }
+            }
+            if (pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateDeregistered ||
+               pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateSearching ||
+               pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateDenied||
+               pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateUnknown)
+            {
+               NdisZeroMemory( (VOID *)pNdisRegisterState->RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN);
+               NdisZeroMemory( (VOID *)pNdisRegisterState->RegistrationState.RoamingText, WWAN_ROAMTEXT_LEN);
+            }     
+           if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+           {
+              if (pNdisRegisterState->uStatus == WWAN_STATUS_SUCCESS && 
+                  pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateHome)
+              {
+                 MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                        QMINAS_GET_HOME_NETWORK_REQ, NULL, TRUE );
+
+              }
+           }
+           if (pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateDeregistered ||
+               pNdisRegisterState->RegistrationState.RegisterState == WwanRegisterStateDenied)
+   {
+               pNdisRegisterState->RegistrationState.uNwError = pAdapter->nwRejectCause;
+            }
+   }
+        break;
+        case OID_WWAN_VISIBLE_PROVIDERS:
+        {
+           UNICODE_STRING unicodeStr;
+           ANSI_STRING ansiStr;
+           ULONG AvailableDataClass = 0;
+           PNDIS_WWAN_VISIBLE_PROVIDERS pVisibleProviders = (PNDIS_WWAN_VISIBLE_PROVIDERS)pOID->pOIDResp;
+
+           if (retVal == 0xFF)
+           {
+              pOID->OIDStatus = WWAN_STATUS_PROVIDERS_NOT_FOUND;
+              if (pAdapter->DeviceReadyState == DeviceWWanOff)
+   {
+                 pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+   }
+              else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+   {
+                 pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+   }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+} 
+              else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+{
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+   {
+                 pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+   }
+              else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+   {
+                 pOID->OIDStatus = WWAN_STATUS_RADIO_POWER_OFF;
+   }
+              else if(pAdapter->DeviceReadyState == DeviceWWanOn && 
+                      qmux_msg->GetServingSystemResp.QMUXError == 0x4A)
+   {
+                 LARGE_INTEGER timeoutValue;
+                 KeClearEvent(&pAdapter->DeviceInfoReceivedEvent);
+                 // wait for signal
+                 timeoutValue.QuadPart = -(50 * 1000 * 1000); // 5.0 sec
+                 KeWaitForSingleObject
+                       (
+                          &pAdapter->DeviceInfoReceivedEvent,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          &timeoutValue
+                       );
+                 MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                        QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+   }
+} 
+           else
+           {
+              WWAN_REGISTER_STATE RegisterState;
+              int i;
+
+              ParseNasGetSysInfo
+(
+                 pAdapter, 
+                 qmux_msg,
+                 &nRoamingInd,
+                 szProviderID,
+                 szProviderName,
+                 RadioIfList,
+                 &DataCapList,
+                 &RegState,
+                 &CSAttachedState,
+                 &PSAttachedState,
+                 &RegisteredNetwork,
+                 NULL, 
+                 NULL
+              );
+
+              switch (RegState)
+   {
+                 case 0x00:
+                     RegisterState = WwanRegisterStateDeregistered;
+                     break;
+                 case 0x01:
+                     RegisterState = WwanRegisterStateHome;
+                     break;
+                 case 0x02:
+                     RegisterState = WwanRegisterStateSearching;
+                     break;
+                 case 0x03:
+                     RegisterState = WwanRegisterStateDenied;
+                     break;
+                 case 0x04:
+                     RegisterState = WwanRegisterStateUnknown;
+                     break;
+   }
+               pAdapter->DeviceRegisterState = RegState;
+
+   QCNET_DbgPrint
+   (
+                 MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                 ("<%s> QMUX: serving system RoamingIndicator 0x%x\n", pAdapter->PortName,
+                 nRoamingInd)
+   );
+
+               if (pAdapter->DeviceRegisterState == QMI_NAS_REGISTERED)
+               {
+               if (nRoamingInd == 0)
+               {
+                  RegisterState = WwanRegisterStateHome;
+               }
+               if (nRoamingInd == 1)
+   {
+                 RegisterState = WwanRegisterStateRoaming;
+   }
+               if (nRoamingInd == 2)
+   {
+                  RegisterState = WwanRegisterStatePartner;
+   }
+} 
+
+               // ParseAvailableDataClass(pAdapter, DataCapList, &AvailableDataClass);
+               AvailableDataClass = DataCapList;
+
+               if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+{
+                 if (pAdapter->DeviceReadyState == DeviceWWanOff)
+   {
+                    pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+      {
+                    pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+      }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+   }
+                 else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+   {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+     {
+                    pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+                 }
+                 else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+        {
+                    pOID->OIDStatus = WWAN_STATUS_RADIO_POWER_OFF;
+           }
+                 else if (pAdapter->DeviceRegisterState == QMI_NAS_REGISTERED)                        
+           {
+                    CHAR temp[1024];
+                    PWWAN_PROVIDER pWwanProvider;
+                    pVisibleProviders->VisibleListHeader.ElementCount = 1;
+                    pWwanProvider = (PWWAN_PROVIDER)(((PCHAR)pVisibleProviders) + sizeof(NDIS_WWAN_VISIBLE_PROVIDERS));
+                    
+                    RtlStringCchPrintfExA( temp, 
+                                           1024,
+                                           NULL,
+                                           NULL,
+                                           STRSAFE_IGNORE_NULLS,
+                                           "%05d", 
+                                           WWAN_CDMA_DEFAULT_PROVIDER_ID);
+                    RtlInitAnsiString( &ansiStr, temp);
+                    RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                    RtlStringCbCopyW(pWwanProvider->ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                    RtlFreeUnicodeString( &unicodeStr );
+               
+                    RtlInitAnsiString( &ansiStr, pAdapter->CurrentCarrier);
+                    RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                    RtlStringCbCopyW(pWwanProvider->ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                    RtlFreeUnicodeString( &unicodeStr );
+                    pWwanProvider->ProviderState = WWAN_PROVIDER_STATE_VISIBLE |
+                                                   WWAN_PROVIDER_STATE_REGISTERED;
+                    if (RegisterState == WwanRegisterStateHome)
+                    {
+                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                              QMINAS_GET_HOME_NETWORK_REQ, NULL, TRUE );
+           }
+           else
+           {
+                       pWwanProvider->ProviderState |= WWAN_PROVIDER_STATE_PREFERRED;
+                       pOID->OIDRespLen += sizeof(WWAN_PROVIDER);
+                    }
+                    pWwanProvider->WwanDataClass = AvailableDataClass;
+              }
+              else
+              {
+                    pOID->OIDStatus = WWAN_STATUS_PROVIDERS_NOT_FOUND;
+                 }
+                 pVisibleProviders->uStatus = pOID->OIDStatus;
+              }
+           }
+        }
+        break;
+        case OID_WWAN_PROVISIONED_CONTEXTS:
+        {
+           PNDIS_WWAN_PROVISIONED_CONTEXTS pNdisProvisionedContexts = (PNDIS_WWAN_PROVISIONED_CONTEXTS)pOID->pOIDResp;
+           PNDIS_WWAN_SET_PROVISIONED_CONTEXT pNdisSetProvisionedContext = (PNDIS_WWAN_SET_PROVISIONED_CONTEXT)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+           if (pOID->OidType == fMP_SET_OID)
+           {
+              if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+              {
+                 NDIS_STATUS ndisStatus;
+                 UNICODE_STRING unicodeStr;
+                 PWWAN_CONTEXT pWwanContext = (PWWAN_CONTEXT)((PCHAR)pNdisProvisionedContexts+sizeof(NDIS_WWAN_PROVISIONED_CONTEXTS));
+                 pOID->OIDStatus = WWAN_STATUS_SUCCESS;
+                 if (pAdapter->DeviceReadyState == DeviceWWanOff)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                 }
+                 else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+                 }
+                 else if (pNdisSetProvisionedContext->ProvisionedContext.ContextId != 1 &&
+                          pNdisSetProvisionedContext->ProvisionedContext.ContextId != WWAN_CONTEXT_ID_APPEND)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+                 }
+                 else if (pNdisSetProvisionedContext->ProvisionedContext.ContextType != WwanContextTypeInternet)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+                 }
+                 else if (pNdisSetProvisionedContext->ProvisionedContext.Compression != WwanCompressionNone)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+                 }
+                 else if (pNdisSetProvisionedContext->ProvisionedContext.AuthType > WwanAuthProtocolMsChapV2)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+                 }
+                 else
+                 {
+                    if (pNdisSetProvisionedContext->ProvisionedContext.ContextId == WWAN_CONTEXT_ID_APPEND)
+                    {
+                       pNdisSetProvisionedContext->ProvisionedContext.ContextId = 1;
+                    }
+                    ndisStatus = WriteCDMAContext( pAdapter, &(pNdisSetProvisionedContext->ProvisionedContext), sizeof(WWAN_CONTEXT));
+                    if (ndisStatus != STATUS_SUCCESS)
+                    {
+                       pOID->OIDStatus = WWAN_STATUS_WRITE_FAILURE;
+                    }
+                 }
+              }
+              else
+              if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+              {
+                NDIS_STATUS ndisStatus;
+                UNICODE_STRING unicodeStr;
+                PWWAN_CONTEXT pWwanContext = (PWWAN_CONTEXT)((PCHAR)pNdisProvisionedContexts+sizeof(NDIS_WWAN_PROVISIONED_CONTEXTS));
+                pOID->OIDStatus = WWAN_STATUS_SUCCESS;
+                if (pAdapter->DeviceReadyState == DeviceWWanOff)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+                }
+                else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+                }
+                else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                }
+                else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                }
+                else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+                }
+                else if (pNdisSetProvisionedContext->ProvisionedContext.ContextId != 1 &&
+                         pNdisSetProvisionedContext->ProvisionedContext.ContextId != WWAN_CONTEXT_ID_APPEND)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+                }
+                else if (pNdisSetProvisionedContext->ProvisionedContext.ContextType != WwanContextTypeInternet)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+                }
+                else if (pNdisSetProvisionedContext->ProvisionedContext.Compression != WwanCompressionNone)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+                }
+                else if (pNdisSetProvisionedContext->ProvisionedContext.AuthType >= WwanAuthProtocolMsChapV2)
+                {
+                   pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+     }
+                else
+                {
+                   if (pNdisSetProvisionedContext->ProvisionedContext.ContextId == WWAN_CONTEXT_ID_APPEND)
+                   {
+                      pNdisSetProvisionedContext->ProvisionedContext.ContextId = 1;
+   }
+                   MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_WDS, 
+                                          QMIWDS_MODIFY_PROFILE_SETTINGS_REQ, MPQMUX_ComposeWdsModifyProfileSettingsReqSend, TRUE );
+
+}  
+             }
+           }
+           else
+           {
+              if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+              {
+                 NDIS_STATUS ndisStatus;
+                 UNICODE_STRING unicodeStr;
+                 PWWAN_CONTEXT pWwanContext = (PWWAN_CONTEXT)((PCHAR)pNdisProvisionedContexts+sizeof(NDIS_WWAN_PROVISIONED_CONTEXTS));
+                 pOID->OIDStatus = WWAN_STATUS_SUCCESS;
+                 if (pAdapter->DeviceReadyState == DeviceWWanOff)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                 }
+                 else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+                 }
+                 else
+                 {
+                    ndisStatus = ReadCDMAContext( pAdapter, pWwanContext, sizeof(WWAN_CONTEXT));
+                    if (ndisStatus != STATUS_SUCCESS)
+                    {
+                       pWwanContext->ContextId = 1;
+                       pWwanContext->ContextType = WwanContextTypeInternet;
+                       pWwanContext->Compression = WwanCompressionNone;
+                       pWwanContext->AuthType = WwanAuthProtocolNone;
+                       RtlInitUnicodeString( &unicodeStr, L"username");
+                       RtlStringCbCopyW(pWwanContext->UserName, WWAN_USERNAME_LEN, unicodeStr.Buffer);
+                       RtlInitUnicodeString( &unicodeStr, L"password");
+                       RtlStringCbCopyW(pWwanContext->Password, WWAN_PASSWORD_LEN, unicodeStr.Buffer);
+                       RtlInitUnicodeString( &unicodeStr, L"#777");
+                       RtlStringCbCopyW(pWwanContext->AccessString, WWAN_ACCESSSTRING_LEN, unicodeStr.Buffer);
+                       ndisStatus = WriteCDMAContext( pAdapter, pWwanContext, sizeof(WWAN_CONTEXT));
+                       if (ndisStatus != STATUS_SUCCESS)
+                       {
+                          pOID->OIDStatus = WWAN_STATUS_READ_FAILURE;
+                       }
+                    }
+                    if (pOID->OIDStatus == WWAN_STATUS_SUCCESS)
+                    {
+                       pNdisProvisionedContexts->ContextListHeader.ElementCount = 1;
+                       pOID->OIDRespLen += sizeof(WWAN_CONTEXT);
+                    }
+                 }
+              }
+              else
+              {
+                 NDIS_STATUS ndisStatus;
+                 UNICODE_STRING unicodeStr;
+                 PWWAN_CONTEXT pWwanContext = (PWWAN_CONTEXT)((PCHAR)pNdisProvisionedContexts+sizeof(NDIS_WWAN_PROVISIONED_CONTEXTS));
+                 pOID->OIDStatus = WWAN_STATUS_SUCCESS;
+                 if (pAdapter->DeviceReadyState == DeviceWWanOff)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+{
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                 }
+                 else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+                 }
+                 else
+                 {
+                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_WDS, 
+                                           QMIWDS_GET_DEFAULT_SETTINGS_REQ, MPQMUX_ComposeWdsGetDefaultSettingsReqSend, TRUE );
+
+                 }
+              }
+           }
+           pNdisProvisionedContexts->uStatus = pOID->OIDStatus;
+        }
+        break;
+        case OID_WWAN_CONNECT:
+        {
+           PNDIS_WWAN_CONTEXT_STATE pNdisContextState = (PNDIS_WWAN_CONTEXT_STATE)pOID->pOIDResp;
+           if (retVal == 0xFF)
+           {
+              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+              if (pAdapter->DeviceReadyState == DeviceWWanOff)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+              }
+              else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+              {
+                 if (pOID->OidType == fMP_QUERY_OID)
+                 {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                    pNdisContextState->ContextState.ActivationState = WwanActivationStateDeactivated;
+                 }
+                 else
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_RADIO_POWER_OFF;
+                 }
+              }
+              else if(qmux_msg->GetServingSystemResp.QMUXError == 0x4A)
+              {
+
+                 if (pAdapter->DeviceReadyState == DeviceWWanOn && 
+                     pOID->OidType == fMP_SET_OID)
+   {
+                    LARGE_INTEGER timeoutValue;
+                    KeClearEvent(&pAdapter->DeviceInfoReceivedEvent);
+                    // wait for signal
+                    timeoutValue.QuadPart = -(50 * 1000 * 1000); // 5.0 sec
+                    KeWaitForSingleObject
+      (
+                             &pAdapter->DeviceInfoReceivedEvent,
+                             Executive,
+                             KernelMode,
+                             FALSE,
+                             &timeoutValue
+      );
+                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                           QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                 }
+                 else
+                 {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                    pNdisContextState->ContextState.ActivationState = WwanActivationStateDeactivated;
+                 }
+              }
+           }
+           else if(pOID->OidType == fMP_QUERY_OID)
+           {
+              if (pAdapter->DeviceReadyState == DeviceWWanOff)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+   }
+              else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+   {
+     pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                 pNdisContextState->ContextState.ActivationState = WwanActivationStateDeactivated;
+              }
+              else 
+              {
+                 pNdisContextState->ContextState.ConnectionId = pAdapter->WWanServiceConnectHandle;
+                 if (pAdapter->DeviceContextState == DeviceWWanContextAttached)
+     {
+                    pNdisContextState->ContextState.ActivationState = WwanActivationStateActivated;
+                 }
+                 else
+        {
+                    pNdisContextState->ContextState.ActivationState = WwanActivationStateDeactivated;
+                 }
+              }
+           }
+           else if (pOID->OidType == fMP_SET_OID)
+           {
+              PNDIS_WWAN_SET_CONTEXT_STATE pSetContext = (PNDIS_WWAN_SET_CONTEXT_STATE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+              PNDIS_WWAN_CONTEXT_STATE pNdisContextState = (PNDIS_WWAN_CONTEXT_STATE)pOID->pOIDResp;
+              pNdisContextState->ContextState.ConnectionId = pSetContext->SetContextState.ConnectionId;
+              pAdapter->AuthPreference = pSetContext->SetContextState.AuthType;
+              if (pAdapter->DeviceReadyState == DeviceWWanOff)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+              }
+              else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_RADIO_POWER_OFF;
+              }
+              else 
+              {
+                 if (pSetContext->SetContextState.ActivationCommand == WwanActivationCommandActivate)
+                 {
+                    if (pAdapter->DeviceRegisterState != QMI_NAS_REGISTERED)                        
+                    {
+                       pOID->OIDStatus = WWAN_STATUS_NOT_REGISTERED;
+                    }
+                    else if (pAdapter->DevicePacketState == DeviceWWanPacketDetached)
+                    {
+                       pOID->OIDStatus = WWAN_STATUS_PACKET_SVC_DETACHED;
+                    }
+                    else if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA && 
+                             pAdapter->CDMAPacketService == DeviceWWanPacketDetached)
+                    {
+                       pOID->OIDStatus = WWAN_STATUS_PACKET_SVC_DETACHED;
+                    }
+                    else if (pAdapter->DeviceContextState == DeviceWWanContextAttached &&
+                       pAdapter->IPType == 0x04 )
+                    {
+                       if (pAdapter->WWanServiceConnectHandle == pSetContext->SetContextState.ConnectionId)
+                       {
+                          pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                          pNdisContextState->ContextState.ActivationState = WwanActivationStateActivated;
+                       }
+                       else
+              {
+                          pOID->OIDStatus = WWAN_STATUS_MAX_ACTIVATED_CONTEXTS;
+                       }
+              }
+                    else if (pSetContext->SetContextState.AuthType >= WwanAuthProtocolMsChapV2)
+              {
+                       pOID->OIDStatus = WWAN_STATUS_FAILURE;
+              }
+                    else if (pSetContext->SetContextState.Compression != WwanCompressionNone)
+              {
+                       pOID->OIDStatus = WWAN_STATUS_FAILURE;
+              }
+                    else if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+                    {
+                       UNICODE_STRING unicodeStrUserName;
+                       UNICODE_STRING unicodeStrPassword;
+                       UNICODE_STRING unicodeStr;
+                       ANSI_STRING ansiStr;
+                       RtlInitUnicodeString( &unicodeStrUserName, pSetContext->SetContextState.UserName );
+                       RtlInitUnicodeString( &unicodeStrPassword, pSetContext->SetContextState.Password );
+                       pAdapter->AuthPreference = 0x00;
+                       
+                       /* Changed the Auth Algo to do PAP|CHAP when AuthType passed is NONE 
+                          and (username or password) is passed else do No Auth */
+                       if ( ( pSetContext->SetContextState.AuthType == 0) && 
+                            ( unicodeStrUserName.Length > 0 ||
+                              unicodeStrPassword.Length > 0 ) )
+                       {
+                          pAdapter->AuthPreference = 0x03;
+           }
+                       else if (pSetContext->SetContextState.AuthType == WwanAuthProtocolPap)
+           {
+                          pAdapter->AuthPreference = 0x01;
+                       }
+                       else if (pSetContext->SetContextState.AuthType == WwanAuthProtocolChap)
+              {
+                          pAdapter->AuthPreference = 0x02;
+                       }
+                       RtlInitUnicodeString( &unicodeStr, pSetContext->SetContextState.AccessString );
+                       if ( (unicodeStr.Length > 0) && (QCMAIN_IsDualIPSupported(pAdapter) == FALSE) )
+                 {
+                          RtlUnicodeStringToAnsiString(&ansiStr, &unicodeStr, TRUE);
+                          // if (strcmp(ansiStr.Buffer, "#777") == 0 )
+                          // {
+                             pAdapter->WWanServiceConnectHandle = pSetContext->SetContextState.ConnectionId;
+                             MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_WDS, 
+                                                    QMIWDS_START_NETWORK_INTERFACE_REQ, (CUSTOMQMUX)MPQMUX_ComposeWdsStartNwInterfaceReqSend, TRUE );
+                          // }
+                          // else
+                          // {
+                          //   pOID->OIDStatus = WWAN_STATUS_INVALID_ACCESS_STRING;
+                          // }
+                          RtlFreeAnsiString( &ansiStr );
+                 }
+                       else
+                 {
+                          pAdapter->WWanServiceConnectHandle = pSetContext->SetContextState.ConnectionId;
+                          MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_WDS, 
+                                                 QMIWDS_START_NETWORK_INTERFACE_REQ, (CUSTOMQMUX)MPQMUX_ComposeWdsStartNwInterfaceReqSend, TRUE );
+                 }
+              }
+                    
+              else
+              {
+                       UNICODE_STRING unicodeStrUserName;
+                       UNICODE_STRING unicodeStrPassword;
+                       RtlInitUnicodeString( &unicodeStrUserName, pSetContext->SetContextState.UserName );
+                       RtlInitUnicodeString( &unicodeStrPassword, pSetContext->SetContextState.Password );
+                       pAdapter->AuthPreference = 0x00;
+                       if ( ( pSetContext->SetContextState.AuthType == 0) && 
+                            ( unicodeStrUserName.Length > 0 ||
+                              unicodeStrPassword.Length > 0 ) )
+                       {
+                          pAdapter->AuthPreference = 0x03;
+                       }
+                       else if (pSetContext->SetContextState.AuthType == WwanAuthProtocolPap)
+                 {
+                          pAdapter->AuthPreference = 0x01;
+                 }
+                       else if (pSetContext->SetContextState.AuthType == WwanAuthProtocolChap)
+                 {
+                          pAdapter->AuthPreference = 0x02;
+                       }
+                       pAdapter->WWanServiceConnectHandle = pSetContext->SetContextState.ConnectionId;
+                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_WDS, 
+                                              QMIWDS_START_NETWORK_INTERFACE_REQ, (CUSTOMQMUX)MPQMUX_ComposeWdsStartNwInterfaceReqSend, TRUE );
+                 }
+              }
+                 else
+                 {
+                    if (pSetContext->SetContextState.ConnectionId != pAdapter->WWanServiceConnectHandle)
+                    {
+                       pOID->OIDStatus = WWAN_STATUS_CONTEXT_NOT_ACTIVATED;
+           }
+           else
+           {
+                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_WDS, 
+                                              QMIWDS_STOP_NETWORK_INTERFACE_REQ, (CUSTOMQMUX)MPQMUX_ComposeWdsStopNwInterfaceReqSend, TRUE );
+                    }
+                 }
+              }
+           }
+           pNdisContextState->uStatus = pOID->OIDStatus;
+        }
+        break;
+#endif /*NDIS620_MINIPORT*/
+     default:
+        pOID->OIDStatus = NDIS_STATUS_FAILURE;
+        break;
+     }
+   }
+   else
+   {
+#ifdef NDIS620_MINIPORT
+      if (retVal != 0xFF)
+      {
+
+         ANSI_STRING ansiStr;
+         UNICODE_STRING unicodeStr;
+         int i;
+         USHORT MCC = 0,
+                MNC = 0;
+
+         DEVICE_REGISTER_STATE previousRegisterState;
+
+         NDIS_WWAN_PACKET_SERVICE_STATE WwanServingState;
+         NDIS_WWAN_REGISTRATION_STATE NdisRegisterState;
+
+         NdisZeroMemory( &WwanServingState, sizeof(NDIS_WWAN_PACKET_SERVICE_STATE));
+         WwanServingState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+         WwanServingState.Header.Revision = NDIS_WWAN_PACKET_SERVICE_STATE_REVISION_1;
+         WwanServingState.Header.Size = sizeof(NDIS_WWAN_PACKET_SERVICE_STATE);
+
+         NdisZeroMemory( &NdisRegisterState, sizeof(NDIS_WWAN_REGISTRATION_STATE));
+         NdisRegisterState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+         NdisRegisterState.Header.Revision = NDIS_WWAN_REGISTRATION_STATE_REVISION_1;
+         NdisRegisterState.Header.Size = sizeof(NDIS_WWAN_REGISTRATION_STATE);
+   
+
+         ParseNasGetSysInfo
+         ( 
+            pAdapter, 
+            qmux_msg,
+            &nRoamingInd,
+            szProviderID,
+            szProviderName,
+            RadioIfList,
+            &DataCapList,
+            &RegState,
+            &CSAttachedState,
+            &PSAttachedState,
+            &RegisteredNetwork,
+            &MCC, 
+            &MNC
+         );
+
+         if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+{
+            char temp[1024];
+            RtlStringCchPrintfExA( temp, 
+                                   1024,
+                                   NULL,
+                                   NULL,
+                                   STRSAFE_IGNORE_NULLS,
+                                   "%05d", 
+                                   WWAN_CDMA_DEFAULT_PROVIDER_ID);
+            RtlInitAnsiString( &ansiStr, temp);
+            RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+            RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+            RtlFreeUnicodeString( &unicodeStr );
+         }
+         
+         RtlInitAnsiString( &ansiStr, pAdapter->CurrentCarrier);
+         RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+         RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+         RtlFreeUnicodeString( &unicodeStr );
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+            ("<%s> ProcessNasServingSystemResp as Indication\n", pAdapter->PortName)
+   );
+
+
+         NdisRegisterState.RegistrationState.RegisterMode = pAdapter->RegisterMode;
+         
+         if (PSAttachedState == 1)
+         {
+            WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateAttached;
+         }
+         else if (PSAttachedState == 2)
+   {
+            WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+   }
+   else
+   {
+            WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateUnknown;
+   }
+
+         if (CSAttachedState == 1)
+   {
+            pAdapter->DeviceCircuitState = DeviceWWanPacketAttached;
+   }
+         else
+   {
+            pAdapter->DeviceCircuitState = DeviceWWanPacketDetached;
+         }
+
+
+            QCNET_DbgPrint
+            (
+               MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+            ("<%s> QMUX: serving system RegistrationState 0x%x\n", pAdapter->PortName,
+            RegState)
+            );
+         previousRegisterState = pAdapter->DeviceRegisterState;
+         switch (RegState)
+            {
+            case 0x00:
+                NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+                break;
+             case 0x01:
+                 NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateHome;
+                 break;
+            case 0x02:
+                NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateSearching;
+               break;
+            case 0x03:
+                NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateDenied;
+                break;
+            case 0x04:
+                NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateUnknown;
+               break;                  
+            }
+         
+         // workaround to get VAN UI to show device when service not activated
+         if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
+         {        
+            NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateRoaming;
+            pAdapter->DeviceRegisterState = QMI_NAS_REGISTERED;
+         }
+         else
+         {
+            pAdapter->DeviceRegisterState = RegState;
+      }
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+            ("<%s> QMUX: serving system roaming Ind 0x%x\n", pAdapter->PortName,
+            nRoamingInd)
+   );
+
+         if (pAdapter->DeviceRegisterState == QMI_NAS_REGISTERED) 
+         {
+         if (nRoamingInd == 0)
+   {
+            NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateHome;
+   }
+         if (nRoamingInd == 1)
+   {
+            NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateRoaming;
+         }
+         if (nRoamingInd == 2)
+      {
+            NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStatePartner;
+         }
+         }
+
+         // workaround to get VAN UI to show device when service not activated
+         if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
+         {
+            NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateRoaming;
+            }
+
+         // ParseAvailableDataClass(pAdapter, DataCapList, &(WwanServingState.PacketService.AvailableDataClass));
+         WwanServingState.PacketService.AvailableDataClass = DataCapList;
+
+               if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+               {
+            RtlInitAnsiString( &ansiStr, szProviderID);
+            RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+            RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+            RtlFreeUnicodeString( &unicodeStr );
+
+            if (strlen(szProviderName) > 0 &&
+                strlen(szProviderName) < WWAN_PROVIDERNAME_LEN)
+                   {
+               RtlInitAnsiString( &ansiStr, (PCSZ)szProviderName);
+               RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+               RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+               RtlFreeUnicodeString( &unicodeStr );
+                   }
+               } 
+         if ( pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+         {
+            if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO_REVB)
+               {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO_REVB;
+               }
+            else if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO_REVA)
+               {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO_REVA;
+            }
+            else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO)
+                  {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO;
+                  }
+            else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XRTT)
+                  {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XRTT;
+            }
+                  }
+                  else
+                  {
+            if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_LTE)
+            {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_LTE;
+            }
+            else if ((WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSDPA) &&
+                (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSUPA))
+            {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSDPA|WWAN_DATA_CLASS_HSUPA;
+            }
+            else if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSDPA)
+            {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSDPA;
+            }
+            else if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSUPA)
+            {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSUPA;
+            }
+            else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_UMTS)
+            {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_UMTS;
+                  }   
+            else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_EDGE)
+            {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_EDGE;
+               }
+            else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_GPRS)
+            {
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_GPRS;
+            }
+         }
+         // use current data bearer if connected
+         if (pAdapter->DeviceContextState == DeviceWWanContextAttached)
+         {
+            WwanServingState.PacketService.CurrentDataClass = GetDataClass(pAdapter);
+     }
+
+      
+         if (pAdapter->nBusyOID > 0)
+         {
+            pAdapter->DeviceRegisterState = previousRegisterState;
+   }
+         if ((pAdapter->DeviceReadyState == DeviceWWanOn) && 
+              (pAdapter->nBusyOID == 0))
+   {
+            if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+      {
+               NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+            }
+            if (NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateDeregistered ||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateSearching ||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateDenied||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateUnknown)
+          {
+               WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+               NdisZeroMemory( (VOID *)NdisRegisterState.RegistrationState.ProviderId, WWAN_PROVIDERID_LEN);
+               NdisZeroMemory( (VOID *)NdisRegisterState.RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN);
+               NdisZeroMemory( (VOID *)NdisRegisterState.RegistrationState.RoamingText, WWAN_ROAMTEXT_LEN );
+               WwanServingState.PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+          }
+            else if ( pAdapter->DeviceClass == DEVICE_CLASS_GSM )
+            {
+               // registered so get plmn
+               // save indicator status NdisRegisterState and WwanServingState
+               RtlCopyMemory( (PVOID)&(pAdapter->WwanServingState),
+                              (PVOID)&(WwanServingState),
+                              sizeof( NDIS_WWAN_PACKET_SERVICE_STATE ));
+
+               RtlCopyMemory( (PVOID)&(pAdapter->NdisRegisterState),
+                              (PVOID)&(NdisRegisterState),
+                              sizeof( NDIS_WWAN_REGISTRATION_STATE ));
+               pAdapter->DeviceRegisterState = QMI_NAS_NOT_REGISTERED;
+               MPQMUX_ComposeNasGetPLMNReqSend( pAdapter, NULL, MCC, MNC );
+               return retVal;
+      } 
+            MyNdisMIndicateStatus
+            (
+               pAdapter->AdapterHandle,
+               NDIS_STATUS_WWAN_REGISTER_STATE,
+               (PVOID)&NdisRegisterState,
+               sizeof(NDIS_WWAN_REGISTRATION_STATE)
+            );
+
+            if ((WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateDetached &&
+                WwanServingState.PacketService.AvailableDataClass == WWAN_DATA_CLASS_NONE &&
+                WwanServingState.PacketService.CurrentDataClass == WWAN_DATA_CLASS_NONE) ||
+                (WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateAttached &&
+                WwanServingState.PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE &&
+                WwanServingState.PacketService.CurrentDataClass != WWAN_DATA_CLASS_NONE))
+      {
+         MyNdisMIndicateStatus
+         (
+            pAdapter->AdapterHandle,
+                  NDIS_STATUS_WWAN_PACKET_SERVICE,
+                  (PVOID)&WwanServingState,
+                  sizeof(NDIS_WWAN_PACKET_SERVICE_STATE)
+         );
+               if (WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateAttached)
+         {
+                  pAdapter->DevicePacketState = DeviceWWanPacketAttached;
+                  pAdapter->CDMAPacketService = DeviceWWanPacketAttached;
+               }
+               else
+            {
+                  pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+                  pAdapter->CDMAPacketService = DeviceWWanPacketDetached;
+               }
+            }
+         }
+      }
+#endif   
+   }
+   return retVal;
+}  
+
+ULONG MPQMUX_ProcessNasSysInfoInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+   int i;
+   UCHAR nRoamingInd = 0;
+   CHAR szProviderID[32] = {0, };
+   CHAR szProviderName[255] = {0, };
+   UCHAR RadioIfList[32] = {0, };
+   ULONG DataCapList;
+   CHAR RegState = 0;
+   CHAR CSAttachedState = 0;
+   CHAR PSAttachedState = 0;
+   CHAR RegisteredNetwork = 0;
+
+#ifdef NDIS620_MINIPORT
+   ANSI_STRING ansiStr;
+   UNICODE_STRING unicodeStr;
+
+   DEVICE_REGISTER_STATE previousRegisterState;
+
+   NDIS_WWAN_PACKET_SERVICE_STATE WwanServingState;
+   NDIS_WWAN_REGISTRATION_STATE NdisRegisterState;
+   USHORT MCC = 0,
+          MNC = 0;
+
+   NdisZeroMemory( &WwanServingState, sizeof(NDIS_WWAN_PACKET_SERVICE_STATE));
+   WwanServingState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+   WwanServingState.Header.Revision = NDIS_WWAN_PACKET_SERVICE_STATE_REVISION_1;
+   WwanServingState.Header.Size = sizeof(NDIS_WWAN_PACKET_SERVICE_STATE);
+
+   NdisZeroMemory( &NdisRegisterState, sizeof(NDIS_WWAN_REGISTRATION_STATE));
+   NdisRegisterState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+   NdisRegisterState.Header.Revision = NDIS_WWAN_REGISTRATION_STATE_REVISION_1;
+   NdisRegisterState.Header.Size = sizeof(NDIS_WWAN_REGISTRATION_STATE);
+
+   if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+   {
+      char temp[1024];
+      RtlStringCchPrintfExA( temp, 
+                             1024,
+                             NULL,
+                             NULL,
+                             STRSAFE_IGNORE_NULLS,
+                             "%05d", 
+                             WWAN_CDMA_DEFAULT_PROVIDER_ID);
+      RtlInitAnsiString( &ansiStr, temp);
+      RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+      RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+      RtlFreeUnicodeString( &unicodeStr );
+   }
+   
+   RtlInitAnsiString( &ansiStr, pAdapter->CurrentCarrier);
+   RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+   RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+   RtlFreeUnicodeString( &unicodeStr );
+   
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> ProcessNasServingSystemInd\n", pAdapter->PortName)
+   );
+
+   ParseNasGetSysInfo
+      (
+      pAdapter, 
+      qmux_msg,
+      &nRoamingInd,
+      szProviderID,
+      szProviderName,
+      RadioIfList,
+      &DataCapList,
+      &RegState,
+      &CSAttachedState,
+      &PSAttachedState,
+      &RegisteredNetwork,
+      &MCC, 
+      &MNC
+      );
+
+   NdisRegisterState.RegistrationState.RegisterMode = pAdapter->RegisterMode;
+   
+   if (PSAttachedState == 1)
+   {
+      WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateAttached;
+   }
+   else if (PSAttachedState == 2)
+   {
+      WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+   }
+   else
+     {
+      WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateUnknown;
+   }
+
+   if (CSAttachedState == 1)
+        {
+      pAdapter->DeviceCircuitState = DeviceWWanPacketAttached;
+           }
+           else
+           {
+      pAdapter->DeviceCircuitState = DeviceWWanPacketDetached;
+        }
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> QMUX: serving system RegistrationState 0x%x\n", pAdapter->PortName,
+      RegState)
+   );
+   previousRegisterState = pAdapter->DeviceRegisterState;
+   switch (RegState)
+   {
+      case 0x00:
+          NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+          break;
+       case 0x01:
+           NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateHome;
+           break;
+      case 0x02:
+          NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateSearching;
+        break;
+      case 0x03:
+          NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateDenied;
+          break;
+      case 0x04:
+          NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateUnknown;
+        break;
+     }
+   // workaround to get VAN UI to show device when service not activated
+   if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
+   {        
+    NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateRoaming;
+    pAdapter->DeviceRegisterState = QMI_NAS_REGISTERED;
+   }
+   else
+   {
+    pAdapter->DeviceRegisterState = RegState;
+}  
+
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> QMUX: serving system roming Ind 0x%x\n", pAdapter->PortName,
+      nRoamingInd)
+   );
+   
+   if (pAdapter->DeviceRegisterState == QMI_NAS_REGISTERED)
+   {
+   if (nRoamingInd == 0)
+      {
+      NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateHome;
+         }
+   if (nRoamingInd == 1)
+         {
+      NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateRoaming;
+         }
+   if (nRoamingInd == 2)
+         {
+      NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStatePartner;
+         }
+      }
+
+   // workaround to get VAN UI to show device when service not activated
+   if (pAdapter->DeviceReadyState == DeviceWWanNoServiceActivated)
+   {   
+      NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateRoaming;
+   }
+
+   //ParseAvailableDataClass(pAdapter, DataCapList, &(WwanServingState.PacketService.AvailableDataClass));
+   WwanServingState.PacketService.AvailableDataClass = DataCapList;
+
+   if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+{
+      RtlInitAnsiString( &ansiStr, szProviderID);
+      RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+      RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+      RtlFreeUnicodeString( &unicodeStr );
+      if (strlen(szProviderName) > 0 &&
+          strlen(szProviderName) < WWAN_PROVIDERNAME_LEN)
+   {
+         RtlInitAnsiString( &ansiStr, (PCSZ)szProviderName);
+         RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+         RtlStringCbCopyW(NdisRegisterState.RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+         RtlFreeUnicodeString( &unicodeStr );
+      }
+   }
+   if ( pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+   {
+      if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO_REVB)
+   {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO_REVB;
+      }
+      else if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO_REVA)
+     {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO_REVA;
+      }
+      else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XEVDO)
+        {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XEVDO;
+      }
+      else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_1XRTT)
+           {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_1XRTT;
+      }
+           }
+           else
+           {
+      if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_LTE)
+      {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_LTE;
+      }
+      else if ((WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSDPA) &&
+          (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSUPA))
+              {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSDPA|WWAN_DATA_CLASS_HSUPA;
+      }
+      else if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSDPA)
+                 {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSDPA;
+                 }
+      else if (WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_HSUPA)
+                 {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_HSUPA;
+                 }
+      else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_UMTS)
+                 {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_UMTS;
+                 }
+      else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_EDGE)
+                 {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_EDGE;
+                 }
+      else if(WwanServingState.PacketService.AvailableDataClass & WWAN_DATA_CLASS_GPRS)
+                 {
+         WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_GPRS;
+                 }
+              }
+   // use current data bearer if connected
+   if (pAdapter->DeviceContextState == DeviceWWanContextAttached)
+   {
+      WwanServingState.PacketService.CurrentDataClass = GetDataClass(pAdapter);
+           }
+   
+   if (pOID == NULL)
+           {
+      BOOL bRegistered = FALSE;
+
+      if (pAdapter->MBDunCallOn == 1)
+              {
+         return retVal;
+              }
+
+      if (NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateHome || 
+         NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateRoaming ||
+         NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStatePartner)
+      {
+         bRegistered = TRUE;
+           }
+           
+      // to avoid WHQL failure for case when OID_WWAN_RADIO set is pending and
+      // registration changes to non-registred state, only allow sending of 
+      // notification when either no pending OID or registered
+      if (pAdapter->nBusyOID > 0 && (bRegistered == FALSE))
+      {
+         pAdapter->DeviceRegisterState = previousRegisterState;
+        }
+      if ((pAdapter->DeviceReadyState == DeviceWWanOn) &&
+          ((bRegistered == TRUE) || (pAdapter->nBusyOID == 0)))
+        {
+         if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+           {
+            NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+           }
+         if (NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateDeregistered ||
+             NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateSearching ||
+             NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateDenied||
+             NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateUnknown)
+           {
+            WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+            NdisZeroMemory( (VOID *)NdisRegisterState.RegistrationState.ProviderId, WWAN_PROVIDERID_LEN);
+            NdisZeroMemory( (VOID *)NdisRegisterState.RegistrationState.ProviderName, WWAN_PROVIDERNAME_LEN);
+            NdisZeroMemory( (VOID *)NdisRegisterState.RegistrationState.RoamingText, WWAN_ROAMTEXT_LEN );
+            WwanServingState.PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+            WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+           }
+         // TODO: need to see if nwRejectCode should be set or not.
+         if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
+             (NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateDeregistered &&
+             NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateSearching))
+         {
+            if (pAdapter->DeviceRegisterState != previousRegisterState)
+            {          
+               if (pAdapter->DeviceClass == DEVICE_CLASS_GSM && bRegistered == TRUE)
+           {
+                  // save indicator status NdisRegisterState and WwanServingState
+                  RtlCopyMemory( (PVOID)&(pAdapter->WwanServingState),
+                                 (PVOID)&(WwanServingState),
+                                 sizeof( NDIS_WWAN_PACKET_SERVICE_STATE ));
+
+                  RtlCopyMemory( (PVOID)&(pAdapter->NdisRegisterState),
+                                 (PVOID)&(NdisRegisterState),
+                                 sizeof( NDIS_WWAN_REGISTRATION_STATE ));
+                  // signal indicator could arrive while we are waiting for PLMN
+                  // prevent signal notification from being sent before register notification
+                  // this will satisfy WHQL radio and signal tests
+                  pAdapter->DeviceRegisterState = QMI_NAS_NOT_REGISTERED;
+                  MPQMUX_ComposeNasGetPLMNReqSend( pAdapter, NULL, MCC, MNC );
+                  return retVal;
+               }
+               MyNdisMIndicateStatus
+               (
+                  pAdapter->AdapterHandle,
+                  NDIS_STATUS_WWAN_REGISTER_STATE,
+                  (PVOID)&NdisRegisterState,
+                  sizeof(NDIS_WWAN_REGISTRATION_STATE)
+               );
+           }
+           }
+           else
+           {
+            pAdapter->DeregisterIndication = 1;
+         }         
+         if ((WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateDetached &&
+             WwanServingState.PacketService.AvailableDataClass == WWAN_DATA_CLASS_NONE &&
+             WwanServingState.PacketService.CurrentDataClass == WWAN_DATA_CLASS_NONE) ||
+             (WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateAttached &&
+             WwanServingState.PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE &&
+             WwanServingState.PacketService.CurrentDataClass != WWAN_DATA_CLASS_NONE))
+              {
+            if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
+                WwanServingState.PacketService.PacketServiceState != WwanPacketServiceStateDetached)
+                 {
+               MyNdisMIndicateStatus
+               (
+                  pAdapter->AdapterHandle,
+                  NDIS_STATUS_WWAN_PACKET_SERVICE,
+                  (PVOID)&WwanServingState,
+                  sizeof(NDIS_WWAN_PACKET_SERVICE_STATE)
+               );
+               if (WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateAttached)
+                 {
+                  pAdapter->DevicePacketState = DeviceWWanPacketAttached;
+                  pAdapter->CDMAPacketService = DeviceWWanPacketAttached;
+              }
+              else
+              {
+                  pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+                  pAdapter->CDMAPacketService = DeviceWWanPacketDetached;
+              }
+
+           }
+        }
+     }
+   }
+   else
+   {
+      switch(pOID->Oid)
+      {
+      case OID_WWAN_REGISTER_STATE:
+         {
+            PNDIS_WWAN_REGISTRATION_STATE pNdisRegisterState = (PNDIS_WWAN_REGISTRATION_STATE)pOID->pOIDResp;
+            PNDIS_WWAN_SET_REGISTER_STATE pNdisSetRegisterState = 
+                                  (PNDIS_WWAN_SET_REGISTER_STATE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+            
+            RtlCopyMemory( (PVOID)&(pNdisRegisterState->RegistrationState),
+                           (PVOID)&(NdisRegisterState.RegistrationState),
+                           sizeof( WWAN_REGISTRATION_STATE));
+
+            pNdisRegisterState->uStatus = NDIS_STATUS_SUCCESS;
+
+            if (NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateHome ||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateRoaming ||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStatePartner)
+            {
+               if (pAdapter->DeviceClass == DEVICE_CLASS_GSM && 
+                   pNdisSetRegisterState->SetRegisterState.RegisterAction == WwanRegisterActionAutomatic)
+               {
+                  if (!(pNdisSetRegisterState->SetRegisterState.WwanDataClass & (WWAN_DATA_CLASS_UMTS|
+                                                                               WWAN_DATA_CLASS_HSDPA|
+                                                                               WWAN_DATA_CLASS_HSUPA|
+                                                                               WWAN_DATA_CLASS_LTE)))
+                  {
+                     if (WwanServingState.PacketService.CurrentDataClass & (WWAN_DATA_CLASS_UMTS|
+                                                                            WWAN_DATA_CLASS_HSDPA|
+                                                                            WWAN_DATA_CLASS_HSUPA|
+                                                                            WWAN_DATA_CLASS_LTE))
+                     {
+                        retVal = QMI_SUCCESS_NOT_COMPLETE;
+   return retVal;
+}  
+                  }
+               }
+               /* The registerstate is registered so complete the OID and cancel the RegisterPacketTimer */
+               NdisAcquireSpinLock(&pAdapter->QMICTLLock);
+               if (pAdapter->RegisterPacketTimerContext == NULL)
+               {
+                  NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+                  retVal = QMI_SUCCESS_NOT_COMPLETE;
+               }
+               else
+{
+                  BOOLEAN bCancelled;
+                  /* Cancel the timer */
+                  NdisCancelTimer( &pAdapter->RegisterPacketTimer, &bCancelled );
+                  if (bCancelled == FALSE)
+   {
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                        ("<%s> MPQMUX_ProcessNasServingSystemInd: RegisterPacketTimer stopped\n", pAdapter->PortName)
+   );
+   }
+   else
+   {      
+                     // release remove lock
+                     QcMpIoReleaseRemoveLock(pAdapter, pAdapter->pMPRmLock, NULL, MP_CNT_TIMER, 888);
+                  }
+                  pAdapter->RegisterPacketTimerContext = NULL;
+                  NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+
+                  /* Send the packet service indication */
+                  if ((WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateDetached &&
+                      WwanServingState.PacketService.AvailableDataClass == WWAN_DATA_CLASS_NONE &&
+                      WwanServingState.PacketService.CurrentDataClass == WWAN_DATA_CLASS_NONE) ||
+                      (WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateAttached &&
+                      WwanServingState.PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE &&
+                      WwanServingState.PacketService.CurrentDataClass != WWAN_DATA_CLASS_NONE))
+                  {
+                     /* Do not send packet detach when in data call, this is for dormancy fix */
+                     if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
+                         WwanServingState.PacketService.PacketServiceState != WwanPacketServiceStateDetached)
+                     {
+                        MyNdisMIndicateStatus
+      (
+                           pAdapter->AdapterHandle,
+                           NDIS_STATUS_WWAN_PACKET_SERVICE,
+                           (PVOID)&WwanServingState,
+                           sizeof(NDIS_WWAN_PACKET_SERVICE_STATE)
+      );
+                        if (WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateAttached)
+      {
+                           pAdapter->DevicePacketState = DeviceWWanPacketAttached;
+                           pAdapter->CDMAPacketService = DeviceWWanPacketAttached;
+      } 
+                        else
+      {
+                           pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+                           pAdapter->CDMAPacketService = DeviceWWanPacketDetached;
+                        }
+                     }
+                  }
+               }
+      }
+            else
+      {
+               retVal = QMI_SUCCESS_NOT_COMPLETE;
+            }
+            break;
+      }
+      case OID_WWAN_PACKET_SERVICE:
+         {
+            PNDIS_WWAN_PACKET_SERVICE_STATE pWwanServingState = (PNDIS_WWAN_PACKET_SERVICE_STATE)pOID->pOIDResp;
+            if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+      {
+               NdisRegisterState.RegistrationState.RegisterState = WwanRegisterStateDeregistered;
+            }
+            if (NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateDeregistered ||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateSearching ||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateDenied||
+                NdisRegisterState.RegistrationState.RegisterState == WwanRegisterStateUnknown ||
+                WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateDetached)
+         {            
+               WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+               WwanServingState.PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+               WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+            }
+            RtlCopyMemory( (PVOID)&(pWwanServingState->PacketService),
+                           (PVOID)&(WwanServingState.PacketService),
+                           sizeof( WWAN_PACKET_SERVICE));
+
+            if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateDetached)
+            {
+               pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+            }
+            else
+            {
+               pAdapter->DevicePacketState = DeviceWWanPacketAttached;
+            }
+            pWwanServingState->uStatus = NDIS_STATUS_SUCCESS;
+            if (pOID->OidType == fMP_SET_OID)
+            {
+               PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = 
+                                     (PNDIS_WWAN_SET_PACKET_SERVICE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+               /* The packet state is in requested state so complete the OID, cancel the timer */
+               if ((pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach && 
+                    pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateAttached)||
+                   (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionDetach && 
+                    pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateDetached)) 
+               {
+                  NdisAcquireSpinLock(&pAdapter->QMICTLLock);
+                  if (pAdapter->RegisterPacketTimerContext == NULL)
+                  {
+                     NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+                     retVal = QMI_SUCCESS_NOT_COMPLETE;
+         }
+                  else
+                  {
+                     BOOLEAN bCancelled;
+                     /* Cancel the timer */
+                     NdisCancelTimer( &pAdapter->RegisterPacketTimer, &bCancelled );
+                     if (bCancelled == FALSE)
+         {
+                        QCNET_DbgPrint
+            (
+                           MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                           ("<%s> MPQMUX_ProcessNasServingSystemInd: RegisterPacketTimer stopped\n", pAdapter->PortName)
+            );
+                     }
+                     else
+            {
+                        // release remove lock
+                        QcMpIoReleaseRemoveLock(pAdapter, pAdapter->pMPRmLock, NULL, MP_CNT_TIMER, 888);
+            }
+                     pAdapter->RegisterPacketTimerContext = NULL;
+                     NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+         }
+      }
+      else
+      {
+                  retVal = QMI_SUCCESS_NOT_COMPLETE;
+               }
+            }
+            break;
+         }
+      }
+   }
+   
+#endif
+   return retVal;
+}
+
+ULONG MPQMUX_ProcessNasSetPreferredNetworkResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
    PMP_OID_WRITE pOID
 )
 {
@@ -17341,6 +20951,7 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
       );
       retVal = 0xFF;
    }
+
    if (pOID != NULL)
    {
      pOID->OIDStatus = NDIS_STATUS_SUCCESS;
@@ -17383,8 +20994,8 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                  {
                     pOID->OIDStatus = WWAN_STATUS_PROVIDERS_NOT_FOUND;
                  }
-                 else
-                 {
+              else
+              {
                     pOID->OIDStatus = WWAN_STATUS_BUSY;              
                  }
               }
@@ -17402,14 +21013,14 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                  while(remainingLen > 0 )
                  {
                     switch(((PQMI_TLV_HDR)pDataPtr)->TLVType)
-                    {
+              {
                        case 0x10:
                           if (((PQMINAS_PERFORM_NETWORK_SCAN_NETWORK_INFO)pDataPtr)->NumNetworkInstances > 0)
-                          {
+              {
                              INT i;
                              CHAR temp[1024];
-                             UNICODE_STRING unicodeStr;
-                             ANSI_STRING ansiStr;
+                 UNICODE_STRING unicodeStr;
+                 ANSI_STRING ansiStr;
                              PVISIBLE_NETWORK pVisibleNetwork;
                              PWWAN_PROVIDER pWwanProvider;
 
@@ -17439,7 +21050,7 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                                                              "%03d%02d", 
                                                              pVisibleNetwork->MobileCountryCode, 
                                                              pVisibleNetwork->MobileNetworkCode);
-                                   }
+              }
                                    else
                                    {
                                       RtlStringCchPrintfExA( temp, 
@@ -17450,12 +21061,12 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                                                              "%03d%03d", 
                                                              pVisibleNetwork->MobileCountryCode, 
                                                              pVisibleNetwork->MobileNetworkCode);
-                                   }                       
-                                }
+           }
+        }
                                 else if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
                                 {
                                    pOID->OIDStatus = WWAN_STATUS_READ_FAILURE;
-                                   break;
+        break;
                                 }
                                 RtlInitAnsiString( &ansiStr, temp);
                                 //RtlInitUnicodeString( &unicodeStr, pWwanProvider->ProviderId);
@@ -17465,25 +21076,25 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
 
                                 pWwanProvider->ProviderState = WWAN_PROVIDER_STATE_VISIBLE;
                                 if (pVisibleNetwork->NetworkStatus & 0x01)
-                                {
+        {
                                    pWwanProvider->ProviderState |= WWAN_PROVIDER_STATE_REGISTERED;
                                 }
                                 if (pVisibleNetwork->NetworkStatus & 0x04)
-                                {
+           {
                                    pWwanProvider->ProviderState |= WWAN_PROVIDER_STATE_HOME;
                                 }
                                 if (pVisibleNetwork->NetworkStatus & 0x10)
-                                {
+              {
                                    pWwanProvider->ProviderState |= WWAN_PROVIDER_STATE_FORBIDDEN;
-                                }
+              }
                                 if (pVisibleNetwork->NetworkStatus & 0x40)
-                                {
+              {
                                    pWwanProvider->ProviderState |= WWAN_PROVIDER_STATE_PREFERRED;
-                                }
+              }
 
                                 if (pVisibleNetwork->NetworkDesclen > 0 &&
                                     pVisibleNetwork->NetworkDesclen < WWAN_PROVIDERNAME_LEN)
-                                {
+              {
 
                                    PCHAR pNetworkDesc;
                                    CHAR tempStr[WWAN_PROVIDERNAME_LEN];
@@ -17503,10 +21114,10 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                                    RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
                                    RtlStringCbCopyW(pWwanProvider->ProviderName, WWAN_PROVIDERNAME_LEN*sizeof(WCHAR), unicodeStr.Buffer);
                                    RtlFreeUnicodeString( &unicodeStr );
-                                }
+              }
                                 // request the first plmn name
                                 if (i == 0)
-                                {
+              {
                                    pAdapter->nVisibleIndex = 0;
                                    MPQMUX_ComposeNasGetPLMNReqSend( pAdapter, pOID, 
                                         pVisibleNetwork->MobileCountryCode, pVisibleNetwork->MobileNetworkCode );
@@ -17516,20 +21127,20 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                                 pVisibleNetwork = (PVISIBLE_NETWORK)(pDataPtr);
                                 pOID->OIDRespLen += sizeof(WWAN_PROVIDER);
                              }
-                          }
+              }
                           else
                           {
                              if (pAdapter->DeviceContextState != DeviceWWanContextAttached)
-                             {
+              {
                                 pOID->OIDStatus = WWAN_STATUS_PROVIDERS_NOT_FOUND;
-                             }
+              }
                              else
-                             {
+              {
                                 pOID->OIDStatus = WWAN_STATUS_BUSY;              
-                             }
+              }
                              remainingLen -= (sizeof(QMINAS_PERFORM_NETWORK_SCAN_NETWORK_INFO));
                              pDataPtr += (sizeof(QMINAS_PERFORM_NETWORK_SCAN_NETWORK_INFO));
-                          }
+           }
                           break;
                        case 0x11:
                           {
@@ -17537,11 +21148,11 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                              INT ii, jj;
 
                              if (((PQMINAS_PERFORM_NETWORK_SCAN_RAT_INFO)pDataPtr)->NumInst > 0)
-                             {
+           {
                                 UNICODE_STRING unicodeStrProviderID;
                                 ANSI_STRING    ansiStrProviderID;
                                 CHAR           szProviderID[32];
-                                PWWAN_PROVIDER pWwanProvider;
+              PWWAN_PROVIDER  pWwanProvider;
 
                                 pRATData = (PQMINAS_PERFORM_NETWORK_SCAN_RAT)(pDataPtr + sizeof(QMINAS_PERFORM_NETWORK_SCAN_RAT_INFO));
                                 for (ii=0; ii < ((PQMINAS_PERFORM_NETWORK_SCAN_RAT_INFO)pDataPtr)->NumInst; ii++)
@@ -17552,7 +21163,7 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                                       ("<%s> MCC: %d MNC: %d RAT: %d\n", pAdapter->PortName,
                                        pRATData->MCC, pRATData->MNC, pRATData->RAT)
                                    );
-                                  
+
                                    if (pRATData->MNC < 100)
                                    {
                                       RtlStringCchPrintfExA( szProviderID,
@@ -17565,7 +21176,7 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                                                              pRATData->MNC);
                                    }
                                    else
-                                   {
+              {
                                       RtlStringCchPrintfExA( szProviderID, 
                                                              32,
                                                              NULL,
@@ -17574,29 +21185,29 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                                                              "%03d%03d", 
                                                              pRATData->MCC, 
                                                              pRATData->MNC);
-                                   }                           
+              }
 
                                    // find matching provider id in visible list and fill in WwanDataClass
                                    for (jj=0; jj<pVisibleProviders->VisibleListHeader.ElementCount; jj++)
-                                   {
+              {
                                       pWwanProvider = (PWWAN_PROVIDER)((PCHAR)pVisibleProviders + sizeof(NDIS_WWAN_VISIBLE_PROVIDERS) +
                                                       jj*sizeof(WWAN_PROVIDER));
 
-                                      RtlInitUnicodeString( &unicodeStrProviderID, pWwanProvider->ProviderId );
+                 RtlInitUnicodeString( &unicodeStrProviderID, pWwanProvider->ProviderId );
                                       RtlUnicodeStringToAnsiString(&ansiStrProviderID, &unicodeStrProviderID, TRUE);
 
                                       if ( strcmp(ansiStrProviderID.Buffer, szProviderID) == 0)
                                       {
                                          // only fill in if it is empty
                                          if (pWwanProvider->WwanDataClass == 0)
-                                         {
+                 {
                                             if (pRATData->RAT == 0x04)
-                                            {
+                 {
                                                pWwanProvider->WwanDataClass = WWAN_DATA_CLASS_GPRS | WWAN_DATA_CLASS_EDGE;
-                                            }
-                                            else
+                 }
+                 else
                                             if (pRATData->RAT == 0x05)
-                                            {
+                 {
                                                pWwanProvider->WwanDataClass = WWAN_DATA_CLASS_UMTS | WWAN_DATA_CLASS_HSDPA | WWAN_DATA_CLASS_HSUPA;
                                             }
                                             RtlFreeAnsiString( &ansiStrProviderID );
@@ -17614,19 +21225,20 @@ ULONG MPQMUX_ProcessNasPerformNetworkScanResp
                              pDataPtr += (sizeof(QMINAS_PERFORM_NETWORK_SCAN_RAT_INFO) + 
                                            (((PQMINAS_PERFORM_NETWORK_SCAN_RAT_INFO)pDataPtr)->NumInst * 
                                             sizeof(QMINAS_PERFORM_NETWORK_SCAN_RAT)));
-                          }
+                 }
                           break;
                        default:
                           remainingLen -= (sizeof(QMI_TLV_HDR) + ((PQMI_TLV_HDR)pDataPtr)->TLVLength);
                           pDataPtr += (sizeof(QMI_TLV_HDR) + ((PQMI_TLV_HDR)pDataPtr)->TLVLength);
-                          break;
-                    }
-                 }
+                 break;
+              }
+           }
               }
            }
            pVisibleProviders->uStatus = pOID->OIDStatus;
         }
         break;
+
 #endif /*NDIS620_MINIPORT*/
      default:
         pOID->OIDStatus = NDIS_STATUS_FAILURE;
@@ -17663,7 +21275,7 @@ ULONG MPQMUX_ComposeNasSetTechnologyPrefReqSend
 
    Status = NdisAllocateMemoryWithTag( &QMIElement, QMIElementSize, QUALCOMM_TAG );
    if( Status != NDIS_STATUS_SUCCESS )
-   {
+      {
      QCNET_DbgPrint
      (
        MP_DBG_MASK_OID_QMI,
@@ -17671,7 +21283,7 @@ ULONG MPQMUX_ComposeNasSetTechnologyPrefReqSend
        ("<%s> error: Failed to allocate memory for QMI Writes\n", pAdapter->PortName)
      );
       return 0;
-   }
+      }
 
    QCNET_DbgPrint
    (
@@ -17707,7 +21319,99 @@ ULONG MPQMUX_ComposeNasSetTechnologyPrefReqSend
    InsertTailList( &pOID->QMIQueue, &(QMIElement->QCQMIRequest));
    MP_USBSendControl(pAdapter, (PVOID)&QMIElement->QMI, QMIElement->QMILength);
    return qmiLen;
-} 
+      }
+
+USHORT MPQMUX_ComposeNasSetSystemSelPrefReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg   
+)
+      {
+   PNDIS_WWAN_SET_REGISTER_STATE pNdisSetRegisterState = NULL;
+   ULONG        qmux_len = 0;
+   pNdisSetRegisterState = 
+         (PNDIS_WWAN_SET_REGISTER_STATE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> MPQMUX_ComposeNasSetSystemSelPrefReqSend\n", pAdapter->PortName)
+   );
+
+
+   /* Store the current registration state before performing registration */   
+   pAdapter->PreviousDeviceRegisterState = pAdapter->DeviceRegisterState;
+
+   if (pNdisSetRegisterState->SetRegisterState.RegisterAction == WwanRegisterActionAutomatic)
+         {
+      qmux_msg->SetSystemSelPrefReq.QmiNasModePref.TLV2Type = 0x11;
+      qmux_msg->SetSystemSelPrefReq.QmiNasModePref.TLV2Length = 0x02;
+      qmux_msg->SetSystemSelPrefReq.QmiNasModePref.ModePref = 0xFFFF;
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.TLV2Type = 0x16;
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.TLV2Length = 0x05;
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.NetSelPref = 0x00;
+      qmux_msg->SetSystemSelPrefReq.Length = sizeof(QMINAS_SET_SYSTEM_SELECTION_PREF_REQ) - 4;
+      pAdapter->RegisterMode = DeviceWWanRegisteredAutomatic;
+         }
+   else
+         {
+      UNICODE_STRING unicodeStr;
+      WCHAR wCode[10] = L"aaaaaaaa";
+      ULONG value;
+      size_t length;
+      PQMINAS_MANUAL_NW_REGISTER pQmiManual = (PQMINAS_MANUAL_NW_REGISTER)
+                                 ((PCHAR)&qmux_msg->InitiateNwRegisterReq + sizeof(QMINAS_INITIATE_NW_REGISTER_REQ_MSG));
+      
+      RtlInitUnicodeString( &unicodeStr, wCode);
+      RtlUnicodeStringCchCopyStringN( &unicodeStr, pNdisSetRegisterState->SetRegisterState.ProviderId, 3);
+      RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.TLV2Type = 0x16;
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.TLV2Length = 0x05;
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.NetSelPref = 0x01;
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.MCC = value;
+
+
+      RtlInitUnicodeString( &unicodeStr, wCode);
+      RtlStringCchLengthW( pNdisSetRegisterState->SetRegisterState.ProviderId, WWAN_PROVIDERID_LEN*sizeof(WCHAR), (size_t *)&length);
+      RtlUnicodeStringCchCopyStringN( &unicodeStr, &(pNdisSetRegisterState->SetRegisterState.ProviderId[3]), 
+                                       length - 3);
+      RtlUnicodeStringToInteger( &unicodeStr, 10, &value);
+     
+      qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.MNC = value;
+
+      qmux_msg->SetSystemSelPrefReq.QmiNasModePref.TLV2Type = 0x11;
+      qmux_msg->SetSystemSelPrefReq.QmiNasModePref.TLV2Length = 0x02;
+
+      if (pAdapter->RegisterRadioAccess == 0)
+         {
+         /* to do registration for LTE */
+         if ( (pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_UMTS)  ||
+              (pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_HSDPA) ||
+              (pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_HSUPA) )
+            {
+            qmux_msg->SetSystemSelPrefReq.QmiNasModePref.ModePref = 0x18;
+            pAdapter->RegisterRadioAccess = 0x05;       
+         }
+         else
+         {
+            qmux_msg->SetSystemSelPrefReq.QmiNasModePref.ModePref = 0x04;
+            pAdapter->RegisterRadioAccess = 0x04;
+         }         
+               }
+               else
+               {
+         qmux_msg->SetSystemSelPrefReq.QmiNasModePref.ModePref = 0x04;
+         pAdapter->RegisterRadioAccess = 0x04;
+               }
+      qmux_msg->SetSystemSelPrefReq.Length = sizeof(QMINAS_SET_SYSTEM_SELECTION_PREF_REQ) - 4;
+      pAdapter->RegisterMode = DeviceWWanRegisteredManual;
+            }
+
+   qmux_len = qmux_msg->SetSystemSelPrefReq.Length;
+   return qmux_len;
+}
 
 
 USHORT MPQMUX_ComposeNasInitiateNwRegisterReqSend
@@ -17767,34 +21471,34 @@ USHORT MPQMUX_ComposeNasInitiateNwRegisterReqSend
       pQmiManual->MobileNetworkCode = value;
 
       if (pAdapter->RegisterRadioAccess == 0)
-      {
+           {
          /* to do registration for LTE */
          if ( (pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_UMTS)  ||
               (pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_HSDPA) ||
               (pNdisSetRegisterState->SetRegisterState.WwanDataClass & WWAN_DATA_CLASS_HSUPA) )
-         {
+              {
             pQmiManual->RadioAccess = 0x05;
             pAdapter->RegisterRadioAccess = 0x05;       
-         }
+              }
          else
-         {
+              {
             pQmiManual->RadioAccess = 0x04;
             pAdapter->RegisterRadioAccess = 0x04;
-         }
-      }
+              }
+              }
       else
-      {
+              {
          pQmiManual->RadioAccess = 0x04;
          pAdapter->RegisterRadioAccess = 0x04;
-      }
+              }
       qmux_msg->InitiateNwRegisterReq.Length = sizeof(QMINAS_INITIATE_NW_REGISTER_REQ_MSG) - 4 +
                                                sizeof(QMINAS_MANUAL_NW_REGISTER);
       pAdapter->RegisterMode = DeviceWWanRegisteredManual;
-   }
+              }
 
    qmux_len = qmux_msg->InitiateNwRegisterReq.Length;
    return qmux_len;
-} 
+           }
 
 
 ULONG MPQMUX_ComposeNasSetEventReportReq
@@ -17805,7 +21509,7 @@ ULONG MPQMUX_ComposeNasSetEventReportReq
    CHAR currentRssi,
    BOOLEAN bSendImmediately
 )
-{
+           {
    PQCQMIQUEUE QMIElement;
    PQCQMUX      qmux;
    PQMUX_MSG    qmux_msg;
@@ -17816,13 +21520,13 @@ ULONG MPQMUX_ComposeNasSetEventReportReq
    PQCQMI QMI;
 
    if ( pOID == NULL && bSendImmediately == FALSE)
-   {
+              {
       return 0;
-   }
+              }
 
    Status = NdisAllocateMemoryWithTag( &QMIElement, QMIElementSize, QUALCOMM_TAG );
    if( Status != NDIS_STATUS_SUCCESS )
-   {
+              {
      QCNET_DbgPrint
      (
        MP_DBG_MASK_OID_QMI,
@@ -17852,13 +21556,13 @@ ULONG MPQMUX_ComposeNasSetEventReportReq
    qmux_msg->SetEventReportReq.TLVType = 0x10;
    qmux_msg->SetEventReportReq.TLVLength = 0x04;
    if (pAdapter->RssiThreshold != 0 && pAdapter->RssiThreshold != WWAN_RSSI_DEFAULT)
-   {
+                 {
       qmux_msg->SetEventReportReq.ReportSigStrength = 0x01;
-   }
-   else
-   {
+                 }
+                 else
+                 {
       qmux_msg->SetEventReportReq.ReportSigStrength = 0x00;
-   }
+                 }
    qmux_msg->SetEventReportReq.NumTresholds = 2;
    qmux_msg->SetEventReportReq.TresholdList[0] = MapRssitoSignalStrength(currentRssi - pAdapter->RssiThreshold );
    qmux_msg->SetEventReportReq.TresholdList[1] = MapRssitoSignalStrength(currentRssi + pAdapter->RssiThreshold );
@@ -17870,20 +21574,20 @@ ULONG MPQMUX_ComposeNasSetEventReportReq
    if ( pOID != NULL)
    {
       InsertTailList( &pOID->QMIQueue, &(QMIElement->QCQMIRequest));
-   }
+              }   
 
    if (bSendImmediately == TRUE)
-   {
+           {
       MP_USBSendControl(pAdapter, (PVOID)&QMIElement->QMI, QMIElement->QMILength); 
-   }
+        }
 
    if ( pOID == NULL)
    {
      NdisFreeMemory((PVOID)QMIElement, QMIElementSize, 0);
    }
-   
+
    return qmiLen;
-} 
+}  
 
 
 USHORT MPQMUX_ComposeNasGetPLMNReqSend
@@ -17905,22 +21609,22 @@ USHORT MPQMUX_ComposeNasGetPLMNReqSend
 
    Status = NdisAllocateMemoryWithTag( &QMIElement, QMIElementSize, QUALCOMM_TAG );
    if( Status != NDIS_STATUS_SUCCESS )
-   {
+{
      QCNET_DbgPrint
-     (
+                (
        MP_DBG_MASK_OID_QMI,
        MP_DBG_LEVEL_ERROR,
        ("<%s> error: Failed to allocate memory for QMI Writes\n", pAdapter->PortName)
-     );
+                );
       return 0;
    }
 
-   QCNET_DbgPrint
-   (
+      QCNET_DbgPrint
+      (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
       ("<%s> MPQMUX_ComposeNasGetPLMNReqSend %d %d\n", pAdapter->PortName,
        MCC, MNC)
-   );
+      );
 
    QMI = &QMIElement->QMI;
    QMI->ClientId = pAdapter->ClientId[QMUX_TYPE_NAS];
@@ -17961,7 +21665,7 @@ USHORT MPQMUX_ComposeNasGetPLMNReqSend
 } 
 
 USHORT MPQMUX_ComposeNasInitiateAttachReq
-(
+                   (
    PMP_ADAPTER   pAdapter,
    PMP_OID_WRITE pOID,
    PQMUX_MSG    qmux_msg   
@@ -17970,7 +21674,7 @@ USHORT MPQMUX_ComposeNasInitiateAttachReq
    ULONG        qmux_len = 0;
    PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
    BOOLEAN      bAttach = FALSE;
-
+   
    PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = (PNDIS_WWAN_SET_PACKET_SERVICE)
       pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
    if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach)
@@ -17978,21 +21682,21 @@ USHORT MPQMUX_ComposeNasInitiateAttachReq
       bAttach = TRUE;
    }
 
-   QCNET_DbgPrint
-   (
+      QCNET_DbgPrint
+      (
       MP_DBG_MASK_OID_QMI,
       MP_DBG_LEVEL_DETAIL,
       ("<%s> MPQMUX_ComposeNasInitiateAttachReq %d\n", pAdapter->PortName, bAttach)
-   );
+      );
 
    qmux_msg->InitiateAttachReq.Length = sizeof(QMINAS_INITIATE_ATTACH_REQ_MSG) - 4;
    qmux_msg->InitiateAttachReq.TLVType = 0x10;
    qmux_msg->InitiateAttachReq.TLVLength = 0x01;
 
    if (bAttach == TRUE)
-   {
+      {
       qmux_msg->InitiateAttachReq.PsAttachAction = 0x01;
-   }
+      }
    else
    {
       qmux_msg->InitiateAttachReq.PsAttachAction = 0x02;
@@ -18000,26 +21704,26 @@ USHORT MPQMUX_ComposeNasInitiateAttachReq
 
    qmux_len = qmux_msg->InitiateAttachReq.Length;
    return qmux_len;
-} 
+}
 
 
 
 #endif
-
+   
 ULONG MPQMUX_ProcessNasSetTechnologyPrefResp
-(
+                (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,
    PMP_OID_WRITE pOID
 )
-{
+   {
    UCHAR retVal = 0;
-   QCNET_DbgPrint
-   (
+      QCNET_DbgPrint
+      (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
       ("<%s> SetTechnologyPref\n", pAdapter->PortName)
-   );
-
+                   );
+   
    if (qmux_msg->SetTechnologyPrefResp.QMUXResult != QMI_RESULT_SUCCESS)
    {
       QCNET_DbgPrint
@@ -18050,44 +21754,138 @@ ULONG MPQMUX_ProcessNasSetTechnologyPrefResp
                pNdisSetRegisterState->SetRegisterState.RegisterAction != WwanRegisterActionAutomatic)
            {
               pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
-           }
+}
            else if (retVal == 0xFF)
-           {
-               
+{
+
               pRegistrationState->RegistrationState.uNwError = pAdapter->nwRejectCause;
               pOID->OIDStatus = WWAN_STATUS_FAILURE;
-           }
+}
            else
-           {
+{
               /* Set the timer */
               NdisAcquireSpinLock(&pAdapter->QMICTLLock);
               if (pAdapter->RegisterPacketTimerContext == NULL)
-              {
+{
                  pAdapter->RegisterPacketTimerContext = pOID;
                  IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
                  QcStatsIncrement(pAdapter, MP_CNT_TIMER, 888);
                  NdisSetTimer( &pAdapter->RegisterPacketTimer, 30000);
                  NdisReleaseSpinLock(&pAdapter->QMICTLLock);
                  retVal = QMI_SUCCESS_NOT_COMPLETE;
-              }
+      }
               else
-              {
+      {
                  NdisReleaseSpinLock(&pAdapter->QMICTLLock);
                  pOID->OIDStatus = WWAN_STATUS_FAILURE;
-              }
-           }
+      }
+      }
            pRegistrationState->uStatus = pOID->OIDStatus;
-        }
+      }
         break;
 #endif /*NDIS620_MINIPORT*/
      default:
         pOID->OIDStatus = NDIS_STATUS_FAILURE;
         break;
-     }
+      }
+      }
+         
+   return retVal;
+}
+
+ULONG MPQMUX_ProcessNasSetSystemSelPrefResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> MPQMUX_ComposeNasSetSystemSelPrefResp resp\n", pAdapter->PortName)
+   );
+
+   if (qmux_msg->SetSystemSelPrefResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+         ("<%s> QMUX: set initiate nw register result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->SetSystemSelPrefResp.QMUXResult,
+         qmux_msg->SetSystemSelPrefResp.QMUXError)
+      );
+      retVal = 0xFF;
+   }
+      
+   if (pOID != NULL)
+   {
+     pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+     switch(pOID->Oid)
+      {
+#ifdef NDIS620_MINIPORT
+        case OID_WWAN_REGISTER_STATE:
+      {
+           PNDIS_WWAN_SET_REGISTER_STATE pNdisSetRegisterState = 
+                                 (PNDIS_WWAN_SET_REGISTER_STATE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+           PNDIS_WWAN_REGISTRATION_STATE pRegistrationState = (PNDIS_WWAN_REGISTRATION_STATE)pOID->pOIDResp;
+           if (retVal == 0xFF && qmux_msg->SetSystemSelPrefResp.QMUXError != QMI_ERR_NO_EFFECT)
+      {
+              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+              if (pAdapter->DeviceReadyState == DeviceWWanOff)
+      {
+                 pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+      }
+              else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+      {
+                 pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+      }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+      {
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+      }
+              else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+{
+                 pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+   }
+              else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+   {
+                 pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+   }
+              else if (qmux_msg->SetSystemSelPrefResp.QMUXError == 0x20)
+   {
+                 pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
+   }
+              else if (qmux_msg->SetSystemSelPrefResp.QMUXError == 0x0D)
+   {
+                 pOID->OIDStatus = WWAN_STATUS_PROVIDER_NOT_VISIBLE;
+   }
+              if (pOID->OIDStatus == WWAN_STATUS_FAILURE)
+   {
+                 pRegistrationState->RegistrationState.uNwError = pAdapter->nwRejectCause;
+   }
+   }
+#if 0           
+           else
+   {
+              pAdapter->RegisterRetryCount = 0;
+              MPQMUX_ComposeNasGetServingSystemInd(pAdapter, pOID->Oid, pOID);
+   }
+#endif           
+           pRegistrationState->uStatus = pOID->OIDStatus;
+   }
+        break;
+#endif /*NDIS620_MINIPORT*/
+     default:
+        pOID->OIDStatus = NDIS_STATUS_FAILURE;
+        break;
+   }
    }
 
    return retVal;
-}  
+}
 
 ULONG MPQMUX_ProcessNasInitiateNwRegisterResp
 (
@@ -18123,108 +21921,108 @@ ULONG MPQMUX_ProcessNasInitiateNwRegisterResp
      {
 #ifdef NDIS620_MINIPORT
         case OID_WWAN_REGISTER_STATE:
-        {
+   {
            PNDIS_WWAN_SET_REGISTER_STATE pNdisSetRegisterState = 
                                  (PNDIS_WWAN_SET_REGISTER_STATE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
            PNDIS_WWAN_REGISTRATION_STATE pRegistrationState = (PNDIS_WWAN_REGISTRATION_STATE)pOID->pOIDResp;
            if (retVal == 0xFF && qmux_msg->InitiateNwRegisterResp.QMUXError != QMI_ERR_NO_EFFECT)
-           {
+   {
               pOID->OIDStatus = WWAN_STATUS_FAILURE;
               if (pAdapter->DeviceReadyState == DeviceWWanOff)
-              {
+   {
                  pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
-              }
+   }
               else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
-              {
+   {
                  pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
-              }
+   }
               else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
-              {
+   {
                  pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
-              }
+   }
               else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
-              {
+   {
                  pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
-              }
+   }
               else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
-              {
+   {
                  pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
-              }
+   }
               else if (qmux_msg->InitiateNwRegisterResp.QMUXError == 0x20)
-              {
+   {
                  pOID->OIDStatus = WWAN_STATUS_INVALID_PARAMETERS;
-              }
+   }
               else if (qmux_msg->InitiateNwRegisterResp.QMUXError == 0x0D)
-              {
+   {
                  pOID->OIDStatus = WWAN_STATUS_PROVIDER_NOT_VISIBLE;
-              }
+   }
               if (pOID->OIDStatus == WWAN_STATUS_FAILURE)
-              {
+   {
                  pRegistrationState->RegistrationState.uNwError = pAdapter->nwRejectCause;
-              }
-           }
+   }
+   }
            else //if (qmux_msg->InitiateNwRegisterResp.QMUXError == QMI_ERR_NO_EFFECT)
-           {
+   {
               if (pAdapter->DeviceClass == DEVICE_CLASS_GSM && 
                   pNdisSetRegisterState->SetRegisterState.RegisterAction == WwanRegisterActionAutomatic &&
                   pNdisSetRegisterState->SetRegisterState.WwanDataClass != WWAN_DATA_CLASS_NONE)
-              {
+   {
                  if (pNdisSetRegisterState->SetRegisterState.WwanDataClass & (WWAN_DATA_CLASS_UMTS|
                                                                               WWAN_DATA_CLASS_HSDPA|
                                                                               WWAN_DATA_CLASS_HSUPA|
                                                                               WWAN_DATA_CLASS_LTE))
-                 {
+   {
                     MPQMUX_ComposeNasSetTechnologyPrefReqSend(pAdapter, pOID->Oid, pOID, 0);
-                 }
+   }
                  else if (pNdisSetRegisterState->SetRegisterState.WwanDataClass & (WWAN_DATA_CLASS_GPRS|
                                                                                    WWAN_DATA_CLASS_EDGE))
-                 {
+   {
                     MPQMUX_ComposeNasSetTechnologyPrefReqSend(pAdapter, pOID->Oid, pOID, 0x06);
-                 }
-              }
+   }
+    }
               else
-              {
+    {
                  /* Set the timer */
                  NdisAcquireSpinLock(&pAdapter->QMICTLLock);
                  if (pAdapter->RegisterPacketTimerContext == NULL)
-                 {
+    {
                     pAdapter->RegisterPacketTimerContext = pOID;
                     IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
                     QcStatsIncrement(pAdapter, MP_CNT_TIMER, 888);
                     NdisSetTimer( &pAdapter->RegisterPacketTimer, 30000);
                     NdisReleaseSpinLock(&pAdapter->QMICTLLock);
                     retVal = QMI_SUCCESS_NOT_COMPLETE;
-                 }
+    }
                  else
-                 {
+    {
                     NdisReleaseSpinLock(&pAdapter->QMICTLLock);
                     pOID->OIDStatus = WWAN_STATUS_FAILURE;
-                 }
-              }
-           }
+    }
+    }
+    }
 #if 0           
            else
-           {
+    {
               pAdapter->RegisterRetryCount = 0;
               MPQMUX_ComposeNasGetServingSystemInd(pAdapter, pOID->Oid, pOID);
-           }
+    }
 #endif           
            pRegistrationState->uStatus = pOID->OIDStatus;
-        }
+    }
         break;
 #endif /*NDIS620_MINIPORT*/
      default:
         pOID->OIDStatus = NDIS_STATUS_FAILURE;
         break;
-     }
-   }
+    }
+    }
 
    return retVal;
-}  
+    }
 
 
 ULONG MapSignalStrengthtoRssi(CHAR SignalStrength)
-{
+    {
    ULONG Rssi;
    if (SignalStrength <= -113)
       Rssi = 0;   
@@ -18363,7 +22161,7 @@ CHAR MapRssitoSignalStrength(ULONG Rssi)
       SignalStrength = -50;   
    
    return SignalStrength;
-}
+    }
 
 #ifdef NDIS620_MINIPORT   
 
@@ -18372,7 +22170,7 @@ ULONG ParseSignalStrength
    PMP_ADAPTER  pAdapter,
    PQMUX_MSG    qmux_msg
 )
-{
+    {
    ULONG  nRSSI = WWAN_RSSI_UNKNOWN;
 
    QCNET_DbgPrint
@@ -18385,16 +22183,16 @@ ULONG ParseSignalStrength
 
    // get mandatory TLV 
    if( qmux_msg->GetSignalStrengthResp.RadioIf == 0 )
-   {
+    {
       nRSSI = 0;
-   }
+    }
    else
-   {
+    {
       nRSSI = MapSignalStrengthtoRssi
            ( 
               qmux_msg->GetSignalStrengthResp.SignalStrength 
            );
-   }
+    }
    // use mandatory TLV for gsm
    // if cdma and connected, use mandatory if it equals data bearer && 1x
    // (1x is never in optional TLV.)
@@ -18412,44 +22210,44 @@ ULONG ParseSignalStrength
          pAdapter->DeviceContextState)
       );
       return nRSSI;
-   }
+}
 
    if ((LONG)qmux_msg->GetSignalStrengthResp.Length > 
        (sizeof(QMINAS_GET_SIGNAL_STRENGTH_RESP_MSG) - 4))
-   {
+{
       PQMINAS_SIGNAL_STRENGTH_LIST  pSig;
       PQMINAS_SIGNAL_STRENGTH       pSigItem;
-
+   
       // Now check optional TLVs 
       pSig = (PQMINAS_SIGNAL_STRENGTH_LIST) ((PCHAR)&(qmux_msg->GetSignalStrengthResp.Type) + 
                   sizeof(QMINAS_GET_SIGNAL_STRENGTH_RESP_MSG));
-
+   
       if (pSig->TLV3Type == 0x10)
       {
          INT ii;
          pSigItem = (PQMINAS_SIGNAL_STRENGTH) ((PCHAR) pSig + 
                      sizeof(QMINAS_SIGNAL_STRENGTH_LIST)); 
-
+   
          // Should only be one optional TLV, but use NumInstance just in case
          for(ii = 0;ii < pSig->NumInstance; ii++)
          {
-            QCNET_DbgPrint
-            (
+   QCNET_DbgPrint
+   (
                MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
                ("<%s> QMUX: ParseSignalStrength Optional %d %d\n", pAdapter->PortName,
                pSigItem->SigStrength, pSigItem->RadioIf)
-            );
-     
+   );
+   
             if(pSigItem->SigStrength != -125 && pSigItem->RadioIf != 0)
-            {
+   {
                nRSSI = MapSignalStrengthtoRssi(pSigItem->SigStrength);
-               QCNET_DbgPrint
-               (
+      QCNET_DbgPrint
+      (
                   MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
                   ("<%s> QMUX: ParseSignalStrength Use Optional %d %d\n", 
                   pAdapter->PortName,
                   pSigItem->SigStrength, pSigItem->RadioIf)
-               );
+      );
                break;                  
             }
             pSigItem++;
@@ -18457,23 +22255,23 @@ ULONG ParseSignalStrength
       }
    }
    return nRSSI;
-}
+   }
 #endif /*NDIS620_MINIPORT*/
-
+   
 ULONG MPQMUX_ProcessNasGetSignalStrengthResp
 (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,
    PMP_OID_WRITE pOID
 )
-{
+   {
    UCHAR retVal = 0;
-   QCNET_DbgPrint
-   (
+      QCNET_DbgPrint
+      (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
       ("<%s> GetSignalStrength\n", pAdapter->PortName)
-   );
-
+      );
+      
    if (qmux_msg->GetSignalStrengthResp.QMUXResult != QMI_RESULT_SUCCESS)
    {
       QCNET_DbgPrint
@@ -18496,34 +22294,34 @@ ULONG MPQMUX_ProcessNasGetSignalStrengthResp
          {
             PNDIS_WWAN_SIGNAL_STATE pWwanSignalState = (PNDIS_WWAN_SIGNAL_STATE)pOID->pOIDResp;
             if (retVal == 0xFF)
-            {
+   {
                pOID->OIDStatus = WWAN_STATUS_FAILURE;
-            }
+   }
             else
-            {
+   {
                pWwanSignalState->SignalState.Rssi = 
                      ParseSignalStrength( pAdapter, qmux_msg );
-               QCNET_DbgPrint
-               (
+      QCNET_DbgPrint
+      (
                   MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
                   ("<%s> QMUX: SignalStrength 0x%x \n", pAdapter->PortName,
                   pWwanSignalState->SignalState.Rssi)
-               );
+      );
                pWwanSignalState->SignalState.ErrorRate = WWAN_ERROR_RATE_UNKNOWN;
                pWwanSignalState->SignalState.RssiInterval = pAdapter->nSignalStateTimerCount/1000;
                pWwanSignalState->SignalState.RssiThreshold = pAdapter->RssiThreshold;
                if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
                {
-                   if (pAdapter->DeviceRegisterState != QMI_NAS_REGISTERED)                        
+                   if (pAdapter->DeviceRegisterState != QMI_NAS_REGISTERED)
                    {
                       pWwanSignalState->SignalState.Rssi = WWAN_RSSI_UNKNOWN;
                    }
-               } 
+   }
                if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
-               {
+   {
                   pWwanSignalState->SignalState.Rssi = WWAN_RSSI_UNKNOWN;              
-               }
-
+   }
+   
                /* Add signal threshold setting*/
                if (pOID->OidType == fMP_SET_OID)
                {
@@ -18539,14 +22337,14 @@ ULONG MPQMUX_ProcessNasGetSignalStrengthResp
                   }
                   if ( ((pWwanSignalState->SignalState.Rssi - pAdapter->RssiThreshold) > 0) ||
                        ((pWwanSignalState->SignalState.Rssi + pAdapter->RssiThreshold) < 32))
-                  {
+   {
                      pWwanSignalState->SignalState.RssiThreshold = pAdapter->RssiThreshold;
-                  }
-                  else
-                  {
+   }
+   else
+   {
                      pWwanSignalState->SignalState.RssiThreshold = PrevRssiTreshold;
                      pAdapter->RssiThreshold = PrevRssiTreshold;
-                  }   
+   }
                   MPQMUX_ComposeNasSetEventReportReq(pAdapter, pOID->Oid, pOID, pWwanSignalState->SignalState.Rssi, TRUE);
                }
             }
@@ -18580,14 +22378,14 @@ ULONG MPQMUX_ProcessNasGetSignalStrengthResp
       if (pAdapter->DeviceReadyState == DeviceWWanOn &&
          pAdapter->DeviceRadioState == DeviceWWanRadioOn &&
          pAdapter->nBusyOID == 0)
-      {
+   {
          MyNdisMIndicateStatus
-         (
+      (
             pAdapter->AdapterHandle,
             NDIS_STATUS_WWAN_SIGNAL_STATE,
             (PVOID)&SignalState,
             sizeof(NDIS_WWAN_SIGNAL_STATE)
-         );
+      );
          if (pAdapter->RssiThreshold != 0)
          {
             if ( ((SignalState.SignalState.Rssi - pAdapter->RssiThreshold) > 0) ||
@@ -18600,22 +22398,22 @@ ULONG MPQMUX_ProcessNasGetSignalStrengthResp
 #endif   
    }
    return retVal;
-}  
-
+   }
+   
 ULONG MPQMUX_ProcessNasSetEventReportResp
 (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,
    PMP_OID_WRITE pOID
 )
-{
+   {
    UCHAR retVal = 0;
-   QCNET_DbgPrint
-   (
+      QCNET_DbgPrint
+      (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
       ("<%s> SetEventReport\n", pAdapter->PortName)
-   );
-
+      );
+   
    if (qmux_msg->SetEventReportResp.QMUXResult != QMI_RESULT_SUCCESS)
    {
       QCNET_DbgPrint
@@ -18639,9 +22437,9 @@ ULONG MPQMUX_ProcessNasSetEventReportResp
            if (retVal == 0xFF)
            {
               pOID->OIDStatus = WWAN_STATUS_FAILURE;
-           }
-           else
-           {
+   }
+   else
+   {
               pWwanSignalState->SignalState.RssiThreshold = pAdapter->RssiThreshold;
            }
            pWwanSignalState->uStatus = pOID->OIDStatus;
@@ -18655,8 +22453,8 @@ ULONG MPQMUX_ProcessNasSetEventReportResp
    }
 
    return retVal;
-}  
-
+   }
+   
 
 ULONG MPQMUX_ProcessNasEventReportInd
 (
@@ -18664,7 +22462,7 @@ ULONG MPQMUX_ProcessNasEventReportInd
    PQMUX_MSG    qmux_msg,
    PMP_OID_WRITE pOID
 )
-{
+   {
    UCHAR retVal = 0;
 
 #ifdef NDIS620_MINIPORT   
@@ -18672,48 +22470,48 @@ ULONG MPQMUX_ProcessNasEventReportInd
    ULONG remainingLen;
    PCHAR pDataPtr;
    
-   QCNET_DbgPrint
-   (
+      QCNET_DbgPrint
+      (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
       ("<%s> NasEventReportInd\n", pAdapter->PortName)
-   );
+      );
    
    remainingLen = qmux_msg->NasEventReportInd.Length;
    pDataPtr = (CHAR *)&qmux_msg->NasEventReportInd + sizeof(QMINAS_EVENT_REPORT_IND_MSG);
    while(remainingLen > 0 )
    {
       switch(((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->TLVType)
-      {
+   {
          case 0x10:
-         {
-            QCNET_DbgPrint
-            (
+   {
+      QCNET_DbgPrint
+      (
                MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
                ("<%s> QMUX: SignalStrength in Indication raw %d \n", pAdapter->PortName,
                ((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->SigStrength)
-            );
+      );
             // get sig strength since indicator does not have both TLVs
             MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
                                    QMINAS_GET_SIGNAL_STRENGTH_REQ, NULL, TRUE );
             remainingLen -= (3 + ((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->TLVLength);
             pDataPtr += (3 + ((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->TLVLength);
             break;
-         }
+   }
          case 0x12:
-         {
+   {
             pAdapter->nwRejectCause = ((PQMINAS_REJECT_CAUSE_TLV)pDataPtr)->RejectCause;
-            QCNET_DbgPrint
-            (
+      QCNET_DbgPrint
+      (
                MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
                ("<%s> QMUX: RejectCause in Indication 0x%x \n", pAdapter->PortName,
                pAdapter->nwRejectCause)
-            );
+      );
             remainingLen -= (3 + ((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->TLVLength);
             pDataPtr += (3 + ((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->TLVLength);
             break;
-         }
+   }
          default:
-         {
+   {
             remainingLen -= (3 + ((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->TLVLength);
             pDataPtr += (3 + ((PQMINAS_SIGNAL_STRENGTH_TLV)pDataPtr)->TLVLength);
             break;
@@ -18723,7 +22521,7 @@ ULONG MPQMUX_ProcessNasEventReportInd
 
 #endif   
    return retVal;
-}  
+}
 
 ULONG MPQMUX_ProcessNasGetRFBandInfoResp
 (
@@ -18741,13 +22539,13 @@ ULONG MPQMUX_ProcessNasGetRFBandInfoResp
 
    if (qmux_msg->GetRFBandInfoResp.QMUXResult != QMI_RESULT_SUCCESS)
    {
-      QCNET_DbgPrint
-      (
+     QCNET_DbgPrint
+     (
          MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
          ("<%s> QMUX: GetRFBandInfo result 0x%x err 0x%x\n", pAdapter->PortName,
          qmux_msg->GetRFBandInfoResp.QMUXResult,
          qmux_msg->GetRFBandInfoResp.QMUXError)
-      );
+     );
       retVal = 0xFF;
    }
 
@@ -18802,7 +22600,7 @@ ULONG MPQMUX_ProcessNasGetRFBandInfoResp
                  pWwanServingState->uStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
               }
            }
-           
+
         }
         break;
         case OID_WWAN_REGISTER_STATE:
@@ -18845,8 +22643,17 @@ ULONG MPQMUX_ProcessNasGetRFBandInfoResp
                                                                               WWAN_DATA_CLASS_HSUPA|
                                                                               WWAN_DATA_CLASS_LTE))
                  {
-                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+
+                    if (pAdapter->IsNASSysInfoPresent == FALSE)
+                    {
+                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                            QMINAS_INITIATE_NW_REGISTER_REQ, MPQMUX_ComposeNasInitiateNwRegisterReqSend, TRUE );
+                    }
+                    else
+                    {
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                            QMINAS_SET_SYSTEM_SELECTION_PREF_REQ, MPQMUX_ComposeNasSetSystemSelPrefReqSend, TRUE );
+                    }
                  }
                  else
                  {
@@ -18855,22 +22662,30 @@ ULONG MPQMUX_ProcessNasGetRFBandInfoResp
               }
               else
               {
-                 MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                 if (pAdapter->IsNASSysInfoPresent == FALSE)
+                 {
+                    MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                         QMINAS_INITIATE_NW_REGISTER_REQ, MPQMUX_ComposeNasInitiateNwRegisterReqSend, TRUE );
+                 }
+                 else
+                 {
+                     MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                         QMINAS_SET_SYSTEM_SELECTION_PREF_REQ, MPQMUX_ComposeNasSetSystemSelPrefReqSend, TRUE );
+                 }
               }
 
            }
            pRegistrationState->uStatus = pOID->OIDStatus;
         }
         break;
-        
+
 #endif /*NDIS620_MINIPORT*/
      default:
         pOID->OIDStatus = NDIS_STATUS_FAILURE;
         break;
      }
    }
-
+   
    return retVal;
 }  
 
@@ -18890,11 +22705,11 @@ BOOLEAN ParseNasPLMNResp(
 
    NetworkDesc[0]= 0;
 
-   QCNET_DbgPrint
-   (
+      QCNET_DbgPrint
+      (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
       ("<%s> ParsePLMNResp\n", pAdapter->PortName)
-   );
+      );
    if (qmux_msg->GetPLMNNameResp.QMUXResult != QMI_RESULT_SUCCESS)
    {
       return FALSE;
@@ -18914,17 +22729,17 @@ BOOLEAN ParseNasPLMNResp(
                                     sizeof(QMINAS_GET_PLMN_NAME_PLMN) + pPLMNShort->PLMN_Len);
 
       QCNET_DbgPrint
-      (
+(
          MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
          ("<%s> SPN enc %d len %d\n", pAdapter->PortName, 
          pSPN->SPN_Enc, pSPN->SPN_Len)
       );
-      QCNET_DbgPrint
-      (
+   QCNET_DbgPrint
+   (
          MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
          ("<%s> PLMN short enc %d len %d\n", pAdapter->PortName,
          pPLMNShort->PLMN_Enc, pPLMNShort->PLMN_Len)
-      );
+   );
       QCNET_DbgPrint
       (
          MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
@@ -18950,8 +22765,8 @@ BOOLEAN ParseNasPLMNResp(
          nEnc  = pPLMNLong->PLMN_Enc;
          pPLMN = ((CHAR*)pPLMNLong + sizeof(QMINAS_GET_PLMN_NAME_PLMN));
          nLen  = pPLMNLong->PLMN_Len;
-      }
-   
+   }
+
       if (nLen != 0)
       {
          // encoding UCS2
@@ -20669,8 +24484,8 @@ VOID MPQMI_ProcessInboundQWDSADMINResponse
                       if ((pAdapter->MPEnableQMAPV1 != 0) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
-#endif			  
-			  )
+#endif           
+           )
                       {
                           PULONG pValue = (PULONG)&tlv->Value;
                           pAdapter->QMAPDLMinPadding = *pValue;
@@ -21057,7 +24872,7 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
         epTlv->TLVLength = 8;
         if (pAdapter->BindEPType == 0x00)
         {
-        epTlv->ep_type = 0x02;
+           epTlv->ep_type = 0x02;
         }
         else
         {
@@ -21066,7 +24881,7 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
         DisconnectedAllAdapters(pAdapter, &returnAdapter);
         if (pAdapter->BindIFId == 0x00)
         {
-        epTlv->iface_id = (((PDEVICE_EXTENSION)(returnAdapter->USBDo->DeviceExtension))->DataInterface);
+           epTlv->iface_id = (((PDEVICE_EXTENSION)(returnAdapter->USBDo->DeviceExtension))->DataInterface);
         }
         else
         {
@@ -21075,7 +24890,7 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
         bufPtr = (PUCHAR)&(epTlv->ep_type);
         bufPtr += epTlv->TLVLength;
     }    
-    
+
 #ifdef MP_QCQOS_ENABLED    
     if (pAdapter->IsQosPresent == TRUE)
     {
@@ -21094,8 +24909,8 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
     if (((pAdapter->MPEnableQMAPV1 != 0) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
-#endif	
-	) 
+#endif   
+   ) 
         && (pAdapter->QMAPDLMinPadding != 0))
     {
        PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV dlpadTlp;
@@ -21410,7 +25225,7 @@ NDIS_STATUS MPQMUX_SetQMUXBindMuxDataPort
    qmux_msg->BindMuxDataPortReq.TLVLength = sizeof(ULONG) + sizeof(ULONG);
    if (pAdapter->BindEPType == 0x00)
    {
-   qmux_msg->BindMuxDataPortReq.ep_type = 0x02;
+       qmux_msg->BindMuxDataPortReq.ep_type = 0x02;
    }
    else
    {
@@ -21419,7 +25234,7 @@ NDIS_STATUS MPQMUX_SetQMUXBindMuxDataPort
    DisconnectedAllAdapters(pAdapter, &returnAdapter);
    if (pAdapter->BindIFId == 0x00)
    {
-   qmux_msg->BindMuxDataPortReq.iface_id = (((PDEVICE_EXTENSION)(returnAdapter->USBDo->DeviceExtension))->DataInterface);
+      qmux_msg->BindMuxDataPortReq.iface_id = (((PDEVICE_EXTENSION)(returnAdapter->USBDo->DeviceExtension))->DataInterface);
    }
    else
    {
@@ -21553,7 +25368,7 @@ ULONG MPQMUX_ProcessQMUXBindMuxDataPortResp
       KeSetEvent(&pAdapter->DeviceInfoReceivedEvent, IO_NO_INCREMENT, FALSE);
       if (qmux_msg->QMUXMsgHdr.Type == QMIWDS_BIND_MUX_DATA_PORT_RESP)
       {
-      pAdapter->MuxId = 0x00;
+         pAdapter->MuxId = 0x00;
       }
       retVal = 0xFF;
    }
@@ -21561,6 +25376,1986 @@ ULONG MPQMUX_ProcessQMUXBindMuxDataPortResp
    {
       KeSetEvent(&pAdapter->DeviceInfoReceivedEvent, IO_NO_INCREMENT, FALSE);
    }
+   return 0;      
+} 
+
+USHORT MPQMUX_ComposeUimReadTransparentIMSIReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   USHORT qmux_len = 0;
+   PREAD_TRANSPARENT_TLV pReadTransparent;
+   UCHAR *path;
+
+   qmux_msg->UIMUIMReadTransparentReq.TLVType =  0x01;
+   qmux_msg->UIMUIMReadTransparentReq.TLVLength = 0x02;
+   qmux_msg->UIMUIMReadTransparentReq.Aid_Len = 0x00;
+   qmux_msg->UIMUIMReadTransparentReq.TLV2Type = 0x02;
+   path = (UCHAR *)&(qmux_msg->UIMUIMReadTransparentReq.path);
+
+   qmux_msg->UIMUIMReadTransparentReq.Session_Type = 0x00;
+   qmux_msg->UIMUIMReadTransparentReq.file_id = 0x6F07;
+   qmux_msg->UIMUIMReadTransparentReq.path_len = 0x04;
+   path[0] = 0x00;
+   path[1] = 0x3F;
+   path[2] = 0xFF;
+   path[3] = 0x7F;
+   if (pAdapter->IndexGWPri == 0x02)
+   {
+      path[2] = 0x20;
+   }
+   qmux_msg->UIMUIMReadTransparentReq.TLV2Length = 3 +  qmux_msg->UIMUIMReadTransparentReq.path_len;
+   pReadTransparent = (PREAD_TRANSPARENT_TLV)(path + qmux_msg->UIMUIMReadTransparentReq.path_len);
+   pReadTransparent->TLVType = 0x03;
+   pReadTransparent->TLVLength = 0x04;
+   pReadTransparent->Offset = 0x00;
+   pReadTransparent->Length = 0x00;
+   
+   qmux_msg->UIMUIMReadTransparentReq.Length = sizeof(QMIUIM_READ_TRANSPARENT_REQ_MSG) - 5 + qmux_msg->UIMUIMReadTransparentReq.path_len + sizeof(READ_TRANSPARENT_TLV);
+
+   qmux_len = qmux_msg->UIMUIMReadTransparentReq.Length;
+
+   pAdapter->UIMICCID = 0;
+   
+   return qmux_len;
+}  
+
+#ifdef NDIS620_MINIPORT      
+
+USHORT MPQMUX_ComposeUimReadTransparentICCIDReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   USHORT qmux_len = 0;
+   PREAD_TRANSPARENT_TLV pReadTransparent;
+   UCHAR *path;
+
+   qmux_msg->UIMUIMReadTransparentReq.TLVType =  0x01;
+   qmux_msg->UIMUIMReadTransparentReq.TLVLength = 0x02;
+   qmux_msg->UIMUIMReadTransparentReq.Aid_Len = 0x00;
+   qmux_msg->UIMUIMReadTransparentReq.TLV2Type = 0x02;
+   path = (UCHAR *)&(qmux_msg->UIMUIMReadTransparentReq.path);
+
+   qmux_msg->UIMUIMReadTransparentReq.Session_Type = 0x06;
+   qmux_msg->UIMUIMReadTransparentReq.file_id = 0x2FE2;
+   qmux_msg->UIMUIMReadTransparentReq.path_len = 0x02;
+   path[0] = 0x00;
+   path[1] = 0x3F;
+
+   qmux_msg->UIMUIMReadTransparentReq.TLV2Length = 3 +  qmux_msg->UIMUIMReadTransparentReq.path_len;
+   pReadTransparent = (PREAD_TRANSPARENT_TLV)(path + qmux_msg->UIMUIMReadTransparentReq.path_len);
+   pReadTransparent->TLVType = 0x03;
+   pReadTransparent->TLVLength = 0x04;
+   pReadTransparent->Offset = 0x00;
+   pReadTransparent->Length = 0x00;
+   
+   qmux_msg->UIMUIMReadTransparentReq.Length = sizeof(QMIUIM_READ_TRANSPARENT_REQ_MSG) - 5 + qmux_msg->UIMUIMReadTransparentReq.path_len + sizeof(READ_TRANSPARENT_TLV);
+
+   qmux_len = qmux_msg->UIMUIMReadTransparentReq.Length;
+
+   pAdapter->UIMICCID = 1;
+
+   return qmux_len;
+}  
+
+USHORT MPQMUX_ComposeUimUnblockPinReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   USHORT qmux_len = 0;
+   PUIM_PUK pPuk;
+   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+   UNICODE_STRING unicodeStr;
+   ANSI_STRING ansiStr;
+
+   qmux_msg->UIMUIMUnblockPinReq.TLVType = 0x01;
+   qmux_msg->UIMUIMUnblockPinReq.TLVLength = 0x02;
+   qmux_msg->UIMUIMUnblockPinReq.Session_Type = 0x00;
+   qmux_msg->UIMUIMUnblockPinReq.Aid_Len = 0x00;
+   qmux_msg->UIMUIMUnblockPinReq.TLV2Type = 0x02;
+
+   if(pSetPin->PinAction.PinType == WwanPinTypePuk1)
+   {
+      qmux_msg->UIMUIMUnblockPinReq.PINID = 0x01;
+   }
+   else
+   {
+      qmux_msg->UIMUIMUnblockPinReq.PINID = 0x02;
+   }
+   pPuk = (PUIM_PUK)&(qmux_msg->UIMUIMUnblockPinReq.PinDetails);
+   RtlInitUnicodeString( &unicodeStr, pSetPin->PinAction.Pin );
+   RtlUnicodeStringToAnsiString(&ansiStr, &unicodeStr, TRUE);
+   pPuk->PukLength = strlen(ansiStr.Buffer);
+   strcpy((PCHAR)&pPuk->PukValue, ansiStr.Buffer);
+
+   qmux_msg->UIMUIMUnblockPinReq.Length = sizeof(QMIUIM_UNBLOCK_PIN_REQ_MSG) - 5 + sizeof(UIM_PUK) - 1 + strlen(ansiStr.Buffer);
+   qmux_msg->UIMUIMUnblockPinReq.TLV2Length = sizeof(UIM_PUK) + strlen(ansiStr.Buffer);
+
+   pPuk = (PUIM_PUK)((PCHAR)pPuk + sizeof(UIM_PUK) + strlen(ansiStr.Buffer) - 1);
+   RtlFreeAnsiString( &ansiStr );
+   RtlInitUnicodeString( &unicodeStr, pSetPin->PinAction.NewPin );
+   RtlUnicodeStringToAnsiString(&ansiStr, &unicodeStr, TRUE);
+   pPuk->PukLength = strlen(ansiStr.Buffer);
+   strcpy((PCHAR)&pPuk->PukValue, ansiStr.Buffer);
+
+   qmux_msg->UIMUIMUnblockPinReq.Length += sizeof(UIM_PUK) + strlen(ansiStr.Buffer) - 1;
+   qmux_msg->UIMUIMUnblockPinReq.TLV2Length += sizeof(UIM_PUK) + strlen(ansiStr.Buffer) - 1;
+   RtlFreeAnsiString( &ansiStr );
+
+   qmux_len = qmux_msg->UIMUIMUnblockPinReq.Length;
+
+   return qmux_len;
+}  
+
+USHORT MPQMUX_ComposeUimVerifyPinReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   USHORT qmux_len = 0;
+   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+   UNICODE_STRING unicodeStr;
+   ANSI_STRING ansiStr;
+
+   qmux_msg->UIMUIMVerifyPinReq.TLVType = 0x01;
+   qmux_msg->UIMUIMVerifyPinReq.TLVLength = 0x02;
+   qmux_msg->UIMUIMVerifyPinReq.Session_Type = 0x00;
+   qmux_msg->UIMUIMVerifyPinReq.Aid_Len = 0x00;
+   qmux_msg->UIMUIMVerifyPinReq.TLV2Type = 0x02;
+   if(pSetPin->PinAction.PinType == WwanPinTypePin1)
+   {
+      qmux_msg->UIMUIMVerifyPinReq.PINID = 0x01;
+   }
+   else
+   {
+      qmux_msg->UIMUIMVerifyPinReq.PINID = 0x02;
+   }
+   RtlInitUnicodeString( &unicodeStr, pSetPin->PinAction.Pin );
+   RtlUnicodeStringToAnsiString(&ansiStr, &unicodeStr, TRUE);
+   qmux_msg->UIMUIMVerifyPinReq.PINLen= strlen(ansiStr.Buffer);
+   strcpy((PCHAR)&qmux_msg->UIMUIMVerifyPinReq.PINValue, ansiStr.Buffer);
+
+   qmux_msg->UIMUIMVerifyPinReq.Length = sizeof(QMIUIM_VERIFY_PIN_REQ_MSG) - 5 + strlen(ansiStr.Buffer);
+   qmux_msg->UIMUIMVerifyPinReq.TLV2Length = 2 + strlen(ansiStr.Buffer);
+   RtlFreeAnsiString( &ansiStr );
+
+   qmux_len = qmux_msg->UIMUIMVerifyPinReq.Length;
+   return qmux_len;
+}  
+
+USHORT MPQMUX_ComposeUimSetPinProtectionReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   USHORT qmux_len = 0;
+   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+   UNICODE_STRING unicodeStr;
+   ANSI_STRING ansiStr;
+
+   qmux_msg->UIMUIMSetPinProtectionReq.TLVType = 0x01;
+   qmux_msg->UIMUIMSetPinProtectionReq.TLVLength = 0x02;
+   qmux_msg->UIMUIMSetPinProtectionReq.Session_Type = 0x00;
+   qmux_msg->UIMUIMSetPinProtectionReq.Aid_Len = 0x00;
+   qmux_msg->UIMUIMSetPinProtectionReq.TLV2Type = 0x02;
+
+   if( pSetPin->PinAction.PinOperation == WwanPinOperationEnable)
+   {
+      qmux_msg->UIMUIMSetPinProtectionReq.ProtectionSetting = 0x01;
+   }
+   else
+   {
+      qmux_msg->UIMUIMSetPinProtectionReq.ProtectionSetting = 0x00;
+   }
+
+   if( pSetPin->PinAction.PinType == WwanPinTypePin1)
+   {
+      qmux_msg->UIMUIMSetPinProtectionReq.PINID = 0x01;
+   }
+   else
+   {
+      qmux_msg->UIMUIMSetPinProtectionReq.PINID = 0x02;
+   }
+   RtlInitUnicodeString( &unicodeStr, pSetPin->PinAction.Pin );
+   RtlUnicodeStringToAnsiString(&ansiStr, &unicodeStr, TRUE);
+   qmux_msg->UIMUIMSetPinProtectionReq.PINLen= strlen(ansiStr.Buffer);
+   strcpy((PCHAR)&qmux_msg->UIMUIMSetPinProtectionReq.PINValue, ansiStr.Buffer);
+
+   qmux_msg->UIMUIMSetPinProtectionReq.Length = sizeof(QMIUIM_SET_PIN_PROTECTION_REQ_MSG) - 5 + strlen(ansiStr.Buffer);
+   qmux_msg->UIMUIMSetPinProtectionReq.TLV2Length = 3 + strlen(ansiStr.Buffer);
+   RtlFreeAnsiString( &ansiStr );
+
+   qmux_len = qmux_msg->UIMUIMSetPinProtectionReq.Length;
+   return qmux_len;
+}  
+
+USHORT MPQMUX_ComposeUimChangePinReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   USHORT qmux_len = 0;
+
+   PUIM_PIN pPin;
+   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+
+   UNICODE_STRING unicodeStr;
+   ANSI_STRING ansiStr;
+
+   qmux_msg->UIMUIMChangePinReq.TLVType = 0x01;
+   qmux_msg->UIMUIMChangePinReq.TLVLength = 0x02;
+   qmux_msg->UIMUIMChangePinReq.Session_Type = 0x00;
+   qmux_msg->UIMUIMChangePinReq.Aid_Len = 0x00;
+   qmux_msg->UIMUIMChangePinReq.TLV2Type = 0x02;
+   if(pSetPin->PinAction.PinType == WwanPinTypePin1)
+   {
+      qmux_msg->UIMUIMChangePinReq.PINID = 0x01;
+   }
+   else
+   {
+      qmux_msg->UIMUIMChangePinReq.PINID = 0x02;
+   }
+   pPin = (PUIM_PIN)&(qmux_msg->UIMUIMChangePinReq.PinDetails);
+   RtlInitUnicodeString( &unicodeStr, pSetPin->PinAction.Pin );
+   RtlUnicodeStringToAnsiString(&ansiStr, &unicodeStr, TRUE);
+   pPin->PinLength = strlen(ansiStr.Buffer);
+   strcpy((PCHAR)&pPin->PinValue, ansiStr.Buffer);
+
+   qmux_msg->UIMUIMChangePinReq.Length = sizeof(QMIUIM_CHANGE_PIN_REQ_MSG) - 5 + sizeof(UIM_PIN) - 1 + strlen(ansiStr.Buffer);
+   qmux_msg->UIMUIMChangePinReq.TLV2Length = sizeof(UIM_PIN) + strlen(ansiStr.Buffer);
+
+   pPin = (PUIM_PIN)((PCHAR)pPin + sizeof(UIM_PIN) + strlen(ansiStr.Buffer) - 1);
+   RtlFreeAnsiString( &ansiStr );
+   
+   RtlInitUnicodeString( &unicodeStr, pSetPin->PinAction.NewPin );
+   RtlUnicodeStringToAnsiString(&ansiStr, &unicodeStr, TRUE);
+   pPin->PinLength = strlen(ansiStr.Buffer);
+   strcpy((PCHAR)&pPin->PinValue, ansiStr.Buffer);
+
+   qmux_msg->UIMUIMChangePinReq.Length += sizeof(UIM_PIN) + strlen(ansiStr.Buffer) - 1;
+   qmux_msg->UIMUIMChangePinReq.TLV2Length += sizeof(UIM_PIN) + strlen(ansiStr.Buffer) - 1;
+   RtlFreeAnsiString( &ansiStr );
+
+   qmux_len = qmux_msg->UIMUIMChangePinReq.Length;
+
+   return qmux_len;
+}  
+
+#endif
+
+BOOLEAN ParseUIMReadTransparant( PMP_ADAPTER pAdapter, PQMUX_MSG   qmux_msg)
+{
+   LONG remainingLen;
+   PQMIUIM_CONTENT pUimContent;
+
+#ifdef NDIS620_MINIPORT
+
+   pUimContent = (PQMIUIM_CONTENT)(((PCHAR)&qmux_msg->UIMUIMReadTransparentResp) + QCQMUX_MSG_HDR_SIZE);
+   remainingLen = qmux_msg->UIMUIMReadTransparentResp.Length;
+
+   while (remainingLen > 0)
+   {
+      switch (pUimContent->TLVType)
+      {
+         case 0x11:
+         {
+            if (pAdapter->UIMICCID == 1)
+            {
+               // save to pAdapter
+               if (pAdapter->ICCID == NULL)
+               {
+                  // allocate memory and save
+                  pAdapter->ICCID = ExAllocatePool
+                                             (
+                                             NonPagedPool,
+                                             (pUimContent->content_len+2)
+                                             );
+                  if (pAdapter->ICCID != NULL)
+                  {
+                     RtlZeroMemory
+                     (
+                        pAdapter->ICCID,
+                        (pUimContent->content_len+2)
+                     );
+                     RtlCopyMemory
+                     (
+                        pAdapter->ICCID,
+                        &pUimContent->content,
+                        pUimContent->content_len
+                     );
+                  }
+                  else
+                  {
+                     QCNET_DbgPrint
+                     (
+                        MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+                        ("<%s> QMUX: iccid mem alloc failure.\n", pAdapter->PortName)
+                     );
+                  }
+               }
+            }
+            else
+            {
+               // save to pAdapter
+               if (pAdapter->DeviceIMSI == NULL)
+               {
+                  int i = 0;
+                  UCHAR Imsi[255];
+                  // allocate memory and save
+                  pAdapter->DeviceIMSI = ExAllocatePool
+                                           (
+                                              NonPagedPool,
+                                              ((pUimContent->content_len*2)+2)
+                                           );
+                  if (pAdapter->DeviceIMSI != NULL)
+                  {
+                     RtlZeroMemory
+                     (
+                        pAdapter->DeviceIMSI,
+                        ((pUimContent->content_len*2)+2)
+                     );
+                     RtlCopyMemory(Imsi,&pUimContent->content, pUimContent->content_len);
+                     while (i <= Imsi[0])
+                     {
+                        pAdapter->DeviceIMSI[i*2] = (Imsi[i+1] & 0x0F) + 48;
+                        pAdapter->DeviceIMSI[i*2+1] = ((Imsi[i+1] & 0xF0) >> 0x04) + 48;
+                        i++;
+                     }
+                     pAdapter->DeviceIMSI[(i-1)*2] = '\0';
+                     RtlCopyMemory((char *)pAdapter->DeviceIMSI, (char *)&pAdapter->DeviceIMSI[1],(i-1)*2);
+                  }
+                  else
+                  {
+                     QCNET_DbgPrint
+                     (
+                        MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+                        ("<%s> QMUX: DeviceIMSI mem alloc failure.\n", pAdapter->PortName)
+                     );
+                  }
+               }
+            }
+            break;
+         }
+      }
+      remainingLen -= (pUimContent->TLVLength + 3);
+      pUimContent = (PQMIUIM_CONTENT)((PCHAR)&pUimContent->TLVLength + pUimContent->TLVLength + sizeof(USHORT));
+   }
+#endif
+   return TRUE;    
+}
+
+ULONG MPQMUX_ProcessUimReadTransparantResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   
+{
+   UCHAR retVal = 0;
+   if (qmux_msg->UIMUIMReadTransparentResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
+         ("<%s> QMUX: UIMUIMReadTransparentResp result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->UIMUIMReadTransparentResp.QMUXResult,
+         qmux_msg->UIMUIMReadTransparentResp.QMUXError)
+      );
+      retVal =  0xFF;
+   }
+   else
+   {
+      ParseUIMReadTransparant( pAdapter, qmux_msg );
+   }
+   if (pOID != NULL)
+   {
+     switch(pOID->Oid)
+     {
+#ifdef NDIS620_MINIPORT
+        case OID_WWAN_READY_INFO:
+        {
+           PNDIS_WWAN_READY_INFO pNdisReadyInfo = (PNDIS_WWAN_READY_INFO)pOID->pOIDResp;
+           if (retVal != 0xFF)
+           {
+              if (pAdapter->UIMICCID == 0)
+              {
+                  if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+                  {
+                     if (pAdapter->DeviceIMSI != NULL)
+                     {
+                        UNICODE_STRING unicodeStr;
+                        ANSI_STRING ansiStr;
+                       
+                        RtlInitAnsiString( &ansiStr, pAdapter->DeviceIMSI);
+                        RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                        RtlStringCbCopyW(pNdisReadyInfo->ReadyInfo.SubscriberId , WWAN_SUBSCRIBERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                        RtlFreeUnicodeString( &unicodeStr );
+                        QCNET_DbgPrint
+                        (
+                           MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                           ("<%s> QMUX: IMSI in OID case GSM<%s>\n", pAdapter->PortName,
+                             pAdapter->DeviceIMSI)
+                        );
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                              QMIDMS_GET_MSISDN_REQ, NULL, TRUE );
+                     }
+                     else
+                     {
+                        pAdapter->DeviceReadyState = DeviceWWanOff;
+                        MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                               QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                        MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                               QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+                     }
+                  }        
+              }
+              else
+              {
+                  if (pAdapter->ICCID != NULL)
+                  {
+                     UNICODE_STRING unicodeStr;
+                     ANSI_STRING ansiStr;
+                     RtlInitAnsiString( &ansiStr, pAdapter->ICCID);
+                     RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                     RtlStringCbCopyW(pNdisReadyInfo->ReadyInfo.SimIccId, WWAN_SIMICCID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                     RtlFreeUnicodeString( &unicodeStr );
+                  }
+                  QCNET_DbgPrint
+                  (
+                     MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                     ("<%s> QMUX: Processed ReadyInfo OID.\n", pAdapter->PortName)
+                  );
+                  MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                         QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                  MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                         QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+              }
+           }
+           else
+           {
+              if (pAdapter->UIMICCID == 0)
+              {
+                  if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+                  {
+                     if (pAdapter->DeviceCkPinLock != DeviceWWanCkDeviceLocked)
+                     {
+                        if(strcmp(pAdapter->CurrentCarrier, "DoCoMo") == 0)
+                        {
+                           UNICODE_STRING unicodeStr;
+                           ANSI_STRING ansiStr;
+
+                           // save to pAdapter
+                           if (pAdapter->DeviceIMSI == NULL)
+                           {
+                              // allocate memory and save
+                              pAdapter->DeviceIMSI = ExAllocatePool
+                                                      (
+                                                         NonPagedPool,
+                                                         (18+2)
+                                                      );
+                              if (pAdapter->DeviceIMSI != NULL)
+                              {
+                                 RtlZeroMemory
+                                 (
+                                    pAdapter->DeviceIMSI,
+                                    (18+2)
+                                 );
+                                 strcpy( pAdapter->DeviceIMSI, "440100123456789");
+                              }
+                           }
+                           if (pAdapter->DeviceIMSI != NULL)
+                           {
+                              RtlInitAnsiString( &ansiStr, pAdapter->DeviceIMSI);
+                              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                              RtlStringCbCopyW(pNdisReadyInfo->ReadyInfo.SubscriberId , WWAN_SUBSCRIBERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                              RtlFreeUnicodeString( &unicodeStr );
+                           }
+                           MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                                  QMIDMS_GET_MSISDN_REQ, NULL, TRUE );
+                        }
+                        else
+                        {
+                           pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
+                           pAdapter->DeviceReadyState = DeviceWWanOff;
+                           MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                                 QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                           MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                                  QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+                        }
+                     }
+                     else
+                     {
+                        RtlStringCbCopyW(pNdisReadyInfo->ReadyInfo.SubscriberId , WWAN_SUBSCRIBERID_LEN*sizeof(WCHAR), L"000000000000000");
+                        MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                               QMIDMS_GET_MSISDN_REQ, NULL, TRUE );
+                     }
+                  }
+               }
+               else
+               {
+                   if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+                   {
+                      pAdapter->DeviceReadyState = DeviceWWanOff;
+                      pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
+                   }
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                          QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                          QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+               }
+           }
+        }
+        break;
+#endif /*NDIS620_MINIPORT*/
+    default:
+       pOID->OIDStatus = NDIS_STATUS_FAILURE;
+       break;
+    }
+ }
+ else
+ {
+#ifdef NDIS620_MINIPORT  
+    if (retVal != 0xFF)
+    {
+       if (pAdapter->UIMICCID == 0)
+       {
+           if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
+           {
+              if (pAdapter->DeviceIMSI != NULL)
+              {
+                 UNICODE_STRING unicodeStr;
+                 ANSI_STRING ansiStr;
+                 
+                 RtlInitAnsiString( &ansiStr, pAdapter->DeviceIMSI);
+                 RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                 RtlStringCbCopyW(pAdapter->ReadyInfo.ReadyInfo.SubscriberId , WWAN_SUBSCRIBERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                 RtlFreeUnicodeString( &unicodeStr );
+                 QCNET_DbgPrint
+                 (
+                    MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                    ("<%s> QMUX: IMSI in no OID case GSM<%s>\n", pAdapter->PortName,
+                      pAdapter->DeviceIMSI)
+                 );
+                 
+                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                        QMIDMS_GET_MSISDN_REQ, NULL, TRUE );              
+              }
+           }        
+       }
+       else
+       {
+           if (pAdapter->ICCID != NULL)
+           {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+              RtlInitAnsiString( &ansiStr, pAdapter->ICCID);
+              RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+              RtlStringCbCopyW(pAdapter->ReadyInfo.ReadyInfo.SimIccId, WWAN_SIMICCID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+              RtlFreeUnicodeString( &unicodeStr );
+           
+              QCNET_DbgPrint
+              (
+                 MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                 ("<%s> GetICCID %s\n", pAdapter->PortName, pAdapter->ICCID)
+              );
+           
+              if (pAdapter->nBusyOID == 0)
+              {
+                 if (pAdapter->DeviceReadyState == DeviceWWanOn)
+                 {
+                    MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateInitialized);
+                 }
+                 else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+                 {
+                    MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateDeviceLocked);
+                 }
+              }
+              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                     QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                     QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+           }      
+       }
+    }
+    else
+    {
+       if (pAdapter->UIMICCID == 0)
+       {
+           if(strcmp(pAdapter->CurrentCarrier, "DoCoMo") == 0)
+           {
+              UNICODE_STRING unicodeStr;
+              ANSI_STRING ansiStr;
+
+              // save to pAdapter
+              if (pAdapter->DeviceIMSI == NULL)
+              {
+                 // allocate memory and save
+                 pAdapter->DeviceIMSI = ExAllocatePool
+                                         (
+                                          NonPagedPool,
+                                          (18+2)
+                                         );
+                 if (pAdapter->DeviceIMSI != NULL)
+                 {
+                     RtlZeroMemory
+                     (
+                        pAdapter->DeviceIMSI,
+                        (18+2)
+                     );
+                    strcpy( pAdapter->DeviceIMSI, "440100123456789");
+                 }
+              }
+              if (pAdapter->DeviceIMSI != NULL)
+              {
+                 RtlInitAnsiString( &ansiStr, pAdapter->DeviceIMSI);
+                 RtlAnsiStringToUnicodeString(&unicodeStr, &ansiStr, TRUE);
+                 RtlStringCbCopyW(pAdapter->ReadyInfo.ReadyInfo.SubscriberId , WWAN_SUBSCRIBERID_LEN*sizeof(WCHAR), unicodeStr.Buffer);
+                 RtlFreeUnicodeString( &unicodeStr );
+              }
+              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                     QMIDMS_GET_MSISDN_REQ, NULL, TRUE );              
+           }
+       }
+       else
+       {
+           if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+           {
+              if (pAdapter->DeviceReadyState == DeviceWWanOn)
+              {
+                 MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateInitialized);
+              }
+              else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+              {
+                 MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateDeviceLocked);
+              }
+              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                     QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+              MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                     QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+           }
+       }
+   }
+#else
+   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                         QMIDMS_GET_MSISDN_REQ, NULL, TRUE );              
+#endif    
+   }
+   return retVal;
+}
+
+ULONG MPQMUX_ProcessUimReadRecordResp
+   (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   return 0;   
+}
+
+ULONG MPQMUX_ProcessUimWriteTransparantResp
+   (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   return 0;   
+}
+
+ULONG MPQMUX_ProcessUimWriteRecordResp
+(
+   PMP_ADAPTER pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   return 0;   
+}
+
+ULONG MPQMUX_ProcessUimSetPinProtectionResp
+   (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+   if (qmux_msg->UIMSetPinProtectionResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
+         ("<%s> QMUX: UIMSetPinProtection result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->UIMSetPinProtectionResp.QMUXResult,
+         qmux_msg->UIMSetPinProtectionResp.QMUXError)
+      );
+      retVal = 0xFF;
+   }
+   if (pOID != NULL)
+   {
+     pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+     switch(pOID->Oid)
+     {
+#ifdef NDIS620_MINIPORT
+        case OID_WWAN_PIN:
+        {
+           PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+           PNDIS_WWAN_PIN_INFO pPinInfo = (PNDIS_WWAN_PIN_INFO)pOID->pOIDResp;
+           pPinInfo->PinInfo.PinType = WwanPinTypeNone;
+           if (retVal == 0xFF)
+           {
+              if (pAdapter->DeviceClass == DEVICE_CLASS_GSM ||
+                  (pAdapter->DeviceClass == DEVICE_CLASS_CDMA && pAdapter->CDMAUIMSupport == 1))
+              {
+                 pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                 if (qmux_msg->UIMSetPinProtectionResp.QMUXError == QMI_ERR_ACCESS_DENIED)
+                 {
+                 }
+                 else if (qmux_msg->UIMSetPinProtectionResp.QMUXError == QMI_ERR_OP_DEVICE_UNSUPPORTED)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+   }
+                 else if (qmux_msg->UIMSetPinProtectionResp.QMUXError == QMI_ERR_INCORRECT_PIN ||
+                          qmux_msg->UIMSetPinProtectionResp.QMUXError == QMI_ERR_ARG_TOO_LONG)
+                 {
+                    /****************/
+                    // Setting Pin Type is not according to the MS MB Spec but the native UI doesn't show the
+                    // retries left when Pin Type is not set */
+                    /****************/
+                    pPinInfo->PinInfo.PinType = pSetPin->PinAction.PinType;
+
+                    if (qmux_msg->UIMSetPinProtectionResp.Length >= (sizeof(QMIDMS_UIM_SET_PIN_PROTECTION_RESP_MSG) - 4))
+                    {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMSetPinProtectionResp.PINVerifyRetriesLeft;
+                    }
+                    else
+                    {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                    }
+                 }
+                 else if (qmux_msg->UIMSetPinProtectionResp.QMUXError == QMI_ERR_PIN_BLOCKED)
+                 {
+                    pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                    if (pSetPin->PinAction.PinType == WwanPinTypePin1)
+                    {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk1;
+                    }
+                    else
+                    {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk2;
+                    }
+                    if (qmux_msg->UIMSetPinProtectionResp.Length >= (sizeof(QMIDMS_UIM_SET_PIN_PROTECTION_RESP_MSG) - 4))
+                    {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMSetPinProtectionResp.PINUnblockRetriesLeft;
+                    }
+                    else
+                    {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                    }
+                 }
+                 else if (qmux_msg->UIMSetPinProtectionResp.QMUXError == QMI_ERR_PIN_PERM_BLOCKED)
+                 {
+                    pAdapter->DeviceReadyState = DeviceWWanBadSim;
+                    MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateBadSim);
+                 }
+                 else if (qmux_msg->UIMSetPinProtectionResp.QMUXError == QMI_ERR_NO_EFFECT)
+                 {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                 }
+              }
+              else if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+              {
+                 pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+              }
+           }
+           else
+   {
+              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+           }
+           pPinInfo->uStatus = pOID->OIDStatus;
+        }
+        break;
+#endif /*NDIS620_MINIPORT*/
+     default:
+        pOID->OIDStatus = NDIS_STATUS_FAILURE;
+        break;
+     }
+   }
+
+   return retVal;
+}
+
+ULONG MPQMUX_ProcessUimVerifyPinResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+   if (qmux_msg->UIMUIMVerifyPinResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
+         ("<%s> QMUX: UIMUIMVerifyPin result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->UIMUIMVerifyPinResp.QMUXResult,
+         qmux_msg->UIMUIMVerifyPinResp.QMUXError)
+      );
+      retVal = 0XFF;
+   }
+   if (pOID != NULL)
+   {
+     pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+     switch(pOID->Oid)
+     {
+#ifdef NDIS620_MINIPORT
+        case OID_WWAN_PIN:
+        {
+           PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+           PNDIS_WWAN_PIN_INFO pPinInfo = (PNDIS_WWAN_PIN_INFO)pOID->pOIDResp;
+           pPinInfo->PinInfo.PinType = WwanPinTypeNone;
+           if (retVal == 0xFF)
+           {
+              if (pAdapter->DeviceClass == DEVICE_CLASS_GSM ||
+                  (pAdapter->DeviceClass == DEVICE_CLASS_CDMA && pAdapter->CDMAUIMSupport == 1))
+              {
+                 pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                 if (qmux_msg->UIMUIMVerifyPinResp.QMUXError == QMI_ERR_ACCESS_DENIED)
+                 {
+                 }
+                 else if (qmux_msg->UIMUIMVerifyPinResp.QMUXError == QMI_ERR_OP_DEVICE_UNSUPPORTED)
+                 {
+                    pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+                 }
+                 else if (qmux_msg->UIMUIMVerifyPinResp.QMUXError == QMI_ERR_INCORRECT_PIN ||
+                          qmux_msg->UIMUIMVerifyPinResp.QMUXError == QMI_ERR_ARG_TOO_LONG)
+                 {
+                    pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                    pPinInfo->PinInfo.PinType = pSetPin->PinAction.PinType;
+                    if (qmux_msg->UIMUIMVerifyPinResp.Length >= (sizeof(QMIUIM_VERIFY_PIN_RESP_MSG) - 4))
+                    {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMUIMVerifyPinResp.PINVerifyRetriesLeft;
+   }
+                    else
+   {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                    }
+                 }
+                 else if (qmux_msg->UIMUIMVerifyPinResp.QMUXError == QMI_ERR_PIN_BLOCKED)
+      {
+                    pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                    if (pSetPin->PinAction.PinType == WwanPinTypePin1)
+         {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk1;
+                    }
+                    else
+            {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk2;
+            }
+                    if (qmux_msg->UIMUIMVerifyPinResp.Length >= (sizeof(QMIUIM_VERIFY_PIN_RESP_MSG) - 4))
+            {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMUIMVerifyPinResp.PINUnblockRetriesLeft;
+                    }
+                    else
+               {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                    }
+                 }
+                 else if (qmux_msg->UIMUIMVerifyPinResp.QMUXError == QMI_ERR_PIN_PERM_BLOCKED)
+                     {
+                    pAdapter->DeviceReadyState = DeviceWWanBadSim;
+                    MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateBadSim);
+                 }
+                 else if (qmux_msg->UIMUIMVerifyPinResp.QMUXError == QMI_ERR_NO_EFFECT)
+                     {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                    // TODO: PIN
+                    //MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                    //                       QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );
+                 }
+              }
+              else if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+                        {
+                 pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+              }
+                        }
+                        else
+                        {
+              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+              // TODO: PIN
+              //MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+              //                       QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );
+           }
+           pPinInfo->uStatus = pOID->OIDStatus;
+                        }
+        break;
+#endif /*NDIS620_MINIPORT*/
+     default:
+        pOID->OIDStatus = NDIS_STATUS_FAILURE;
+        break;
+                     }
+                     }
+
+   return retVal;
+                     }
+                  
+ULONG MPQMUX_ProcessUimUnblockPinResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+                  {
+   UCHAR retVal = 0;
+   if (qmux_msg->UIMUIMUnblockPinResp.QMUXResult != QMI_RESULT_SUCCESS)
+                      {
+                      QCNET_DbgPrint
+                      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
+         ("<%s> QMUX: UIM unblock result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->UIMUIMUnblockPinResp.QMUXResult,
+         qmux_msg->UIMUIMUnblockPinResp.QMUXError)
+                      );
+      retVal = 0xFF;
+                    }
+   if (pOID != NULL)
+   {
+     pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+     switch(pOID->Oid)
+     {
+#ifdef NDIS620_MINIPORT
+        case OID_WWAN_PIN:
+        {
+           PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+           PNDIS_WWAN_PIN_INFO pPinInfo = (PNDIS_WWAN_PIN_INFO)pOID->pOIDResp;
+           pPinInfo->PinInfo.PinType = WwanPinTypeNone;
+                  
+           if (retVal == 0xFF)
+                    {
+              if (pAdapter->DeviceClass == DEVICE_CLASS_GSM ||
+                  (pAdapter->DeviceClass == DEVICE_CLASS_CDMA && pAdapter->CDMAUIMSupport == 1))
+                        {
+                 pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                 if (qmux_msg->UIMUIMUnblockPinResp.QMUXError == QMI_ERR_ACCESS_DENIED)
+                           {
+                           }
+                 else if (qmux_msg->UIMUIMUnblockPinResp.QMUXError == QMI_ERR_OP_DEVICE_UNSUPPORTED)
+                           {
+                    pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+                        }
+                 else if (qmux_msg->UIMUIMUnblockPinResp.QMUXError == QMI_ERR_PIN_BLOCKED)
+                        {
+                    pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                    if (pSetPin->PinAction.PinType == WwanPinTypePuk1)
+                           {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk1;
+                           }
+                           else
+                           {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk2;
+                        }
+                    if (qmux_msg->UIMUIMUnblockPinResp.Length >= (sizeof(QMIDMS_UIM_UNBLOCK_PIN_RESP_MSG) - 4))
+                           {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMUIMUnblockPinResp.PINUnblockRetriesLeft;
+                           }
+                           else
+                           {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                           }
+                        }
+                 else if (qmux_msg->UIMUIMUnblockPinResp.QMUXError == QMI_ERR_PIN_PERM_BLOCKED)
+                      {
+                    pAdapter->DeviceReadyState = DeviceWWanBadSim;
+                    MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateBadSim);
+                 }
+                 else if (qmux_msg->UIMUIMUnblockPinResp.QMUXError == QMI_ERR_NO_EFFECT)
+                         {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                    // TODO: PIN
+                    //MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                    //                       QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );
+                         }
+                         else
+                         {
+                    pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                    pPinInfo->PinInfo.PinType = pSetPin->PinAction.PinType;
+                    if (qmux_msg->UIMUIMUnblockPinResp.Length >= (sizeof(QMIDMS_UIM_UNBLOCK_PIN_RESP_MSG) - 4))
+                        {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMUIMUnblockPinResp.PINUnblockRetriesLeft;
+                        }
+                        else
+                        {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                    }
+                 }
+              }
+              else if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+                           {
+                 pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+              }
+                           }
+                           else
+                           {
+              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+              // TODO: PIN
+              //MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+              //                       QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );
+           }
+           pPinInfo->uStatus = pOID->OIDStatus;
+        }
+        break;
+#endif /*NDIS620_MINIPORT*/
+     default:
+        pOID->OIDStatus = NDIS_STATUS_FAILURE;
+        break;
+                        }
+                     }
+   return retVal;
+                     }
+
+ULONG MPQMUX_ProcessUimChangePinResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+   if (qmux_msg->UIMChangePinResp.QMUXResult != QMI_RESULT_SUCCESS)
+                    {
+                        QCNET_DbgPrint
+                        (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
+         ("<%s> QMUX: UIM change result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->UIMChangePinResp.QMUXResult,
+         qmux_msg->UIMChangePinResp.QMUXError)
+                        );
+      retVal = 0xFF;
+   }
+   if (pOID != NULL)
+   {
+     pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+     switch(pOID->Oid)
+                        {
+#ifdef NDIS620_MINIPORT
+        case OID_WWAN_PIN:
+                           {
+           PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+           PNDIS_WWAN_PIN_INFO pPinInfo = (PNDIS_WWAN_PIN_INFO)pOID->pOIDResp;
+           pPinInfo->PinInfo.PinType = WwanPinTypeNone;
+           if (retVal == 0xFF)
+                           {
+              if (pAdapter->DeviceClass == DEVICE_CLASS_GSM ||
+                  (pAdapter->DeviceClass == DEVICE_CLASS_CDMA && pAdapter->CDMAUIMSupport == 1))
+                        {
+                 pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                 if (qmux_msg->UIMChangePinResp.QMUXError == QMI_ERR_ACCESS_DENIED)
+                           {
+                    pOID->OIDStatus = WWAN_STATUS_PIN_DISABLED;
+                           }
+                 else if (qmux_msg->UIMChangePinResp.QMUXError == QMI_ERR_OP_DEVICE_UNSUPPORTED)
+                           {
+                    pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+                           }
+                 else if (qmux_msg->UIMChangePinResp.QMUXError == QMI_ERR_INCORRECT_PIN ||
+                          qmux_msg->UIMChangePinResp.QMUXError == QMI_ERR_ARG_TOO_LONG)
+                        {
+                    /****************/
+                    // Setting Pin Type is not according to the MS MB Spec but the native UI doesn't show the
+                    // retries left when Pin Type is not set */
+                    /****************/
+                    pPinInfo->PinInfo.PinType = pSetPin->PinAction.PinType;
+                    
+                    if (qmux_msg->UIMChangePinResp.Length >= (sizeof(QMIDMS_UIM_CHANGE_PIN_RESP_MSG) - 4))
+                           {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMChangePinResp.PINVerifyRetriesLeft;
+                           }
+                           else
+                           {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                           }
+                        }
+                 else if (qmux_msg->UIMChangePinResp.QMUXError == QMI_ERR_PIN_BLOCKED)
+                 {
+                    pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                    if (pSetPin->PinAction.PinType == WwanPinTypePin1)
+                        {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk1;
+                            }
+                            else
+                            {
+                       pPinInfo->PinInfo.PinType = WwanPinTypePuk2;
+                    }
+                    if (qmux_msg->UIMChangePinResp.Length >= (sizeof(QMIDMS_UIM_CHANGE_PIN_RESP_MSG) - 4))
+                                {
+                       pPinInfo->PinInfo.AttemptsRemaining = qmux_msg->UIMChangePinResp.PINUnblockRetriesLeft;
+                                }
+                                else
+                                {
+                       pPinInfo->PinInfo.AttemptsRemaining = pAdapter->SimRetriesLeft;
+                            }
+                        }
+                 else if (qmux_msg->UIMChangePinResp.QMUXError == QMI_ERR_PIN_PERM_BLOCKED)
+                 {
+                    pAdapter->DeviceReadyState = DeviceWWanBadSim;
+                    MPOID_IndicationReadyInfo( pAdapter, WwanReadyStateBadSim);
+                        }
+                 else if (qmux_msg->UIMChangePinResp.QMUXError == QMI_ERR_NO_EFFECT)
+                         {
+                    pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                 }
+              }
+              else if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+                             {
+                 pOID->OIDStatus = WWAN_STATUS_NO_DEVICE_SUPPORT;
+              }
+                             }
+                             else
+                             {
+              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+              // TODO: PIN
+              //MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+              //                       QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );
+                             }
+           pPinInfo->uStatus = pOID->OIDStatus;
+                         }
+        break;
+#endif /*NDIS620_MINIPORT*/
+     default:
+        pOID->OIDStatus = NDIS_STATUS_FAILURE;
+                         break;
+                     }
+   }
+   return retVal;
+}
+
+ULONG MPQMUX_ProcessUimEventResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+                  {
+   return 0;   
+                     }
+
+BOOLEAN ParseUIMCardState
+                     (
+   PMP_ADAPTER pAdapter, 
+   PQMUX_MSG   qmux_msg,
+   UCHAR *CardState,
+   UCHAR *PIN1State,
+   UCHAR *PIN1Retries,
+   UCHAR *PUK1Retries,
+   UCHAR *PIN2State,
+   UCHAR *PIN2Retries,
+   UCHAR *PUK2Retries
+)
+{
+   LONG remainingLen;
+   PQMIUIM_CARD_STATUS pCardStatus;
+   PQMIUIM_PIN_STATE pPINState;
+
+#ifdef NDIS620_MINIPORT
+
+   pCardStatus = (PQMIUIM_CARD_STATUS)(((PCHAR)&qmux_msg->UIMGetCardStatus) + QCQMUX_MSG_HDR_SIZE);
+   remainingLen = qmux_msg->UIMGetCardStatus.Length;
+
+   while (remainingLen > 0)
+                 {
+      switch (pCardStatus->TLVType)
+                   {
+         case 0x10:
+                      {
+            pPINState = (PQMIUIM_PIN_STATE)((PUCHAR)pCardStatus + sizeof(QMIUIM_CARD_STATUS) + pCardStatus->AIDLength);
+                   QCNET_DbgPrint
+                   (
+               MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+               ("<%s> QMUX: UIM Card status 0x%x TLVType 0x%x\n", pAdapter->PortName,
+               pCardStatus->CardState, pCardStatus->TLVType)
+                   );
+            *CardState  = pCardStatus->CardState;
+            if (pPINState->UnivPIN == 1)
+            {
+               *PIN1State = pCardStatus->UPINState;
+               *PIN1Retries = pCardStatus->UPINRetries;
+               *PUK1Retries = pCardStatus->UPUKRetries;
+            }
+            else
+            {
+               *PIN1State = pPINState->PIN1State;
+               *PIN1Retries = pPINState->PIN1Retries;
+               *PUK1Retries = pPINState->PUK1Retries;
+            }
+            *PIN2State = pPINState->PIN2State;
+            *PIN2Retries = pPINState->PIN2Retries;
+            *PUK2Retries = pPINState->PUK2Retries;
+            pAdapter->IndexGWPri = pCardStatus->IndexGWPri;
+                   break;
+                }                    
+                     }
+      remainingLen -= (pCardStatus->TLVLength + 3);
+      pCardStatus = (PQMIUIM_CARD_STATUS)((PCHAR)&pCardStatus->TLVLength + pCardStatus->TLVLength + sizeof(USHORT));
+                     }
+#endif
+   return TRUE;
+                  }                    
+
+ULONG MPQMUX_ProcessUimGetCardStatusResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+                  {
+   UCHAR retVal = 0;
+   UCHAR CardState;
+   UCHAR PIN1State;
+   UCHAR PIN1Retries;
+   UCHAR PUK1Retries;
+   UCHAR PIN2State;
+   UCHAR PIN2Retries;
+   UCHAR PUK2Retries;
+
+   if (qmux_msg->UIMGetCardStatus.QMUXResult != QMI_RESULT_SUCCESS)
+                     {
+                         QCNET_DbgPrint
+                         (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR, 
+         ("<%s> QMUX: UIMGetCardStatus result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->UIMGetCardStatus.QMUXResult,
+         qmux_msg->UIMGetCardStatus.QMUXError)
+                         );
+      retVal =  0xFF;
+                     }
+   else
+   {
+      ParseUIMCardState( pAdapter, qmux_msg, &CardState, &PIN1State, &PIN1Retries,
+                         &PUK1Retries, &PIN2State, &PIN2Retries, &PUK2Retries);
+                  }                    
+   if (pOID != NULL)
+   {
+      ULONG value;
+      pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+      switch(pOID->Oid)
+      {
+#ifdef NDIS620_MINIPORT
+         case OID_WWAN_READY_INFO:
+                  {
+             PNDIS_WWAN_READY_INFO pNdisReadyInfo = (PNDIS_WWAN_READY_INFO)pOID->pOIDResp;
+             pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+             if (retVal != 0xFF)
+                      {
+                          QCNET_DbgPrint
+                          (
+                   MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL, 
+                   ("<%s> QMUX: UIMGetCardStatus 0x%x\n", pAdapter->PortName,
+                   CardState)
+                          );
+                if ((CardState == 0x01) && 
+                    ((PIN1State == QMI_PIN_STATUS_VERIFIED)|| (PIN1State == QMI_PIN_STATUS_DISABLED)))
+                {
+                   if ( pAdapter->DeviceClass == DEVICE_CLASS_CDMA && pAdapter->CDMAUIMSupport == 1)
+                   {
+                      MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                             QMIDMS_GET_ACTIVATED_STATUS_REQ, NULL, TRUE );
+                   }
+                   else
+                   {
+                      MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                             QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+                   }
+                }
+                else if (CardState == 0x01)
+                {
+                   if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                   {
+                       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                                   QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );                     
+                   }
+                   else
+                   {
+                      if (PIN1State == QMI_PIN_STATUS_NOT_VERIF || 
+                          PIN1State == QMI_PIN_STATUS_BLOCKED)
+                      {
+                         pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateDeviceLocked;
+                         pAdapter->DeviceReadyState = DeviceWWanDeviceLocked;
+                         MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+                      }
+                      else if (PIN1State == QMI_PIN_STATUS_NOT_INIT ||
+                               PIN1State == QMI_PIN_STATUS_VERIFIED ||
+                               PIN1State == QMI_PIN_STATUS_DISABLED)
+                      {
+                         // pAdapter->CkFacility = 0;
+                         // MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                         //                       QMIDMS_UIM_GET_CK_STATUS_REQ, MPQMUX_GetDmsUIMGetCkStatusReq, TRUE );
+                         MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+                         
+                  }     
+                      else if (PIN1State == QMI_PIN_STATUS_PERM_BLOCKED) 
+                  {
+                         pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateBadSim;
+                         pAdapter->DeviceReadyState = DeviceWWanBadSim;
+                         MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                                QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                         MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                                QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+                  }
+               }
+            }
+                else if (CardState == 0x00 ||
+                         CardState == 0x02)
+         {
+                   pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateSimNotInserted;
+                   pAdapter->DeviceReadyState = DeviceWWanNoSim;
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                          QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                   MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                          QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+                }
+             }
+             else
+            {
+                pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateSimNotInserted;
+                pAdapter->DeviceReadyState = DeviceWWanNoSim;
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                       QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                       QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+             }
+               break;
+            }
+         case OID_WWAN_PIN:
+         {
+            PNDIS_WWAN_PIN_INFO pPinInfo = (PNDIS_WWAN_PIN_INFO)pOID->pOIDResp;
+            
+            if (pOID->OidType == fMP_QUERY_OID)
+               {
+               pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+               if (retVal != 0xFF)
+                  {
+                  pPinInfo->PinInfo.PinType = WwanPinTypeNone;
+                  pPinInfo->PinInfo.PinState = WwanPinStateNone;
+   
+                  if (PIN1State == QMI_PIN_STATUS_NOT_VERIF)
+                  {
+                     pPinInfo->PinInfo.PinType = WwanPinTypePin1;
+                     pPinInfo->PinInfo.AttemptsRemaining = PIN1Retries;
+                     pAdapter->SimRetriesLeft = PIN1Retries;
+                     pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                  }
+                  else if (PIN1State == QMI_PIN_STATUS_BLOCKED)
+                  {
+                     pPinInfo->PinInfo.PinType = WwanPinTypePuk1;
+                     pPinInfo->PinInfo.AttemptsRemaining = PUK1Retries;
+                     pAdapter->SimRetriesLeft = PUK1Retries;
+                     pPinInfo->PinInfo.PinState = WwanPinStateEnter;
+                  }
+                  else if (PIN1State == QMI_PIN_STATUS_PERM_BLOCKED)
+                  {
+                     pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+               }
+            }
+               if (pAdapter->DeviceReadyState == DeviceWWanOff)
+               {
+                  pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+         }
+               else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+         {
+                  pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+               }
+               pPinInfo->uStatus = pOID->OIDStatus;
+         }
+            else
+            {
+               pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+               pPinInfo->PinInfo.PinType = WwanPinTypeNone;
+               pPinInfo->PinInfo.PinState = WwanPinStateNone;
+               if (retVal != 0xFF)
+               {
+                  PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
+                  switch(pSetPin->PinAction.PinOperation)
+                  {
+                     case WwanPinOperationEnter:
+                     {
+                        if (pSetPin->PinAction.PinType == WwanPinTypePuk1)
+                        {
+                           if (PIN1State == QMI_PIN_STATUS_BLOCKED)
+      {
+                              pAdapter->SimRetriesLeft = PUK1Retries;                       
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_UNBLOCK_PIN_REQ, MPQMUX_ComposeUimUnblockPinReqSend, TRUE );
+      }
+      else
+      {
+                              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                           }
+      }
+                        else if (pSetPin->PinAction.PinType == WwanPinTypePuk2)
+                        {
+                           if (PIN2State == QMI_PIN_STATUS_BLOCKED)
+      {
+                              pAdapter->SimRetriesLeft = PUK2Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_UNBLOCK_PIN_REQ, MPQMUX_ComposeUimUnblockPinReqSend, TRUE );
+      }
+                           else
+   {
+                              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                           }
+   }
+      
+                        else if (pSetPin->PinAction.PinType == WwanPinTypePin1)
+                        {
+                           if (PIN1State == QMI_PIN_STATUS_NOT_VERIF ||
+                               PIN1State == QMI_PIN_STATUS_VERIFIED)
+   {
+                              pAdapter->SimRetriesLeft = PIN1Retries; 
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_VERIFY_PIN_REQ, MPQMUX_ComposeUimVerifyPinReqSend, TRUE );
+   }
+                           else
+   {
+                              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                           }
+   }
+                        else if (pSetPin->PinAction.PinType == WwanPinTypePin2)
+    {
+                           if (PIN2State == QMI_PIN_STATUS_NOT_VERIF ||
+                               PIN2State == QMI_PIN_STATUS_VERIFIED)
+    {
+                              pAdapter->SimRetriesLeft = PIN2Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_VERIFY_PIN_REQ, MPQMUX_ComposeUimVerifyPinReqSend, TRUE );
+    }
+    else
+    {
+                              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                           }
+                        }
+                        break;
+    }
+                     case WwanPinOperationEnable:
+                     {
+                        if (pSetPin->PinAction.PinType == WwanPinTypePin1)
+                        {
+                           if (PIN1State != QMI_PIN_STATUS_NOT_VERIF &&
+                               PIN1State != QMI_PIN_STATUS_VERIFIED)
+    {
+                              pAdapter->SimRetriesLeft = PIN1Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_SET_PIN_PROTECTION_REQ, MPQMUX_ComposeUimSetPinProtectionReqSend, TRUE );                              
+    }
+                           else
+    {
+                              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                           }
+    }
+                        else if (pSetPin->PinAction.PinType == WwanPinTypePin2)
+    {
+                           if (PIN2State != QMI_PIN_STATUS_NOT_VERIF &&
+                               PIN2State != QMI_PIN_STATUS_VERIFIED)
+    {
+                              pAdapter->SimRetriesLeft = PIN2Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_SET_PIN_PROTECTION_REQ, MPQMUX_ComposeUimSetPinProtectionReqSend, TRUE );                              
+    }
+    else
+    {
+                              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+                           }
+                        }
+                        break;
+    }
+                     case WwanPinOperationDisable:
+    {
+                        if (pSetPin->PinAction.PinType == WwanPinTypePin1)
+    {
+                           if (PIN1State != QMI_PIN_STATUS_DISABLED)
+       {
+                              pAdapter->SimRetriesLeft = PIN1Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_SET_PIN_PROTECTION_REQ, MPQMUX_ComposeUimSetPinProtectionReqSend, TRUE );                              
+       }
+       else
+       { 
+                              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+       }
+    }
+                        else if (pSetPin->PinAction.PinType == WwanPinTypePin2)
+    {
+                           if (PIN2State != QMI_PIN_STATUS_DISABLED)
+    {
+                              pAdapter->SimRetriesLeft = PIN2Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_SET_PIN_PROTECTION_REQ, MPQMUX_ComposeUimSetPinProtectionReqSend, TRUE );                              
+    }
+                           else
+                           {
+                              pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+    }
+    }
+                        break;
+    }
+                     case WwanPinOperationChange:
+    {
+                        if (pSetPin->PinAction.PinType == WwanPinTypePin1)
+    {
+                           if (PIN1State == QMI_PIN_STATUS_NOT_VERIF ||
+                               PIN1State == QMI_PIN_STATUS_VERIFIED)
+    {
+                              pAdapter->SimRetriesLeft = PIN1Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_CHANGE_PIN_REQ, MPQMUX_ComposeUimChangePinReqSend, TRUE );
+                              
+    }
+                           else if(PIN1State == QMI_PIN_STATUS_DISABLED)
+    {
+                              pOID->OIDStatus = WWAN_STATUS_PIN_DISABLED;
+    }
+    else
+    {
+                              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+                           }
+                        }
+                        else if (pSetPin->PinAction.PinType == WwanPinTypePin2)
+    {
+                           if (PIN2State == QMI_PIN_STATUS_NOT_VERIF ||
+                               PIN2State == QMI_PIN_STATUS_VERIFIED)
+       {
+                              pAdapter->SimRetriesLeft = PIN2Retries;
+                              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_CHANGE_PIN_REQ, MPQMUX_ComposeUimChangePinReqSend, TRUE );
+                           }
+                           else if(PIN2State == QMI_PIN_STATUS_DISABLED)
+          {
+                              pOID->OIDStatus = WWAN_STATUS_PIN_DISABLED;
+          }
+          else
+          {
+                              pOID->OIDStatus = WWAN_STATUS_FAILURE;
+          }
+       }
+                        break;
+       }
+    }
+    }
+               pPinInfo->uStatus = pOID->OIDStatus;
+    }
+    }
+         break;
+
+         case OID_WWAN_PIN_LIST:
+         {
+            PNDIS_WWAN_PIN_LIST pPinList = (PNDIS_WWAN_PIN_LIST)pOID->pOIDResp;
+            pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+            if (retVal != 0xFF)
+            {
+               if (PIN1State == QMI_PIN_STATUS_NOT_VERIF || 
+                   PIN1State == QMI_PIN_STATUS_VERIFIED ||
+                   PIN1State == QMI_PIN_STATUS_BLOCKED )
+    {
+                  pPinList->PinList.WwanPinDescPin1.PinMode = WwanPinModeEnabled;
+    }
+               else if (PIN1State == QMI_PIN_STATUS_DISABLED) 
+    {
+                  pPinList->PinList.WwanPinDescPin1.PinMode = WwanPinModeDisabled;
+    }
+               pPinList->PinList.WwanPinDescPin1.PinFormat = WwanPinFormatNumeric;
+               pPinList->PinList.WwanPinDescPin1.PinLengthMin =  4;
+               pPinList->PinList.WwanPinDescPin1.PinLengthMax =  8;
+               if (PIN2State == QMI_PIN_STATUS_NOT_VERIF || 
+                   PIN2State == QMI_PIN_STATUS_VERIFIED ||
+                   PIN2State == QMI_PIN_STATUS_BLOCKED)
+    {
+                  pPinList->PinList.WwanPinDescPin2.PinMode = WwanPinModeEnabled;
+               }
+               else if (PIN2State == QMI_PIN_STATUS_DISABLED) 
+        {
+                  pPinList->PinList.WwanPinDescPin2.PinMode = WwanPinModeDisabled;
+               }
+               pPinList->PinList.WwanPinDescPin2.PinFormat = WwanPinFormatNumeric;
+               pPinList->PinList.WwanPinDescPin2.PinLengthMin =  4;
+               pPinList->PinList.WwanPinDescPin2.PinLengthMax =  8;
+        }
+            if (pAdapter->DeviceReadyState == DeviceWWanOff)
+        {
+               pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+        }
+            else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+        {
+               pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+        }
+            else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+        {
+               pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+        }
+            pPinList->uStatus = pOID->OIDStatus;
+    }    
+         break;
+#endif
+         default:
+         pOID->OIDStatus = NDIS_STATUS_FAILURE;
+         break;
+    }
+    }
+   else
+    {
+      if (retVal != 0xFF)
+    {
+       QCNET_DbgPrint
+       (
+            MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL, 
+            ("<%s> QMUX: UIMGetCardStatus 0x%x\n", pAdapter->PortName,
+            CardState)
+       );
+#ifdef NDIS620_MINIPORT
+        if ((CardState == 0x01) && 
+            ((PIN1State == QMI_PIN_STATUS_VERIFIED)|| (PIN1State == QMI_PIN_STATUS_DISABLED)))
+        {
+           if ( pAdapter->DeviceClass == DEVICE_CLASS_CDMA && pAdapter->CDMAUIMSupport == 1)
+           {
+              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                     QMIDMS_GET_ACTIVATED_STATUS_REQ, NULL, TRUE );
+           }
+           else
+           {
+              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                     QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+    }
+}
+        else if (CardState == 0x01)
+        {
+           if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+           {
+               MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                           QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );                     
+           }
+           else
+           {
+              if (PIN1State == QMI_PIN_STATUS_NOT_VERIF || 
+                  PIN1State == QMI_PIN_STATUS_BLOCKED)
+{
+                 pAdapter->DeviceReadyState = DeviceWWanDeviceLocked;
+                 MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                        QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+              }
+              else if (PIN1State == QMI_PIN_STATUS_NOT_INIT ||
+                       PIN1State == QMI_PIN_STATUS_VERIFIED ||
+                       PIN1State == QMI_PIN_STATUS_DISABLED)
+    {
+                 // pAdapter->CkFacility = 0;
+                 // MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                 //                       QMIDMS_UIM_GET_CK_STATUS_REQ, MPQMUX_GetDmsUIMGetCkStatusReq, TRUE );
+                 MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                        QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+    }
+              else if (PIN1State == QMI_PIN_STATUS_PERM_BLOCKED) 
+    {
+                 pAdapter->DeviceReadyState = DeviceWWanBadSim;
+                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                        QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                 MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                        QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+              }
+           }
+    }
+        else if (CardState == 0x00 ||
+                 CardState == 0x02)
+    {
+           pAdapter->DeviceReadyState = DeviceWWanNoSim;
+           MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                  QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+           MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                  QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+        } 
+#endif        
+      }
+   }
+   return retVal;
+    }
+    
+USHORT MPQMUX_SendUimSetEventReportReq
+
+(
+   PMP_ADAPTER pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   USHORT qmux_len = 0;
+   ULONG unQmuxLen = 0;
+   PUCHAR pPayload;
+
+   unQmuxLen = sizeof(QMIDMS_SET_EVENT_REPORT_REQ_MSG);
+
+   pPayload = (PUCHAR)qmux_msg;
+   qmux_msg->DmsSetEventReportReq.Length = unQmuxLen - 4;
+   pPayload += unQmuxLen;
+
+   {
+      PQMIUIM_EVENT_REG pUIMEventReg = (PQMIUIM_EVENT_REG)(pPayload);
+      unQmuxLen += sizeof(QMIUIM_EVENT_REG);
+      qmux_msg->DmsSetEventReportReq.Length += sizeof(QMIUIM_EVENT_REG);
+      pPayload += sizeof(QMIUIM_EVENT_REG);
+      pUIMEventReg->TLVType = 0x01;
+      pUIMEventReg->TLVLength = 0x04;
+      pUIMEventReg->Mask = 0x01;
+   }
+   qmux_len = qmux_msg->DmsSetEventReportReq.Length;
+   return qmux_len;
+   }
+
+ULONG MPQMUX_ProcessUimSetEventReportResp
+(
+   PMP_ADAPTER pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> UimSetEventReport\n", pAdapter->PortName)
+   );
+
+   if (qmux_msg->DmsSetEventReportResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+         ("<%s> QMUX: SendUimSetEventReportResp result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->DmsSetEventReportResp.QMUXResult,
+         qmux_msg->DmsSetEventReportResp.QMUXError)
+      );
+      retVal = 0xFF;
+   }
+   if (pOID != NULL)
+   {
+     //pOID->OIDStatus = NDIS_STATUS_SUCCESS;
+     switch(pOID->Oid)
+   {
+#ifdef NDIS620_MINIPORT
+#endif /*NDIS620_MINIPORT*/
+     default:
+        //pOID->OIDStatus = NDIS_STATUS_FAILURE;
+        break;
+     }
+   }
+
+   return retVal;
+   }
+
+
+ULONG MPQMUX_ProcessUimEventReportInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   {
+   UCHAR retVal = 0;
+   ULONG remainingLen;
+   UCHAR CardState;
+   UCHAR PIN1State;
+   UCHAR PIN1Retries;
+   UCHAR PUK1Retries;
+   UCHAR PIN2State;
+   UCHAR PIN2Retries;
+   UCHAR PUK2Retries;
+   
+      QCNET_DbgPrint
+      (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> UimEventReportInd\n", pAdapter->PortName)
+      );
+
+   ParseUIMCardState(pAdapter, qmux_msg, &CardState, &PIN1State, &PIN1Retries, &PUK1Retries,
+                     &PIN2State, &PIN2Retries, &PUK2Retries);
+#ifdef NDIS620_MINIPORT
+   if (pOID == NULL)
+   {
+      if ((CardState == 0x01) && 
+          ((PIN1State == QMI_PIN_STATUS_VERIFIED)|| (PIN1State == QMI_PIN_STATUS_DISABLED)))
+   {
+         if ( pAdapter->DeviceClass == DEVICE_CLASS_CDMA && pAdapter->CDMAUIMSupport == 1)
+   {
+            MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                   QMIDMS_GET_ACTIVATED_STATUS_REQ, NULL, TRUE );
+   }
+   else
+   {
+            MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                   QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+         }
+   }
+      else if (CardState == 0x01)
+      {
+         if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+   {
+             MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+                                         QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, TRUE );                     
+   }
+   else
+   {
+            if (PIN1State == QMI_PIN_STATUS_NOT_VERIF || 
+                PIN1State == QMI_PIN_STATUS_BLOCKED)
+            {
+               pAdapter->DeviceReadyState = DeviceWWanDeviceLocked;
+               MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                      QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentICCIDReqSend, TRUE );
+               
+   }
+            else if (PIN1State == QMI_PIN_STATUS_NOT_INIT ||
+                     PIN1State == QMI_PIN_STATUS_VERIFIED ||
+                     PIN1State == QMI_PIN_STATUS_DISABLED)
+            {
+               // pAdapter->CkFacility = 0;
+               // MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
+               //                       QMIDMS_UIM_GET_CK_STATUS_REQ, MPQMUX_GetDmsUIMGetCkStatusReq, TRUE );
+               MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                      QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+    
+            }
+            else if (PIN1State == QMI_PIN_STATUS_PERM_BLOCKED) 
+   {
+               pAdapter->DeviceReadyState = DeviceWWanBadSim;
+               MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                      QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+               MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                      QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+            }
+         }
+   }
+      else if (CardState == 0x00 ||
+               CardState == 0x02)
+   {
+         pAdapter->DeviceReadyState = DeviceWWanNoSim;
+         MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+         MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+       }
+   }
+#else
+   MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                       QMIUIM_READ_TRANSPARENT_REQ, MPQMUX_ComposeUimReadTransparentIMSIReqSend, TRUE );
+#endif   
+   return retVal;
+   }
+
+
+ULONG MPQMUX_ProcessUimReadTransparantInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   {
+   return 0;   
+   } 
+   
+ULONG MPQMUX_ProcessUimReadRecordInd
+      (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   {
+   return 0;   
+   }
+
+ULONG MPQMUX_ProcessUimWriteTransparantInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   {
+   return 0;   
+   }
+
+ULONG MPQMUX_ProcessUimWriteRecordInd
+         (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   {
+   return 0;   
+}
+
+ULONG MPQMUX_ProcessUimSetPinProtectionInd
+      (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   {
+   return 0;   
+   }
+
+ULONG MPQMUX_ProcessUimVerifyPinInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   return 0;   
+}
+
+ULONG MPQMUX_ProcessUimUnblockPinInd
+   (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   return 0;   
+}
+
+ULONG MPQMUX_ProcessUimChangePinInd
+      (
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+      {
+   return 0;   
+      }
+    
+ULONG MPQMUX_ProcessUimStatusChangePinInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+   {
    return 0;      
 } 
 

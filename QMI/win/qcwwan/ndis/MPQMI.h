@@ -58,6 +58,7 @@ typedef enum _QMI_SERVICE_TYPE
    QMUX_TYPE_QOS  = 0x04,
    QMUX_TYPE_WMS  = 0x05,
    QMUX_TYPE_PDS  = 0x06,
+   QMUX_TYPE_UIM  = 0x0B,
    QMUX_TYPE_WDS_ADMIN  = 0x1A,
    QMUX_TYPE_DFS  = 0x30,   
    QMUX_TYPE_MAX  = 0xFF,

@@ -4473,6 +4473,13 @@ NDIS_STATUS MPMAIN_OpenQMIClients(PMP_ADAPTER pAdapter)
    {
       goto ExitPoint;
    }
+
+   ndisStatus = MPQCTL_GetClientId(pAdapter, QMUX_TYPE_UIM, pAdapter);
+   if (ndisStatus != NDIS_STATUS_SUCCESS)
+   {
+      goto ExitPoint;
+   }
+   
 ExitPoint:
 
    if (ndisStatus != NDIS_STATUS_SUCCESS)
@@ -4769,8 +4776,17 @@ VOID RegisterPacketTimerDpc
 
    if ( pOID != NULL)
    {
+      if (pAdapter->IsNASSysInfoPresent == FALSE)
+      {
       MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                              QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
+      }
+      else
+      {
+          MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                         QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+      }
+      
       pAdapter->RegisterPacketTimerContext = NULL;
    }
 

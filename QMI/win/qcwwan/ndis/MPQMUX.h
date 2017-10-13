@@ -2266,8 +2266,13 @@ typedef struct _QMIWMS_MESSAGE_MODE
 #define QMINAS_SET_TECHNOLOGY_PREF_RESP         0x002A
 #define QMINAS_GET_RF_BAND_INFO_REQ             0x0031
 #define QMINAS_GET_RF_BAND_INFO_RESP            0x0031
+#define QMINAS_SET_SYSTEM_SELECTION_PREF_REQ    0x0033
+#define QMINAS_SET_SYSTEM_SELECTION_PREF_RESP   0x0033
 #define QMINAS_GET_PLMN_NAME_REQ                0x0044
 #define QMINAS_GET_PLMN_NAME_RESP               0x0044
+#define QMINAS_GET_SYS_INFO_REQ                 0x004D
+#define QMINAS_GET_SYS_INFO_RESP                0x004D
+#define QMINAS_SYS_INFO_IND                     0x004D
 
 
 typedef struct _QMINAS_GET_HOME_NETWORK_REQ_MSG
@@ -2435,6 +2440,217 @@ typedef struct _QMINAS_SERVING_SYSTEM_IND_MSG
    USHORT Length;
 } QMINAS_SERVING_SYSTEM_IND_MSG, *PQMINAS_SERVING_SYSTEM_IND_MSG;
 
+typedef struct _QMINAS_GET_SYS_INFO_RESP_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   UCHAR  TLVType;          
+   USHORT TLVLength;        
+   USHORT QMUXResult;      
+   USHORT QMUXError;       
+} QMINAS_GET_SYS_INFO_RESP_MSG, *PQMINAS_GET_SYS_INFO_RESP_MSG;
+
+typedef struct _SERVICE_STATUS_INFO
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvStatus;
+   UCHAR  IsPrefDataPath;
+} SERVICE_STATUS_INFO, *PSERVICE_STATUS_INFO;
+
+typedef struct _SERVICE_STATUS_INFO_2
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvStatus;
+   UCHAR  TrueSrvStatus;
+   UCHAR  IsPrefDataPath;
+} SERVICE_STATUS_INFO_2, *PSERVICE_STATUS_INFO_2;
+
+typedef struct _CDMA_SYSTEM_INFO
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvDomainValid;
+   UCHAR  SrvDomain;
+   UCHAR  SrvCapabilityValid;
+   UCHAR  SrvCapability;
+   UCHAR  RoamStatusValid;
+   UCHAR  RoamStatus;
+   UCHAR  IsSysForbiddenValid;
+   UCHAR  IsSysForbidden;
+   UCHAR  IsSysPrlMatchValid;
+   UCHAR  IsSysPrlMatch;
+   UCHAR  PRevInUseValid;
+   UCHAR  PRevInUse;
+   UCHAR  BSPRevValid;
+   UCHAR  BSPRev;
+   UCHAR  CCSSupportedValid;
+   UCHAR  CCSSupported;
+   UCHAR  CDMASysIdValid;
+   USHORT SID;
+   USHORT NID;
+   UCHAR  BSInfoValid;
+   USHORT BaseID;
+   ULONG  BaseLAT;
+   ULONG  BaseLONG;
+   UCHAR  PacketZoneValid;
+   USHORT PacketZone;
+   UCHAR  NetworkIdValid;
+   UCHAR  MCC[3];
+   UCHAR  MNC[3];
+} CDMA_SYSTEM_INFO, *PCDMA_SYSTEM_INFO;
+
+typedef struct _HDR_SYSTEM_INFO
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvDomainValid;
+   UCHAR  SrvDomain;
+   UCHAR  SrvCapabilityValid;
+   UCHAR  SrvCapability;
+   UCHAR  RoamStatusValid;
+   UCHAR  RoamStatus;
+   UCHAR  IsSysForbiddenValid;
+   UCHAR  IsSysForbidden;
+   UCHAR  IsSysPrlMatchValid;
+   UCHAR  IsSysPrlMatch;
+   UCHAR  HdrPersonalityValid;
+   UCHAR  HdrPersonality;
+   UCHAR  HdrActiveProtValid;
+   UCHAR  HdrActiveProt;
+   UCHAR  is856SysIdValid;
+   UCHAR  is856SysId[16];
+} HDR_SYSTEM_INFO, *PHDR_SYSTEM_INFO;
+
+typedef struct _GSM_SYSTEM_INFO
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvDomainValid;
+   UCHAR  SrvDomain;
+   UCHAR  SrvCapabilityValid;
+   UCHAR  SrvCapability;
+   UCHAR  RoamStatusValid;
+   UCHAR  RoamStatus;
+   UCHAR  IsSysForbiddenValid;
+   UCHAR  IsSysForbidden;
+   UCHAR  LacValid;
+   USHORT Lac;
+   UCHAR  CellIdValid;
+   ULONG  CellId;
+   UCHAR  RegRejectInfoValid;
+   UCHAR  RejectSrvDomain;
+   UCHAR  RejCause;
+   UCHAR  NetworkIdValid;
+   UCHAR  MCC[3];
+   UCHAR  MNC[3];
+   UCHAR  EgprsSuppValid;
+   UCHAR  EgprsSupp;
+   UCHAR  DtmSuppValid;
+   UCHAR  DtmSupp;
+} GSM_SYSTEM_INFO, *PGSM_SYSTEM_INFO;
+
+typedef struct _WCDMA_SYSTEM_INFO
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvDomainValid;
+   UCHAR  SrvDomain;
+   UCHAR  SrvCapabilityValid;
+   UCHAR  SrvCapability;
+   UCHAR  RoamStatusValid;
+   UCHAR  RoamStatus;
+   UCHAR  IsSysForbiddenValid;
+   UCHAR  IsSysForbidden;
+   UCHAR  LacValid;
+   USHORT Lac;
+   UCHAR  CellIdValid;
+   ULONG  CellId;
+   UCHAR  RegRejectInfoValid;
+   UCHAR  RejectSrvDomain;
+   UCHAR  RejCause;
+   UCHAR  NetworkIdValid;
+   UCHAR  MCC[3];
+   UCHAR  MNC[3];
+   UCHAR  HsCallStatusValid;
+   UCHAR  HsCallStatus;
+   UCHAR  HsIndValid;
+   UCHAR  HsInd;
+   UCHAR  PscValid;
+   UCHAR  Psc;
+} WCDMA_SYSTEM_INFO, *PWCDMA_SYSTEM_INFO;
+
+typedef struct _LTE_SYSTEM_INFO
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvDomainValid;
+   UCHAR  SrvDomain;
+   UCHAR  SrvCapabilityValid;
+   UCHAR  SrvCapability;
+   UCHAR  RoamStatusValid;
+   UCHAR  RoamStatus;
+   UCHAR  IsSysForbiddenValid;
+   UCHAR  IsSysForbidden;
+   UCHAR  LacValid;
+   USHORT Lac;
+   UCHAR  CellIdValid;
+   ULONG  CellId;
+   UCHAR  RegRejectInfoValid;
+   UCHAR  RejectSrvDomain;
+   UCHAR  RejCause;
+   UCHAR  NetworkIdValid;
+   UCHAR  MCC[3];
+   UCHAR  MNC[3];
+   UCHAR  TacValid;
+   USHORT Tac;
+} LTE_SYSTEM_INFO, *PLTE_SYSTEM_INFO;
+
+typedef struct _TDSCDMA_SYSTEM_INFO
+{
+   UCHAR  TLVType;         
+   USHORT TLVLength;
+   UCHAR  SrvDomainValid;
+   UCHAR  SrvDomain;
+   UCHAR  SrvCapabilityValid;
+   UCHAR  SrvCapability;
+   UCHAR  RoamStatusValid;
+   UCHAR  RoamStatus;
+   UCHAR  IsSysForbiddenValid;
+   UCHAR  IsSysForbidden;
+   UCHAR  LacValid;
+   USHORT Lac;
+   UCHAR  CellIdValid;
+   ULONG  CellId;
+   UCHAR  RegRejectInfoValid;
+   UCHAR  RejectSrvDomain;
+   UCHAR  RejCause;
+   UCHAR  NetworkIdValid;
+   UCHAR  MCC[3];
+   UCHAR  MNC[3];
+   UCHAR  HsCallStatusValid;
+   UCHAR  HsCallStatus;
+   UCHAR  HsIndValid;
+   UCHAR  HsInd;
+   UCHAR  CellParameterIdValid;
+   USHORT CellParameterId;
+   UCHAR  CellBroadcastCapValid;
+   ULONG  CellBroadcastCap;
+   UCHAR  CsBarStatusValid;
+   ULONG  CsBarStatus;
+   UCHAR  PsBarStatusValid;
+   ULONG  PsBarStatus;
+   UCHAR  CipherDomainValid;
+   UCHAR  CipherDomain;
+} TDSCDMA_SYSTEM_INFO, *PTDSCDMA_SYSTEM_INFO;
+
+typedef struct _QMINAS_SYS_INFO_IND_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+} QMINAS_SYS_INFO_IND_MSG, *PQMINAS_SYS_INFO_IND_MSG;
+
 typedef struct _QMINAS_SET_PREFERRED_NETWORK_REQ_MSG
 {
    USHORT Type;             // QMUX type 0x0003
@@ -2567,6 +2783,48 @@ typedef struct _QMINAS_INITIATE_NW_REGISTER_RESP_MSG
                             // QMI_ERR_INTERNAL
                             // QMI_ERR_FAULT
 } QMINAS_INITIATE_NW_REGISTER_RESP_MSG, *PQMINAS_INITIATE_NW_REGISTER_RESP_MSG;
+
+typedef struct _QMINAS_MODE_PREF
+{
+   UCHAR  TLV2Type;          
+   USHORT TLV2Length;        
+   USHORT ModePref;
+} QMINAS_MODE_PREF, *PQMINAS_MODE_PREF;
+
+typedef struct _QMINAS_NET_SELECTION_PREF
+{
+   UCHAR  TLV2Type;          
+   USHORT TLV2Length;        
+   UCHAR  NetSelPref;
+   USHORT MCC;        
+   USHORT MNC;        
+} QMINAS_NET_SELECTION_PREF, *PQMINAS_NET_SELECTION_PREF;
+
+typedef struct _QMINAS_RADIO_ACCESS_TECH
+{
+   UCHAR  TLV2Type;          
+   USHORT TLV2Length;        
+   UCHAR  RAT;
+} QMINAS_RADIO_ACCESS_TECH, *PQMINAS_RADIO_ACCESS_TECH;
+
+typedef struct _QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   QMINAS_MODE_PREF QmiNasModePref;
+   QMINAS_NET_SELECTION_PREF QmiNasNetSelPref;
+} QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG, *PQMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG;
+
+typedef struct _QMINAS_SET_SYSTEM_SEL_PREF_RESP_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   UCHAR  TLVType;          
+   USHORT TLVLength;        
+   USHORT QMUXResult;      
+   USHORT QMUXError;
+} QMINAS_SET_SYSTEM_SEL_PREF_RESP_MSG, *PQMINAS_SET_SYSTEM_SEL_PREF_RESP_MSG;
+
 
 typedef struct _QMINAS_SET_TECHNOLOGY_PREF_REQ_MSG
 {
@@ -2774,6 +3032,269 @@ typedef struct _QMINAS_INITIATE_ATTACH_RESP_MSG
 
 // ======================= End of NAS ==============================
 
+
+
+// ======================= UIM ==============================
+#define QMIUIM_READ_TRANSPARENT_REQ      0x0020
+#define QMIUIM_READ_TRANSPARENT_RESP     0x0020
+#define QMIUIM_READ_TRANSPARENT_IND      0x0020
+#define QMIUIM_READ_RECORD_REQ           0x0021
+#define QMIUIM_READ_RECORD_RESP          0x0021
+#define QMIUIM_READ_RECORD_IND           0x0021
+#define QMIUIM_WRITE_TRANSPARENT_REQ     0x0022
+#define QMIUIM_WRITE_TRANSPARENT_RESP    0x0022
+#define QMIUIM_WRITE_TRANSPARENT_IND     0x0022
+#define QMIUIM_WRITE_RECORD_REQ          0x0023
+#define QMIUIM_WRITE_RECORD_RESP         0x0023
+#define QMIUIM_WRITE_RECORD_IND          0x0023
+#define QMIUIM_SET_PIN_PROTECTION_REQ    0x0025
+#define QMIUIM_SET_PIN_PROTECTION_RESP   0x0025
+#define QMIUIM_SET_PIN_PROTECTION_IND    0x0025
+#define QMIUIM_VERIFY_PIN_REQ            0x0026
+#define QMIUIM_VERIFY_PIN_RESP           0x0026
+#define QMIUIM_VERIFY_PIN_IND            0x0026
+#define QMIUIM_UNBLOCK_PIN_REQ           0x0027
+#define QMIUIM_UNBLOCK_PIN_RESP          0x0027
+#define QMIUIM_UNBLOCK_PIN_IND           0x0027
+#define QMIUIM_CHANGE_PIN_REQ            0x0028
+#define QMIUIM_CHANGE_PIN_RESP           0x0028
+#define QMIUIM_CHANGE_PIN_IND            0x0028
+#define QMIUIM_DEPERSONALIZATION_REQ     0x0029
+#define QMIUIM_DEPERSONALIZATION_RESP    0x0029
+#define QMIUIM_EVENT_REG_REQ             0x002E
+#define QMIUIM_EVENT_REG_RESP            0x002E
+#define QMIUIM_GET_CARD_STATUS_REQ       0x002F
+#define QMIUIM_GET_CARD_STATUS_RESP      0x002F
+#define QMIUIM_STATUS_CHANGE_IND         0x0032
+
+
+typedef struct _QMIUIM_GET_CARD_STATUS_RESP_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   UCHAR  TLVType;          
+   USHORT TLVLength;        
+   USHORT QMUXResult;       
+   USHORT QMUXError;        
+} QMIUIM_GET_CARD_STATUS_RESP_MSG, *PQMIUIM_GET_CARD_STATUS_RESP_MSG;
+
+typedef struct _QMIUIM_CARD_STATUS
+{
+   UCHAR  TLVType;
+   USHORT TLVLength;
+   USHORT IndexGWPri;
+   USHORT Index1XPri;
+   USHORT IndexGWSec;
+   USHORT Index1XSec;
+   UCHAR  NumSlot;
+   UCHAR  CardState;
+   UCHAR  UPINState;
+   UCHAR  UPINRetries;
+   UCHAR  UPUKRetries;
+   UCHAR  ErrorCode;
+   UCHAR  NumApp;
+   UCHAR  AppType;
+   UCHAR  AppState;
+   UCHAR  PersoState;
+   UCHAR  PersoFeature;
+   UCHAR  PersoRetries;
+   UCHAR  PersoUnblockRetries;
+   UCHAR  AIDLength;
+} QMIUIM_CARD_STATUS, *PQMIUIM_CARD_STATUS;
+
+typedef struct _QMIUIM_PIN_STATE
+{
+   UCHAR  UnivPIN;
+   UCHAR  PIN1State;
+   UCHAR  PIN1Retries;
+   UCHAR  PUK1Retries;
+   UCHAR  PIN2State;
+   UCHAR  PIN2Retries;
+   UCHAR  PUK2Retries;
+} QMIUIM_PIN_STATE, *PQMIUIM_PIN_STATE;
+
+typedef struct _QMIUIM_EVENT_REG
+{
+   UCHAR TLVType;             
+   USHORT TLVLength;
+   ULONG Mask;
+} QMIUIM_EVENT_REG, *PQMIUIM_EVENT_REG;
+
+typedef struct _QMIUIM_VERIFY_PIN_REQ_MSG
+{
+   USHORT Type;     
+   USHORT Length;
+   UCHAR  TLVType;  
+   USHORT TLVLength;
+   UCHAR  Session_Type;
+   UCHAR  Aid_Len;
+   UCHAR  TLV2Type;  
+   USHORT TLV2Length;
+   UCHAR  PINID;
+   UCHAR  PINLen;
+   UCHAR  PINValue;
+} QMIUIM_VERIFY_PIN_REQ_MSG, *PQMIUIM_VERIFY_PIN_REQ_MSG;
+
+typedef struct _QMIUIM_VERIFY_PIN_RESP_MSG
+{
+   USHORT Type;     
+   USHORT Length;
+   UCHAR  TLVType;  
+   USHORT TLVLength;
+   USHORT QMUXResult;
+   USHORT QMUXError;
+   UCHAR  TLV2Type; 
+   USHORT TLV2Length; 
+   UCHAR  PINVerifyRetriesLeft;
+   UCHAR  PINUnblockRetriesLeft;
+} QMIUIM_VERIFY_PIN_RESP_MSG, *PQMIUIM_VERIFY_PIN_RESP_MSG;
+
+typedef struct _QMIUIM_SET_PIN_PROTECTION_REQ_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   UCHAR  TLVType;          
+   USHORT TLVLength;
+   UCHAR  Session_Type;
+   UCHAR  Aid_Len;
+   UCHAR  TLV2Type;  
+   USHORT TLV2Length;
+   UCHAR  PINID;
+   UCHAR  ProtectionSetting;
+   UCHAR  PINLen;
+   UCHAR  PINValue;
+} QMIUIM_SET_PIN_PROTECTION_REQ_MSG, *PQMIUIM_SET_PIN_PROTECTION_REQ_MSG;
+
+typedef struct _QMIUIM_SET_PIN_PROTECTION_RESP_MSG
+{
+   USHORT Type; 
+   USHORT Length;
+   UCHAR  TLVType; 
+   USHORT TLVLength; 
+   USHORT QMUXResult;
+   USHORT QMUXError;        
+   UCHAR  TLV2Type; 
+   USHORT TLV2Length; 
+   UCHAR  PINVerifyRetriesLeft;
+   UCHAR  PINUnblockRetriesLeft;
+} QMIUIM_SET_PIN_PROTECTION_RESP_MSG, *PQMIUIM_SET_PIN_PROTECTION_RESP_MSG;
+
+typedef struct _QMIUIM_CHANGE_PIN_REQ_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   UCHAR  TLVType;          
+   USHORT TLVLength;
+   UCHAR  Session_Type;
+   UCHAR  Aid_Len;
+   UCHAR  TLV2Type;  
+   USHORT TLV2Length;
+   UCHAR  PINID;
+   UCHAR  PinDetails;
+} QMIUIM_CHANGE_PIN_REQ_MSG, *PQMIUIM_CHANGE_PIN_REQ_MSG;
+
+typedef struct _QMIUIM_CHANGE_PIN_RESP_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   UCHAR  TLVType;          
+   USHORT TLVLength;        
+   USHORT QMUXResult;       
+   USHORT QMUXError;
+   UCHAR  TLV2Type; 
+   USHORT TLV2Length; 
+   UCHAR  PINVerifyRetriesLeft;
+   UCHAR  PINUnblockRetriesLeft;
+} QMIUIM_CHANGE_PIN_RESP_MSG, *PQMIUIM_CHANGE_PIN_RESP_MSG;
+
+typedef struct _QMIUIM_UNBLOCK_PIN_REQ_MSG
+{
+   USHORT Type;     
+   USHORT Length;
+   UCHAR  TLVType;  
+   USHORT TLVLength;
+   UCHAR  Session_Type;
+   UCHAR  Aid_Len;
+   UCHAR  TLV2Type;  
+   USHORT TLV2Length;
+   UCHAR  PINID;
+   UCHAR  PinDetails;
+} QMIUIM_UNBLOCK_PIN_REQ_MSG, *PQMIUIM_UNBLOCK_PIN_REQ_MSG;
+
+typedef struct _QMIUIM_UNBLOCK_PIN_RESP_MSG
+{
+   USHORT Type;    
+   USHORT Length;
+   UCHAR  TLVType; 
+   USHORT TLVLength;
+   USHORT QMUXResult;
+   USHORT QMUXError;
+   UCHAR  TLV2Type; 
+   USHORT TLV2Length; 
+   UCHAR  PINVerifyRetriesLeft;
+   UCHAR  PINUnblockRetriesLeft;
+} QMIUIM_UNBLOCK_PIN_RESP_MSG, *PQMIUIM_UNBLOCK_PIN_RESP_MSG;
+
+typedef struct _QMIUIM_READ_TRANSPARENT_REQ_MSG
+{
+   USHORT Type;     
+   USHORT Length;
+   UCHAR  TLVType;  
+   USHORT TLVLength;
+   UCHAR  Session_Type;
+   UCHAR  Aid_Len;
+   UCHAR  TLV2Type;  
+   USHORT TLV2Length;
+   USHORT file_id;
+   UCHAR  path_len;
+   UCHAR  path;
+} QMIUIM_READ_TRANSPARENT_REQ_MSG, *PQMIUIM_READ_TRANSPARENT_REQ_MSG;
+
+typedef struct _READ_TRANSPARENT_TLV
+{
+   UCHAR  TLVType;  
+   USHORT TLVLength;
+   USHORT Offset;
+   USHORT Length;
+} READ_TRANSPARENT_TLV, *PREAD_TRANSPARENT_TLV;
+
+typedef struct _QMIUIM_CONTENT
+{
+   UCHAR  TLVType; 
+   USHORT TLVLength; 
+   USHORT content_len;
+   UCHAR  content;
+}QMIUIM_CONTENT, *PQMIUIM_CONTENT;
+
+typedef struct _QMIUIM_READ_TRANSPARENT_RESP_MSG
+{
+   USHORT Type;    
+   USHORT Length;
+   UCHAR  TLVType; 
+   USHORT TLVLength;
+   USHORT QMUXResult;
+   USHORT QMUXError;
+} QMIUIM_READ_TRANSPARENT_RESP_MSG, *PQMIUIM_READ_TRANSPARENT_RESP_MSG;
+
+VOID MPQMI_ProcessInboundQUIMResponse
+(
+   PMP_ADAPTER pAdapter,
+   PQCQMI      qmi,
+   ULONG       TotalDataLength
+);
+
+VOID MPQMI_ProcessInboundQUIMIndication
+(
+   PMP_ADAPTER pAdapter,
+   PQCQMI      qmi,
+   ULONG       TotalDataLength
+);
+
+
+
+
+// ======================= End of UIM ==============================
+
 typedef struct _QMUX_MSG
 {
    union
@@ -2909,6 +3430,9 @@ typedef struct _QMUX_MSG
       QMINAS_GET_SERVING_SYSTEM_REQ_MSG         GetServingSystemReq;
       QMINAS_GET_SERVING_SYSTEM_RESP_MSG        GetServingSystemResp;
       QMINAS_SERVING_SYSTEM_IND_MSG             NasServingSystemInd;
+      QMINAS_GET_SERVING_SYSTEM_REQ_MSG         GetSysInfoReq;
+      QMINAS_GET_SYS_INFO_RESP_MSG              GetSysInfoResp;
+      QMINAS_SYS_INFO_IND_MSG                   NasSysInfoInd;
       QMINAS_SET_PREFERRED_NETWORK_REQ_MSG      SetPreferredNetworkReq;
       QMINAS_SET_PREFERRED_NETWORK_RESP_MSG     SetPreferredNetworkResp;
       QMINAS_SET_FORBIDDEN_NETWORK_REQ_MSG      SetForbiddenNetworkReq;
@@ -2917,6 +3441,8 @@ typedef struct _QMUX_MSG
       QMINAS_PERFORM_NETWORK_SCAN_RESP_MSG      PerformNetworkScanResp;
       QMINAS_INITIATE_NW_REGISTER_REQ_MSG       InitiateNwRegisterReq;
       QMINAS_INITIATE_NW_REGISTER_RESP_MSG      InitiateNwRegisterResp;
+      QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG        SetSystemSelPrefReq;
+      QMINAS_SET_SYSTEM_SEL_PREF_RESP_MSG       SetSystemSelPrefResp;
       QMINAS_SET_TECHNOLOGY_PREF_REQ_MSG        SetTechnologyPrefReq;
       QMINAS_SET_TECHNOLOGY_PREF_RESP_MSG       SetTechnologyPrefResp;
       QMINAS_GET_SIGNAL_STRENGTH_REQ_MSG        GetSignalStrengthReq;
@@ -2930,6 +3456,19 @@ typedef struct _QMUX_MSG
       QMINAS_INITIATE_ATTACH_RESP_MSG           InitiateAttachResp;
       QMINAS_GET_PLMN_NAME_REQ_MSG              GetPLMNNameReq;
       QMINAS_GET_PLMN_NAME_RESP_MSG             GetPLMNNameResp;
+
+      // QMIUIM Messages
+      QMIUIM_GET_CARD_STATUS_RESP_MSG           UIMGetCardStatus;
+      QMIUIM_VERIFY_PIN_REQ_MSG                 UIMUIMVerifyPinReq;
+      QMIUIM_VERIFY_PIN_RESP_MSG                UIMUIMVerifyPinResp;
+      QMIUIM_SET_PIN_PROTECTION_REQ_MSG         UIMUIMSetPinProtectionReq;
+      QMIUIM_SET_PIN_PROTECTION_RESP_MSG        UIMUIMSetPinProtectionResp;
+      QMIUIM_CHANGE_PIN_REQ_MSG                 UIMUIMChangePinReq;
+      QMIUIM_CHANGE_PIN_RESP_MSG                UIMUIMChangePinResp;
+      QMIUIM_UNBLOCK_PIN_REQ_MSG                UIMUIMUnblockPinReq;
+      QMIUIM_UNBLOCK_PIN_RESP_MSG               UIMUIMUnblockPinResp;
+      QMIUIM_READ_TRANSPARENT_REQ_MSG           UIMUIMReadTransparentReq;
+      QMIUIM_READ_TRANSPARENT_RESP_MSG          UIMUIMReadTransparentResp;
 
       // Allocate 4K so that it can accomodate all the Message Sizes including the 
       // optional TLVs
@@ -3699,7 +4238,21 @@ USHORT MPQMUX_ComposeNasInitiateNwRegisterReqSend
    PQMUX_MSG    qmux_msg
 );
 
+USHORT MPQMUX_ComposeNasSetSystemSelPrefReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg   
+);
+
 ULONG MPQMUX_ProcessNasInitiateNwRegisterResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessNasSetSystemSelPrefResp
 (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,
@@ -3766,6 +4319,20 @@ ULONG MPQMUX_ProcessNasGetServingSystemResp
 );
 
 ULONG MPQMUX_ProcessNasServingSystemInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessNasGetSysInfoResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessNasSysInfoInd
 (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,
@@ -3892,6 +4459,182 @@ VOID MPQMUX_BroadcastWdsPktSrvcStatusInd
    PMP_ADAPTER pAdapter,
    UCHAR       ConnectionStatus,
    UCHAR       ReconfigRequired
+);
+
+USHORT MPQMUX_SendUimSetEventReportReq
+
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+);
+
+USHORT MPQMUX_ComposeUimReadTransparentICCIDReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+);
+
+USHORT MPQMUX_ComposeUimReadTransparentIMSIReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+);
+
+ULONG MPQMUX_ProcessUimReadTransparantResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimReadRecordResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimWriteTransparantResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimWriteRecordResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimSetPinProtectionResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimVerifyPinResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimUnblockPinResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimChangePinResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimUnblockPinResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimEventResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimGetCardStatusResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimReadTransparantInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimReadRecordInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimWriteTransparantInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+    
+ULONG MPQMUX_ProcessUimWriteRecordInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimSetPinProtectionInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimVerifyPinInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimUnblockPinInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimChangePinInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+    
+ULONG MPQMUX_ProcessUimStatusChangePinInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimSetEventReportResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+ULONG MPQMUX_ProcessUimEventReportInd
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
 );
 
 #ifdef NDIS620_MINIPORT

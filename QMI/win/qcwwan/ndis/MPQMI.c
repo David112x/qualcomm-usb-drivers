@@ -244,6 +244,7 @@ BOOLEAN MPQMI_FindQMIRequest
               case QMUX_TYPE_DMS:
               case QMUX_TYPE_WMS:
               case QMUX_TYPE_NAS:
+              case QMUX_TYPE_UIM:
               {
                 curr_qmux = (PQCQMUX)&(currentQMI->SDU);
                 qmux = (PQCQMUX)&qmi->SDU;
@@ -816,27 +817,57 @@ ULONG MPQMI_OIDtoQMI
                   if (pSetPin->PinAction.PinType == WwanPinTypePuk1 || 
                       pSetPin->PinAction.PinType == WwanPinTypePuk2)
                   {
+                    if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                    {
                     qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                     QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, FALSE );                     
+                  }
+                    else
+                    {
+                        qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                    QMIUIM_GET_CARD_STATUS_REQ, NULL, FALSE );                     
+                    }
                   }
                   else if (pSetPin->PinAction.PinType == WwanPinTypePin1 || 
                            pSetPin->PinAction.PinType == WwanPinTypePin2)
                   {
+                     if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                     {
                      qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                      QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, FALSE );                     
+                  }
+                     else
+                     {
+                         qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                     QMIUIM_GET_CARD_STATUS_REQ, NULL, FALSE );                     
+                     }
                   }
                   else if ((pSetPin->PinAction.PinType == WwanPinTypeDeviceSimPin) || 
                            ((pSetPin->PinAction.PinType >= WwanPinTypeNetworkPin) && 
                             (pSetPin->PinAction.PinType <= WwanPinTypeCorporatePin)))
                   {
+                     if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                     {
                      qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                      QMIDMS_UIM_SET_CK_PROTECTION_REQ, MPQMUX_ComposeDmsUIMSetCkProtectionReq, FALSE );
+                  }
+                     else
+                     {
+                        qmiLen = 0;
+                     }
                   }
                   else if (pSetPin->PinAction.PinType >= WwanPinTypeNetworkPuk || 
                            pSetPin->PinAction.PinType <= WwanPinTypeCorporatePuk)
                   {
+                     if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                     {
                      qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                      QMIDMS_UIM_UNBLOCK_CK_REQ, MPQMUX_ComposeDmsUIMUnblockCkReq, FALSE );
+                  }
+                  else
+                  {
+                     qmiLen = 0;
+                  }
                   }
                   else
                   {
@@ -850,8 +881,16 @@ ULONG MPQMI_OIDtoQMI
                   if (pSetPin->PinAction.PinType == WwanPinTypePin1 || 
                       pSetPin->PinAction.PinType == WwanPinTypePin2)
                   {
+                      if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                      {
                      qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                      QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, FALSE );                     
+                  }
+                  else
+                  {
+                          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                      QMIUIM_GET_CARD_STATUS_REQ, NULL, FALSE );                     
+                      }
                   }
                   else
                   {
@@ -864,8 +903,16 @@ ULONG MPQMI_OIDtoQMI
                   if (pSetPin->PinAction.PinType == WwanPinTypePin1 || 
                       pSetPin->PinAction.PinType == WwanPinTypePin2)
                   {
+                      if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+                      {
                      qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                                      QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, FALSE );                     
+                  }
+                  else
+                  {
+                          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                                      QMIUIM_GET_CARD_STATUS_REQ, NULL, FALSE );                     
+                      }
                   }
                   else
                   {
@@ -877,8 +924,16 @@ ULONG MPQMI_OIDtoQMI
          }         
          else
          {
+             if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+             {
             qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                             QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, FALSE );                     
+         }
+             else
+             {
+                 qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                             QMIUIM_GET_CARD_STATUS_REQ, NULL, FALSE );                     
+             }
          }
          if(qmiLen != 0 )
          {
@@ -910,8 +965,16 @@ ULONG MPQMI_OIDtoQMI
       case OID_WWAN_PIN_LIST:
       {
          pOID->OIDAsyncType= NDIS_STATUS_INDICATION_REQUIRED;
+         if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
+         {
          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
                                          QMIDMS_UIM_GET_PIN_STATUS_REQ, NULL, FALSE );                     
+         }
+         else
+         {
+             qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_UIM, 
+                                         QMIUIM_GET_CARD_STATUS_REQ, NULL, FALSE );                     
+         }
          if(qmiLen != 0 )
          {
             PNDIS_WWAN_PIN_LIST  pNdisPinList;
@@ -941,9 +1004,16 @@ ULONG MPQMI_OIDtoQMI
       case OID_WWAN_HOME_PROVIDER:
       {
          pOID->OIDAsyncType= NDIS_STATUS_INDICATION_REQUIRED;
+         if (pAdapter->IsNASSysInfoPresent == FALSE)
+         {
          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                          QMINAS_GET_SERVING_SYSTEM_REQ, NULL, FALSE );
-         
+         }
+         else
+         {
+             qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                             QMINAS_GET_SYS_INFO_REQ, NULL, FALSE );
+         }
          if(qmiLen != 0 )
          {
             PNDIS_WWAN_HOME_PROVIDER  pNdisHomeProvider;
@@ -987,9 +1057,16 @@ ULONG MPQMI_OIDtoQMI
       }
       else
       {
+         if (pAdapter->IsNASSysInfoPresent == FALSE)
+         {
          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                 QMINAS_GET_SERVING_SYSTEM_REQ, NULL, FALSE );
-         
+         }
+         else
+         {
+             qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                             QMINAS_GET_SYS_INFO_REQ, NULL, FALSE );
+         }
       }
       if(qmiLen != 0 )
       {
@@ -1031,8 +1108,16 @@ ULONG MPQMI_OIDtoQMI
       else
       {
          pOID->OIDAsyncType= NDIS_STATUS_INDICATION_REQUIRED;
+         if (pAdapter->IsNASSysInfoPresent == FALSE)
+         {
          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                 QMINAS_GET_SERVING_SYSTEM_REQ, NULL, FALSE );
+      }
+         else
+         {
+             qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                             QMINAS_GET_SYS_INFO_REQ, NULL, FALSE );
+         }
       }
       if(qmiLen != 0 )
       {
@@ -1181,6 +1266,12 @@ ULONG MPQMI_OIDtoQMI
          if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach)
          {
             bSendInitiateAttach = TRUE;
+#if SPOOF_PS_ONLY_DETACH
+            if (pAdapter->IsLTE == TRUE)
+            {
+                bSendInitiateAttach = FALSE;            
+            }
+#endif
          }
          if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionDetach)
          {
@@ -1206,8 +1297,16 @@ ULONG MPQMI_OIDtoQMI
       }
       else
       {
+         if (pAdapter->IsNASSysInfoPresent == FALSE)
+         {
          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                          QMINAS_GET_SERVING_SYSTEM_REQ, NULL, FALSE );
+      }
+         else
+         {
+             qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                             QMINAS_GET_SYS_INFO_REQ, NULL, FALSE );
+         }
       }
       if (qmiLen != 0)
       {
@@ -1241,8 +1340,16 @@ ULONG MPQMI_OIDtoQMI
    {
       pOID->OIDAsyncType = NDIS_STATUS_INDICATION_REQUIRED;
 
+      if (pAdapter->IsNASSysInfoPresent == FALSE)
+      {
       qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                              QMINAS_GET_SERVING_SYSTEM_REQ, NULL, FALSE );
+      }
+      else
+      {
+          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                          QMINAS_GET_SYS_INFO_REQ, NULL, FALSE );
+      }
       if (qmiLen != 0)
       {
 
@@ -1276,8 +1383,16 @@ ULONG MPQMI_OIDtoQMI
    {
 
       pOID->OIDAsyncType= NDIS_STATUS_INDICATION_REQUIRED;
+      if (pAdapter->IsNASSysInfoPresent == FALSE)
+      {
       qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                              QMINAS_GET_SERVING_SYSTEM_REQ, NULL, FALSE );
+      }
+      else
+      {
+          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                          QMINAS_GET_SYS_INFO_REQ, NULL, FALSE );
+      }
       if (qmiLen != 0)
       {
 

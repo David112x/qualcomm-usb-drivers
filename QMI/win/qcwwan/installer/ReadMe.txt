@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.38
-10/08/2015
+Qualcomm USB Host Drivers Version 1.00.39
+11/17/2015
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -19,6 +19,15 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 ---------------------------------------------------------------
 
 2. WHAT'S NEW
+
+This Release (Qualcomm USB Host Drivers Version 1.00.39) 11/17/2015
+USB Driver updates:
+   Serial driver 2.1.2.1
+   Network driver 4.0.3.9
+      a. Replaced deprecated DMS_UIM messages with UIM QMI messages.
+      d. Replaced deprecated QMI_NAS messages with other NAS QMI messages.
+   Filter driver 1.0.3.0
+   QDSS/DPL driver 1.0.0.7
 
 This Release (Qualcomm USB Host Drivers Version 1.00.38) 10/08/2015
 USB Driver updates:

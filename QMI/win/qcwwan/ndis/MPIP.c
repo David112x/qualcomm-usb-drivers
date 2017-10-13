@@ -745,9 +745,16 @@ VOID ProcessWdsPktSrvcStatusInd(PMPIOC_DEV_INFO IocDevice, PQMUX_MSG Message)
                    
                    if (pAdapter->DeregisterIndication == 1)
                    {
+                     if (pAdapter->IsNASSysInfoPresent == FALSE)
+                     {
                      MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
                                        QMINAS_GET_SERVING_SYSTEM_REQ, NULL, TRUE );
-                     
+                     }
+                     else
+                     {
+                         MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
+                                        QMINAS_GET_SYS_INFO_REQ, NULL, TRUE );
+                     }
                    }
                  }
 #endif

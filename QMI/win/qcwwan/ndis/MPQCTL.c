@@ -1602,6 +1602,12 @@ VOID MPQCTL_HandleGetVersionRsp
 #endif      
    }
 
+   if ((pAdapter->QMUXVersion[QMUX_TYPE_NAS].Major >= 1) &&
+       (pAdapter->QMUXVersion[QMUX_TYPE_NAS].Minor >= 8))
+   {
+      pAdapter->IsNASSysInfoPresent = TRUE;
+   }
+
    KeSetEvent(&pAdapter->QMICTLVersionReceivedEvent, IO_NO_INCREMENT, FALSE);
 
 }  // MPQCTL_HandleGetVersionRsp

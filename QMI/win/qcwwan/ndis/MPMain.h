@@ -1435,6 +1435,10 @@ typedef struct _MP_ADAPTER
    UCHAR BindIFId;
    UCHAR BindEPType;
    ULONG DisableQMAPFC;
+   
+   BOOLEAN  IsNASSysInfoPresent;
+   USHORT IndexGWPri;
+   ULONG UIMICCID;
 } MP_ADAPTER, *PMP_ADAPTER;
 
 
