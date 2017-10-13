@@ -14,7 +14,7 @@ GENERAL DESCRIPTION
 #include "MPUsb.h"
 #include "MPQMUX.h"
 #include "MPQOS.h"
-#include "qcusbnet_wmi.h"
+//#include "qcusbnet_wmi.h"
 
 // EVENT_TRACING
 #ifdef EVENT_TRACING

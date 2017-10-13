@@ -2302,7 +2302,7 @@ typedef struct _QMIWMS_MESSAGE_MODE
 #define QMINAS_GET_PLMN_NAME_RESP               0x0044
 #define QMINAS_GET_SYS_INFO_REQ                 0x004D
 #define QMINAS_GET_SYS_INFO_RESP                0x004D
-#define QMINAS_SYS_INFO_IND                     0x004D
+#define QMINAS_SYS_INFO_IND                     0x004E
 
 
 typedef struct _QMINAS_GET_HOME_NETWORK_REQ_MSG
@@ -2830,6 +2830,20 @@ typedef struct _QMINAS_NET_SELECTION_PREF
    USHORT MNC;        
 } QMINAS_NET_SELECTION_PREF, *PQMINAS_NET_SELECTION_PREF;
 
+typedef struct _QMINAS_SRV_DOMAIN_DURATION
+{
+   UCHAR  TLV2Type;          
+   USHORT TLV2Length;        
+   UCHAR  Duration;
+} QMINAS_SRV_DOMAIN_DURATION, *PQMINAS_SRV_DOMAIN_DURATION;
+
+typedef struct _QMINAS_SRV_DOMAIN_PREF
+{
+   UCHAR  TLV2Type;          
+   USHORT TLV2Length;        
+   ULONG  SrvDomainPref;
+} QMINAS_SRV_DOMAIN_PREF, *PQMINAS_SRV_DOMAIN_PREF;
+
 typedef struct _QMINAS_RADIO_ACCESS_TECH
 {
    UCHAR  TLV2Type;          
@@ -2844,6 +2858,14 @@ typedef struct _QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG
    QMINAS_MODE_PREF QmiNasModePref;
    QMINAS_NET_SELECTION_PREF QmiNasNetSelPref;
 } QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG, *PQMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG;
+
+typedef struct _QMINAS_SET_SYSTEM_SEL_PREF_REQ_DOMAIN_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   QMINAS_SRV_DOMAIN_DURATION QmiNasSrvDuration;
+   QMINAS_SRV_DOMAIN_PREF QmiNasSrvDomain;
+} QMINAS_SET_SYSTEM_SEL_PREF_REQ_DOMAIN_MSG, *PQMINAS_SET_SYSTEM_SEL_PREF_REQ_DOMAIN_MSG;
 
 typedef struct _QMINAS_SET_SYSTEM_SEL_PREF_RESP_MSG
 {
@@ -3500,6 +3522,7 @@ typedef struct _QMUX_MSG
       QMINAS_INITIATE_NW_REGISTER_REQ_MSG       InitiateNwRegisterReq;
       QMINAS_INITIATE_NW_REGISTER_RESP_MSG      InitiateNwRegisterResp;
       QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG        SetSystemSelPrefReq;
+      QMINAS_SET_SYSTEM_SEL_PREF_REQ_DOMAIN_MSG SetSystemSelPrefDomainReq;
       QMINAS_SET_SYSTEM_SEL_PREF_RESP_MSG       SetSystemSelPrefResp;
       QMINAS_SET_TECHNOLOGY_PREF_REQ_MSG        SetTechnologyPrefReq;
       QMINAS_SET_TECHNOLOGY_PREF_RESP_MSG       SetTechnologyPrefResp;
@@ -4313,6 +4336,13 @@ USHORT MPQMUX_ComposeNasInitiateNwRegisterReqSend
 );
 
 USHORT MPQMUX_ComposeNasSetSystemSelPrefReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg   
+);
+
+USHORT MPQMUX_ComposeNasSetSystemSelPrefDomainReqSend
 (
    PMP_ADAPTER   pAdapter,
    PMP_OID_WRITE pOID,

@@ -1,0 +1,62 @@
+Build started 10/10/2017 10:31:35 AM.
+__________________________________________________
+Project "Z:\b\HY11\QMI\win\qcwwan\installer\setup\setup.10.sln" (Rebuild target(s)):
+
+Target ValidateSolutionConfiguration:
+    Building solution configuration "Release|Win32".
+Target Rebuild:
+    The target "_ConvertPdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,37)" does not exist in the project, and will be ignored.
+    The target "_CollectPdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,70)" does not exist in the project, and will be ignored.
+    The target "_CollectMdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,38)" does not exist in the project, and will be ignored.
+    The target "_CopyMdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,71)" does not exist in the project, and will be ignored.
+    __________________________________________________
+    Project "Z:\b\HY11\QMI\win\qcwwan\installer\setup\setup.10.sln" is building "Z:\b\HY11\QMI\win\qcwwan\installer\setup\Setup.vcxproj" (Rebuild target(s)):
+
+    Target CoreClean:
+        Creating directory "Release\".
+    Target PrepareForBuild:
+        Creating directory "Release\Setup.tlog\".
+    Target InitializeBuildStatus:
+        Creating "Release\Setup.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+    Target ClCompile:
+        C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I..\Shared /Zi /nologo /W4 /WX- /O2 /Oy- /GL /D WIN32 /D _WINDOWS /D NDEBUG /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp"Release\Setup.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gd /TP /analyze- /errorReport:queue Stdafx.cpp
+        Stdafx.cpp
+        C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I..\Shared /Zi /nologo /W4 /WX- /O2 /Oy- /GL /D WIN32 /D _WINDOWS /D NDEBUG /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"Release\Setup.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gd /TP /analyze- /errorReport:queue ..\Shared\CoreUtilities.cpp ..\Shared\DB2TextFile.cpp Setup.cpp SetupCommandLineInfo.cpp
+        CoreUtilities.cpp
+        DB2TextFile.cpp
+        Setup.cpp
+        Setup.cpp(200): warning C4100: 'PackageName': unreferenced formal parameter
+        Setup.cpp(444): warning C4456: declaration of 'cmd' hides previous local declaration
+        Setup.cpp(335): note: see declaration of 'cmd'
+        Setup.cpp(445): warning C4101: 'tempVal': unreferenced local variable
+        SetupCommandLineInfo.cpp
+    Done building target "ClCompile" in project "Setup.vcxproj".
+    Target ResourceCompile:
+        C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe /D NDEBUG /D _UNICODE /D UNICODE /l"0x0409" /IRelease\ /nologo /fo"Release\Setup.res" Setup.rc 
+    Target Link:
+        C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"Z:\b\HY11\QMI\win\qcwwan\installer\setup\Release\Setup.exe" /INCREMENTAL:NO /NOLOGO /MANIFEST /MANIFESTUAC:"level='requireAdministrator' uiAccess='false'" /manifest:embed /manifestinput:Manifest.txt /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"Z:\b\HY11\QMI\win\qcwwan\installer\setup\Release\Setup.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG:incremental /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE:NO /IMPLIB:"Z:\b\HY11\QMI\win\qcwwan\installer\setup\Release\Setup.lib" /MACHINE:X86 /SAFESEH Release\Setup.res
+        Release\CoreUtilities.obj
+        Release\DB2TextFile.obj
+        Release\Setup.obj
+        Release\SetupCommandLineInfo.obj
+        Release\Stdafx.obj
+        Generating code
+        All 459 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+        Finished generating code
+        Setup.vcxproj -> Z:\b\HY11\QMI\win\qcwwan\installer\setup\Release\Setup.exe
+        Setup.vcxproj -> Z:\b\HY11\QMI\win\qcwwan\installer\setup\Release\Setup.pdb (Full PDB)
+    Target FinalizeBuildStatus:
+        Deleting file "Release\Setup.tlog\unsuccessfulbuild".
+        Touching "Release\Setup.tlog\Setup.lastbuildstate".
+
+    Done building project "Setup.vcxproj".
+
+Build succeeded.
+
+Setup.cpp(200): warning C4100: 'PackageName': unreferenced formal parameter
+Setup.cpp(444): warning C4456: declaration of 'cmd' hides previous local declaration
+Setup.cpp(445): warning C4101: 'tempVal': unreferenced local variable
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.87

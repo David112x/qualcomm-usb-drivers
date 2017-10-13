@@ -46,7 +46,7 @@ sub RequestToSign
    # server socket
    my $socket = new IO::Socket::INET
                     (
-                       PeerHost => '10.52.116.162',
+                       PeerHost => '10.52.121.149',
                        PeerPort => '3197',
                        Proto => 'tcp',
                     );
@@ -59,7 +59,7 @@ sub RequestToSign
    }
    else
    {
-      $signingFolder =~ s/\\/\\\\/g; 
+      #$signingFolder =~ s/\\/\\\\/g; 
       SignFiles($socket, $signingFolder, $signSrc, $signedResult);
    }
 
@@ -87,6 +87,7 @@ sub ValidateFolders
 {
    my ($src_d, $des_d) = @_;
    my $result = 1;
+   my $result2;
 
    return $result;
 
@@ -115,12 +116,25 @@ sub SignFiles
 {
    my ($socket, $signPath, $src_d, $des_d) = @_;
    my $success = 1;
+   my $result2;
+   my $result;
 
 #   if (-e $src_d and -d $src_d)
 #   {
 #      if (-e $des_d and -d $des_d)
 #      {
-         Run(qq(xcopy /R /F /Y /I /S \"$src_d*.$FileExt\" $signPath\\\\));
+         $result2 = `dir $src_d`;
+         print "Source Signing files:\n$result2\n";
+
+         my $signingcommand = qq(copy /Y \"$src_d\" \"$signPath\");
+
+         $result = Run($signingcommand);
+
+         print "Signing command to copy <$signingcommand>\n";
+         print "Signingcommand:\n$result\n";
+
+         $result2 = `dir $signPath`;
+         print "tempsign Signing files:\n$result2\n";
 
          # Instruct server to sign
          SendToServer($socket, "SIGN_FILES", 1);
@@ -128,9 +142,10 @@ sub SignFiles
          # get back signed files
          my $rsp = "";
          $socket->recv($rsp, 1024);
-         my $result = Run(qq(xcopy /R /F /Y /I /S \"$signPath\\\\*.$FileExt\" $des_d));
-         my $result2 = `dir $des_d`;
-         print "Signing result:\n$result\n$result2\n";
+         my $result = Run(qq(copy /Y \"$signPath\" \"$des_d\"));
+
+         $result2 = `dir $des_d`;
+         print "Signing result destination folder:\n$result\n$result2\n";
          
 #      }
 #     else

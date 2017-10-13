@@ -899,6 +899,7 @@ typedef struct _MP_ADAPTER
    UCHAR                   AuthPreference;
    UCHAR                   RegisterRetryCount;
    UCHAR                   IPType;
+   UCHAR                   SetSelDomain;
 
    // Provisioned Context
 #ifdef NDIS620_MINIPORT

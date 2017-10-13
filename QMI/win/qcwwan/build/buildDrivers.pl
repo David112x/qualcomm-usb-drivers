@@ -45,7 +45,7 @@ my $Checked = "Checked";
 #----------------------------------------------------------------------------
 # Tool Paths
 #----------------------------------------------------------------------------
-my $WDKPath  = "\"C:\\Program Files (x86)\\Windows Kits\\8.0\\bin\\x86\"";
+my $WDKPath  = "\"C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x86\"";
 #my $MSBuild  = "\"C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe\"";
 my $MSBuild  = "MSBuild.exe";
 
@@ -61,11 +61,11 @@ my $InstallShieldCmd = "\"C:\\Program Files (x86)\\InstallShield\\2012\\System\\
 #   use $PROJ_ indexes
 
 my %Projects = (
-   serial   => ["qcusbser", "Windows 7", "qcusbser", "serial", "serial", "Win8", "qcser.inf", "qcmdm.inf"],
-   filter   => ["qcusbfilter", "Windows Vista", "qcusbfilter", "filter", "filter", "No", "qcfilter.inf"],
-   ndisnet  => ["qcusbnet", "Windows Vista", "qcusbnet",  "ndis\\5.1", "ndis", "No", "qcnet.inf"],
-   ndismbb  => ["qcusbnet", "Windows 7", "qcusbwwan",  "ndis\\6.2", "ndis", "No", "qcwwan.inf"],
-   qdss     => ["qdbusb", "Windows 7", "qdbusb", "qdss", "qdss", "No", "qdbusb.inf"]
+   serial   => ["qcusbser", "", "qcusbser", "serial", "serial", "Win8", "qcser.inf", "qcmdm.inf"],
+   filter   => ["qcusbfilter", "", "qcusbfilter", "filter", "filter", "No", "qcfilter.inf"],
+   ndisnet  => ["qcusbnet", "WindowsVista", "qcusbnet",  "ndis\\5.1", "ndis", "No", "qcnet.inf"],
+   ndismbb  => ["qcusbnet", "", "qcusbwwan",  "ndis\\6.2", "ndis", "No", "qcwwan.inf"],
+   qdss     => ["qdbusb", "", "qdbusb", "qdss", "qdss", "No", "qdbusb.inf"]
 );   
 
 # indexes for %Projects array
@@ -293,11 +293,11 @@ sub BuildVSProject
 
    if ($BuildType eq "fre")
    {
-      $Config = "$Config Release";
+      $Config = $Config."Release";
    } 
    else
    {
-      $Config = "$Config Debug";
+      $Config = $Config."Debug";
    }
 
    # Build the Project.
@@ -305,6 +305,7 @@ sub BuildVSProject
    my $BuildCommand;
    $BuildCommand = "$MSBuild $Path /t:$Rebuild /p:Configuration=\"$Config\" /p:Platform=$Arch /l:FileLogger,Microsoft.Build.Engine;logfile=$DevEnvOutput";
 #   Run( qq( $BuildCommand ) );
+   TRACE "$Path -- $Config -- $Arch.\n";
    my $result1;
    $result1 = `$BuildCommand`;
    TRACE "\n$result1"; 
@@ -480,12 +481,25 @@ sub BuildDrivers
             { 
                my $BuildArchDir   = $ArchDir{$BuildArch}[0];
                my $InstallArchDir = "$TargetDriverDir\\$ArchDir{$BuildArch}[1]\\";
+               my $releaseDir;
+               my $BuildArch1 = $BuildArch;
+               if ($BuildArch eq "Win32")
+               {
+			      $BuildArch1 = "x86";
+               }
+               BuildVSProject( "$DriverPath\\$Projects{$Driver}[$PROJ_SOLN].sln", $Projects{$Driver}[$PROJ_CONFIG], $BuildType, $BuildArch1);
 
-               BuildVSProject( "$DriverPath\\$Projects{$Driver}[$PROJ_SOLN].sln", $Projects{$Driver}[$PROJ_CONFIG], $BuildType, $BuildArch);
-               
+               if ($BuildArch1 eq "x86")
+               {
+                  $releaseDir = "$outputDir";
+               }
+               else
+               {
+                  $releaseDir = "$BuildArchDir\\$outputDir";
+               }
                # Copy .sys and .pdb to target build directory
-               Run(qq(xcopy /R /F /Y /I $DriverPath\\$outputDir\\$BuildArchDir\\$Projects{$Driver}[$PROJ_TARGET_NAME].sys $InstallArchDir));
-               Run(qq(xcopy /R /F /Y /I $DriverPath\\$outputDir\\$BuildArchDir\\$Projects{$Driver}[$PROJ_TARGET_NAME].pdb $InstallArchDir));
+               Run(qq(xcopy /R /F /Y /I $DriverPath\\$releaseDir\\$Projects{$Driver}[$PROJ_TARGET_NAME].sys $InstallArchDir));
+               Run(qq(xcopy /R /F /Y /I $DriverPath\\$releaseDir\\$Projects{$Driver}[$PROJ_TARGET_NAME].pdb $InstallArchDir));
 	       if ($Driver eq "qdss")
 	       {
                   Run(qq(xcopy /R /F /Y /I $BuildDir\\coinstaller\\$ArchDir{$BuildArch}[1]\\*.dll $InstallArchDir));
@@ -541,8 +555,8 @@ sub BuildDrivers
    #Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\ReadMe.rtf $TargetDir));
 
    # Signing 
-   Run(qq(perl $DriversDir\\build\\tc.pl $TargetDir\\chk $TargetDir\\chk ));
-   Run(qq(perl $DriversDir\\build\\tc.pl $TargetDir\\fre $TargetDir\\fre ));
+   Run(qq(perl $DriversDir\\build\\tcLocal.pl $TargetDir\\chk\\ $TargetDir\\chk\\ cat));
+   Run(qq(perl $DriversDir\\build\\tcLocal.pl $TargetDir\\fre\\ $TargetDir\\fre\\ cat ));
 
    CreateInstallDirs();
 }
@@ -616,6 +630,8 @@ sub BuildInstallShield
    Run(qq($InstallShieldCmd -p $InstallDir\\QualcommDriverInstall.ism));
    Run(qq(xcopy /R /F /Y /I /S \"$InstallDir\\QualcommDriverInstall\\Default Configuration\\Release\\DiskImages\\DISK1\\*\" $InstallDir\\setup\\));
    BuildVSProject1( "$InstallDir\\setup\\setup.10.sln", "Release");
+   Run(qq(perl $DriversDir\\build\\tcLocal.pl $InstallDir\\setup\\Release\\ $InstallDir\\setup\\Release\\ exe));
+
    Run(qq(xcopy /R /F /Y /I /S \"$InstallDir\\setup\\Release\\*.exe\" $TargetDir\\72\\));
    Run(qq(xcopy /R /F /Y /I \"$InstallDir\\Readme.*\" $TargetDir\\72\\));
    Run(qq(xcopy /R /F /Y /I \"$InstallDir\\InstallerGuide.*\" $TargetDir\\72\\));

@@ -31,7 +31,8 @@ NTSTATUS DriverEntry
    QDB_DbgPrintG
    (
       0, 0,
-      ("-->DriverEntry (Build: %s/%s)\n", __DATE__, __TIME__)
+      //("-->DriverEntry (Build: %s/%s)\n", __DATE__, __TIME__)
+	  ("-->DriverEntry (Build: )\n")
    );
 
    WDF_OBJECT_ATTRIBUTES_INIT(&qdbAttributes);

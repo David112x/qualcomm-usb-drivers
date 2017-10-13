@@ -1613,18 +1613,67 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
       return nts;
    }
 
+   // force friendly name creation
+   bufLen = 512;
    nts = WdfDeviceQueryProperty
          (
             Device,
-            DevicePropertyFriendlyName,
+            DevicePropertyDriverKeyName,
+            bufLen,
+            (PVOID)driverKey,
+            &resultLen
+         );
+
+   if (nts == STATUS_SUCCESS)
+   {
+      PCHAR pStart, pEnd;
+
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_DETAIL,
+         ("<%s> QDBPNP_CreateSymbolicName(SwKey): <%ws>\n", pDevContext->PortName, (PWCHAR)driverKey)
+      );
+      pStart = (PCHAR)driverKey;
+      pEnd = pStart + resultLen;
+
+      // look for '\', little-endian byte order: 0x5C 0x00
+      while (pEnd > pStart)
+      {
+         if (*pEnd != 0x5C)  // look for '\'
+         {
+            pEnd--;
+         }
+         else
+         {
+            bMatched = TRUE;
+            break;
+         }
+      }
+      if (bMatched == TRUE)
+      {
+         pSwInstance = (pEnd + 2);
+      }
+   }
+
+   bufLen = MAX_NAME_LEN;
+   nts = WdfDeviceQueryProperty
+         (
+            Device,
+            DevicePropertyDeviceDescription,
             bufLen,
             (PVOID)pDevContext->FriendlyNameHolder,
             &resultLen
          );
+
    if (nts == STATUS_SUCCESS)
    {
-      RtlInitUnicodeString(&tempUcString, DEVICE_LINK_NAME_PATH);       //"\??\"
+      RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, LEFT_P);
+      RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, (PCWSTR)pSwInstance);
+      RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, RIGHT_P);
       RtlInitUnicodeString(&friendlyNameU, pDevContext->FriendlyNameHolder);
+
+      RtlInitUnicodeString(&tempUcString, DEVICE_LINK_NAME_PATH);       //"\??\"
       RtlCopyUnicodeString(&pDevContext->SymbolicLink, &tempUcString); //"\??\"
       RtlAppendUnicodeStringToString
       (
@@ -1633,118 +1682,24 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
       );                             //"\??\<FriendlyName>"
 
       nts = RtlUnicodeStringToAnsiString(&friendlyNameA, &pDevContext->SymbolicLink, TRUE);
+
       if (nts == STATUS_SUCCESS)
       {
          if (friendlyNameA.Length < MAX_NAME_LEN)
          {
-            RtlCopyMemory
-            (
-               pDevContext->FriendlyName,
-               friendlyNameA.Buffer,
-               friendlyNameA.Length
-            );
+            RtlCopyMemory(pDevContext->FriendlyName, friendlyNameA.Buffer, friendlyNameA.Length);
             QDB_DbgPrint
             (
                QDB_DBG_MASK_CONTROL,
                QDB_DBG_LEVEL_DETAIL,
-               ("<%s> -->QDBPNP_CreateSymbolicName(FriendlyName): <%s>\n", pDevContext->PortName,
+               ("<%s> QDBPNP_CreateSymbolicName(DeviceDesc): <%s>\n", pDevContext->PortName,
                  pDevContext->FriendlyName)
             );
+            RtlFreeAnsiString(&friendlyNameA);
+            nts = WdfDeviceCreateSymbolicLink(Device, &pDevContext->SymbolicLink);
          }
-         RtlFreeAnsiString(&friendlyNameA);
-         nts = WdfDeviceCreateSymbolicLink(Device, &pDevContext->SymbolicLink);
-      }
-   }
-   else
-   {
-      // FriendlyName not found, create one
-      bufLen = 512;
-      nts = WdfDeviceQueryProperty
-            (
-               Device,
-               DevicePropertyDriverKeyName,
-               bufLen,
-               (PVOID)driverKey,
-               &resultLen
-            );
-
-      if (nts == STATUS_SUCCESS)
-      {
-         PCHAR pStart, pEnd;
-
-         QDB_DbgPrint
-         (
-            QDB_DBG_MASK_CONTROL,
-            QDB_DBG_LEVEL_DETAIL,
-            ("<%s> QDBPNP_CreateSymbolicName(SwKey): <%ws>\n", pDevContext->PortName, (PWCHAR)driverKey)
-         );
-         pStart = (PCHAR)driverKey;
-         pEnd = pStart + resultLen;
-
-         // look for '\', little-endian byte order: 0x5C 0x00
-         while (pEnd > pStart)
-         {
-            if (*pEnd != 0x5C)  // look for '\'
-            {
-               pEnd--;
-            }
-            else
-            {
-               bMatched = TRUE;
-               break;
-            }
-         }
-         if (bMatched == TRUE)
-         {
-            pSwInstance = (pEnd + 2);
-         }
-      }
-
-      bufLen = MAX_NAME_LEN;
-      nts = WdfDeviceQueryProperty
-            (
-               Device,
-               DevicePropertyDeviceDescription,
-               bufLen,
-               (PVOID)pDevContext->FriendlyNameHolder,
-               &resultLen
-            );
-
-      if (nts == STATUS_SUCCESS)
-      {
-         RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, LEFT_P);
-         RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, (PCWSTR)pSwInstance);
-         RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, RIGHT_P);
-         RtlInitUnicodeString(&friendlyNameU, pDevContext->FriendlyNameHolder);
-
-         RtlInitUnicodeString(&tempUcString, DEVICE_LINK_NAME_PATH);       //"\??\"
-         RtlCopyUnicodeString(&pDevContext->SymbolicLink, &tempUcString); //"\??\"
-         RtlAppendUnicodeStringToString
-         (
-            &pDevContext->SymbolicLink,
-            &friendlyNameU
-         );                             //"\??\<FriendlyName>"
-
-         nts = RtlUnicodeStringToAnsiString(&friendlyNameA, &pDevContext->SymbolicLink, TRUE);
-
-         if (nts == STATUS_SUCCESS)
-         {
-            if (friendlyNameA.Length < MAX_NAME_LEN)
-            {
-               RtlCopyMemory(pDevContext->FriendlyName, friendlyNameA.Buffer, friendlyNameA.Length);
-               QDB_DbgPrint
-               (
-                  QDB_DBG_MASK_CONTROL,
-                  QDB_DBG_LEVEL_DETAIL,
-                  ("<%s> QDBPNP_CreateSymbolicName(DeviceDesc): <%s>\n", pDevContext->PortName,
-                    pDevContext->FriendlyName)
-               );
-               RtlFreeAnsiString(&friendlyNameA);
-               nts = WdfDeviceCreateSymbolicLink(Device, &pDevContext->SymbolicLink);
-            }
-            // Create FriendlyName in registry
-            nts = QDBPNP_SetFriendlyName(Device, &friendlyNameU, (PWCHAR)driverKey);
-         }
+         // Create FriendlyName in registry
+         nts = QDBPNP_SetFriendlyName(Device, &friendlyNameU, (PWCHAR)driverKey);
       }
    }
 

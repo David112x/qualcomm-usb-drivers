@@ -12851,7 +12851,7 @@ USHORT MPQMUX_ComposeWmsSetRouteReqSend
    qmux_msg->WmsSetRouteReq.message_type = 0x00;
    qmux_msg->WmsSetRouteReq.message_class = 0x00;
    qmux_msg->WmsSetRouteReq.route_storage = -1;
-   qmux_msg->WmsSetRouteReq.receipt_action = 1;
+   qmux_msg->WmsSetRouteReq.receipt_action = 2;  // transfer only, no storage
    qmux_msg->WmsSetRouteReq.TLV2Type = 0x10;
    qmux_msg->WmsSetRouteReq.TLV2Length = 0x01;
    qmux_msg->WmsSetRouteReq.transfer_ind = 0x01;
@@ -19070,6 +19070,12 @@ ULONG MPQMUX_ProcessNasGetSysInfoResp
                                             else
                                             {
                           pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
+                          if (pAdapter->SetSelDomain == 0)
+                          {
+                             pAdapter->SetSelDomain = 1;
+                             MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                               QMINAS_SET_SYSTEM_SELECTION_PREF_REQ, MPQMUX_ComposeNasSetSystemSelPrefDomainReqSend, TRUE );
+                          }
                        }
                                             }
                                          }
@@ -19089,6 +19095,12 @@ ULONG MPQMUX_ProcessNasGetSysInfoResp
                     if (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateAttached)
                     {
                        pWwanServingState->uStatus = WWAN_STATUS_FAILURE;
+                       if (pAdapter->SetSelDomain == 0)
+                       {
+                          pAdapter->SetSelDomain = 1;
+                          MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                            QMINAS_SET_SYSTEM_SELECTION_PREF_REQ, MPQMUX_ComposeNasSetSystemSelPrefDomainReqSend, TRUE );
+                       }
                                 }
                              }
                  if (pAdapter->IsLTE == TRUE)
@@ -21523,6 +21535,51 @@ USHORT MPQMUX_ComposeNasSetSystemSelPrefReqSend
 }
 
 
+USHORT MPQMUX_ComposeNasSetSystemSelPrefDomainReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+   ULONG        qmux_len = 0;
+   PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
+   BOOLEAN      bAttach = FALSE;
+   
+   PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = (PNDIS_WWAN_SET_PACKET_SERVICE)
+      pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
+   if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach)
+   {
+      bAttach = TRUE;
+   }
+   
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> MPQMUX_ComposeNasInitiateAttachReq %d\n", pAdapter->PortName, bAttach)
+   );
+
+   qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDuration.TLV2Type = 0x17;
+   qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDuration.TLV2Length = 0x01;
+   qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDuration.Duration  = 0x00;
+
+   qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDomain.TLV2Type = 0x18;
+   qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDomain.TLV2Length = 0x04;
+   qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDomain.SrvDomainPref = 0x00;
+   qmux_msg->SetSystemSelPrefDomainReq.Length = sizeof(QMINAS_SET_SYSTEM_SEL_PREF_REQ_DOMAIN_MSG) - 4;
+   if (bAttach == TRUE)
+   {
+      qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDomain.SrvDomainPref = 0x03;
+   }
+   else
+   {
+       qmux_msg->SetSystemSelPrefDomainReq.QmiNasSrvDomain.SrvDomainPref = 0x04;
+   }
+   qmux_len = qmux_msg->SetSystemSelPrefDomainReq.Length;
+   return qmux_len;
+} 
+
 USHORT MPQMUX_ComposeNasInitiateNwRegisterReqSend
 (
    PMP_ADAPTER   pAdapter,
@@ -22026,6 +22083,25 @@ ULONG MPQMUX_ProcessNasSetSystemSelPrefResp
                  pRegistrationState->RegistrationState.uNwError = pAdapter->nwRejectCause;
    }
    }
+           else
+           {
+              /* Set the timer */
+              NdisAcquireSpinLock(&pAdapter->QMICTLLock);
+              if (pAdapter->RegisterPacketTimerContext == NULL)
+              {
+                 pAdapter->RegisterPacketTimerContext = pOID;
+                 IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
+                 QcStatsIncrement(pAdapter, MP_CNT_TIMER, 888);
+                 NdisSetTimer( &pAdapter->RegisterPacketTimer, 30000);
+                 NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+                 retVal = QMI_SUCCESS_NOT_COMPLETE;
+              }
+              else
+              {
+                 NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+                 pOID->OIDStatus = WWAN_STATUS_FAILURE;
+              }
+           }
 #if 0           
            else
    {
@@ -22036,6 +22112,75 @@ ULONG MPQMUX_ProcessNasSetSystemSelPrefResp
            pRegistrationState->uStatus = pOID->OIDStatus;
    }
         break;
+      case OID_WWAN_PACKET_SERVICE:
+      {
+         PNDIS_WWAN_PACKET_SERVICE_STATE pWwanServingState = (PNDIS_WWAN_PACKET_SERVICE_STATE)pOID->pOIDResp;
+         if (retVal == 0xFF && qmux_msg->SetSystemSelPrefResp.QMUXError != QMI_ERR_NO_EFFECT)
+         {
+            pOID->OIDStatus = WWAN_STATUS_FAILURE;
+            if (pAdapter->DeviceReadyState == DeviceWWanOff)
+            {
+               pOID->OIDStatus = WWAN_STATUS_NOT_INITIALIZED;
+            }
+            else if (pAdapter->DeviceReadyState == DeviceWWanNoSim)
+            {
+               pOID->OIDStatus = WWAN_STATUS_SIM_NOT_INSERTED;
+            }
+            else if (pAdapter->DeviceReadyState == DeviceWWanDeviceLocked)
+            {
+               pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+            }
+            else if (pAdapter->DeviceCkPinLock == DeviceWWanCkDeviceLocked)
+            {
+               pOID->OIDStatus = WWAN_STATUS_PIN_REQUIRED;
+            }
+            else if (pAdapter->DeviceReadyState == DeviceWWanBadSim)
+            {
+               pOID->OIDStatus = WWAN_STATUS_BAD_SIM;
+            }
+            else if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+            {
+               pOID->OIDStatus = WWAN_STATUS_RADIO_POWER_OFF;
+            }
+         }
+         else //if (qmux_msg->InitiateAttachResp.QMUXError == QMI_ERR_NO_EFFECT)
+         {
+            if (pAdapter->DeviceRadioState == DeviceWWanRadioOff)
+            {
+               // Added for Gobi1k WHQL failure for packet test
+               pOID->OIDStatus = WWAN_STATUS_RADIO_POWER_OFF;
+            }
+            else
+            {
+               /* Set the timer */
+               NdisAcquireSpinLock(&pAdapter->QMICTLLock);
+               if (pAdapter->RegisterPacketTimerContext == NULL)
+               {
+                  pAdapter->RegisterPacketTimerContext = pOID;
+                  IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
+                  QcStatsIncrement(pAdapter, MP_CNT_TIMER, 888);
+                  NdisSetTimer( &pAdapter->RegisterPacketTimer, 20000);
+                  NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+                  retVal = QMI_SUCCESS_NOT_COMPLETE;
+               }
+               else
+               {
+                  NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+                  pOID->OIDStatus = WWAN_STATUS_FAILURE;
+               }
+            }   
+         }
+  #if 0 
+         else
+         {
+            pAdapter->RegisterRetryCount = 0;
+            MPQMUX_ComposeNasGetServingSystemInd(pAdapter, pOID->Oid, pOID);
+         }
+  #endif           
+         pWwanServingState->uStatus = pOID->OIDStatus;
+      }
+      break;
+        
 #endif /*NDIS620_MINIPORT*/
      default:
         pOID->OIDStatus = NDIS_STATUS_FAILURE;

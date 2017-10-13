@@ -1297,12 +1297,21 @@ ULONG MPQMI_OIDtoQMI
 
       if (bSendInitiateAttach == TRUE)
       {
-
+          pAdapter->SetSelDomain = 0;
+         if (pAdapter->IsNASSysInfoPresent == FALSE)
+         {
          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
                                 QMINAS_INITIATE_ATTACH_REQ, MPQMUX_ComposeNasInitiateAttachReq, FALSE );
       }
       else
       {
+            qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
+                                            QMINAS_GET_SYS_INFO_REQ, NULL, FALSE );
+         }
+      }
+      else
+      {
+          pAdapter->SetSelDomain = 1;
          if (pAdapter->IsNASSysInfoPresent == FALSE)
          {
          qmiLen = MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 

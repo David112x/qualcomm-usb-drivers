@@ -12,7 +12,7 @@ Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider    = %QCOM%
-DriverVer   = 08/02/2017,4.0.4.7
+DriverVer   = 09/27/2017,4.0.4.9
 Catalogfile = qcwwan.cat
 
 [ControlFlags]
@@ -296,6 +296,8 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90D32%    = qcwwan.ndi, USB\VID_05C6&PID_90D3&MI_02
 %qcwwan.DeviceDesc90D76%    = qcwwan.ndi, USB\VID_05C6&PID_90D7&MI_06
 %qcwwan.DeviceDesc90D86%    = qcwwan.ndi, USB\VID_05C6&PID_90D8&MI_06
+%qcwwan.DeviceDesc90DB2%    = qcwwan.ndi, USB\VID_05C6&PID_90DB&MI_02
+%qcwwan.DeviceDesc90DC2%    = qcwwan.ndi, USB\VID_05C6&PID_90DC&MI_02
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [QCOM.NTia64.6.1]
@@ -564,6 +566,8 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90D32%    = qcwwan.ndi, USB\VID_05C6&PID_90D3&MI_02
 %qcwwan.DeviceDesc90D76%    = qcwwan.ndi, USB\VID_05C6&PID_90D7&MI_06
 %qcwwan.DeviceDesc90D86%    = qcwwan.ndi, USB\VID_05C6&PID_90D8&MI_06
+%qcwwan.DeviceDesc90DB2%    = qcwwan.ndi, USB\VID_05C6&PID_90DB&MI_02
+%qcwwan.DeviceDesc90DC2%    = qcwwan.ndi, USB\VID_05C6&PID_90DC&MI_02
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [QCOM.NTamd64.6.1]
@@ -832,6 +836,8 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90D32%    = qcwwan.ndi, USB\VID_05C6&PID_90D3&MI_02
 %qcwwan.DeviceDesc90D76%    = qcwwan.ndi, USB\VID_05C6&PID_90D7&MI_06
 %qcwwan.DeviceDesc90D86%    = qcwwan.ndi, USB\VID_05C6&PID_90D8&MI_06
+%qcwwan.DeviceDesc90DB2%    = qcwwan.ndi, USB\VID_05C6&PID_90DB&MI_02
+%qcwwan.DeviceDesc90DC2%    = qcwwan.ndi, USB\VID_05C6&PID_90DC&MI_02
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [qcwwan.ndi]
@@ -1211,6 +1217,8 @@ qcwwan.DeviceDesc90D22      = "Qualcomm HS-USB WWAN Adapter 90D2"
 qcwwan.DeviceDesc90D32      = "Qualcomm HS-USB WWAN Adapter 90D3"
 qcwwan.DeviceDesc90D76      = "Qualcomm HS-USB WWAN Adapter 90D7"
 qcwwan.DeviceDesc90D86      = "Qualcomm HS-USB WWAN Adapter 90D8"
+qcwwan.DeviceDesc90DB2      = "Qualcomm HS-USB WWAN Adapter 90DB"
+qcwwan.DeviceDesc90DC2      = "Qualcomm HS-USB WWAN Adapter 90DC"
 qcwwan.DeviceDesc920D0      = "Qualcomm Gobi 3000 HS-USB Mobile Broadband Adapter 920D"
 qcwwan.Service.DispName     = "Qualcomm USB-NDIS WWAN miniport"
 DiskId1 = "Qualcomm USB-NDIS Miniport Device Installation Disk #1"
