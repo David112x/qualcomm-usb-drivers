@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<PropertyGroup>
+<QCEnableCatalogSigning>false</QCEnableCatalogSigning>
+<SignMode>Off</SignMode>
+</PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Windows 7 Debug|arm">
+      <Configuration>Windows 7 Debug</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows 7 Release|arm">
+      <Configuration>Windows 7 Release</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Developer Preview Debug|arm">
+      <Configuration>Windows Developer Preview Debug</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Developer Preview Debug|Win32">
+      <Configuration>Windows Developer Preview Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows 7 Debug|Win32">
+      <Configuration>Windows 7 Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Developer Preview Release|arm">
+      <Configuration>Windows Developer Preview Release</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Vista Debug|arm">
+      <Configuration>Windows Vista Debug</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Vista Debug|Win32">
+      <Configuration>Windows Vista Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Developer Preview Release|Win32">
+      <Configuration>Windows Developer Preview Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows 7 Release|Win32">
+      <Configuration>Windows 7 Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Vista Release|arm">
+      <Configuration>Windows Vista Release</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Vista Release|Win32">
+      <Configuration>Windows Vista Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Developer Preview Debug|x64">
+      <Configuration>Windows Developer Preview Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows 7 Debug|x64">
+      <Configuration>Windows 7 Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Vista Debug|x64">
+      <Configuration>Windows Vista Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Developer Preview Release|x64">
+      <Configuration>Windows Developer Preview Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows 7 Release|x64">
+      <Configuration>Windows 7 Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Windows Vista Release|x64">
+      <Configuration>Windows Vista Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="PropertySheets">
+    <PlatformToolset>WindowsKernelModeDriver8.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>WDM</DriverType>
+    <TARGETNAME>qcusbser</TARGETNAME>
+    <Configuration>Windows Developer Preview Debug</Configuration>
+  </PropertyGroup>
+  <PropertyGroup Label="Globals">
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A13AA9AF-6B9F-4B8F-89B6-F806B241995E}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|Win32'">
+    <TargetVersion>Win8</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|Win32'">
+    <TargetVersion>Win7</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|Win32'">
+    <TargetVersion>Vista</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|Win32'">
+    <TargetVersion>Win8</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|Win32'">
+    <TargetVersion>Win7</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|Win32'">
+    <TargetVersion>Vista</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|x64'">
+    <TargetVersion>Win8</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|arm'" Label="Configuration">
+    <TargetVersion>Win8</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|x64'">
+    <TargetVersion>Win7</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|arm'" Label="Configuration">
+    <TargetVersion>Win7</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|x64'">
+    <TargetVersion>Vista</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|arm'" Label="Configuration">
+    <TargetVersion>Vista</TargetVersion>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|x64'">
+    <TargetVersion>Win8</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|arm'" Label="Configuration">
+    <TargetVersion>Win8</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|x64'">
+    <TargetVersion>Win7</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|arm'" Label="Configuration">
+    <TargetVersion>Win7</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|x64'">
+    <TargetVersion>Vista</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|arm'" Label="Configuration">
+    <TargetVersion>Vista</TargetVersion>
+    <UseDebugLibraries>False</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Label="PropertySheets">
+    <WDKContentRoot Condition="'$(WDKContentRoot)' == ''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\WDK@WDKContentRoot)</WDKContentRoot>
+    <WDKContentRoot Condition="'$(WDKContentRoot)' == ''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\WDK@WDKContentRoot)</WDKContentRoot>
+    <WDKContentRoot Condition="!HasTrailingSlash('$(WDKContentRoot)')">$(WDKContentRoot)\</WDKContentRoot>
+    <SourcesFile>Sources.props</SourcesFile>
+    <MakeFileInc>makefile.inc.props</MakeFileInc>
+    <PostToolsetRules>$(WDKContentRoot)\bin\conversion\PostToolsetRules.props</PostToolsetRules>
+    <InitialStateRules>$(WDKContentRoot)\bin\conversion\InitialStateRules.props</InitialStateRules>
+    <ConversionTasks>$(WDKContentRoot)\bin\conversion\TargetConversion.targets</ConversionTasks>
+    <BUILD_ALT_DIR>$(Configuration.Replace(' ',''))</BUILD_ALT_DIR>
+    <IntDir Condition="'$(Platform)'!='Win32'">$(BUILD_ALT_DIR)\$(Platform)\</IntDir>
+    <IntDir Condition="'$(Platform)'=='Win32'">$(BUILD_ALT_DIR)\x86\</IntDir>
+    <OutDir>$(IntDir)</OutDir>
+  </PropertyGroup>
+  <!-- Needed by any VcxProj -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|arm'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|arm'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|arm'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|arm'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|arm'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|arm'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <!-- /Needed by any VcxProj -->
+  <PropertyGroup Label="PropertySheets">
+    <IncludeMakeFile Condition="'$(NTTARGETFILE0)'!='' or '$(NTTARGETFILE1)'!='' or '$(NTTARGETFILE2)'!='' or '$(NTTARGETFILES)'!=''">true</IncludeMakeFile>
+  </PropertyGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Condition="'$(PlatformToolset)'=='Windows8.0SDK'" Project="$(WDKContentRoot)build\WindowsDriver8.0.Shared.props" />
+    <!-- For SDK Toolset-->
+    <!-- For Conversion-->
+    <Import Project="$(InitialStateRules)" />
+    <Import Project="$(SourcesFile)" />
+    <Import Project="$(ConversionTasks)" />
+  </ImportGroup>
+  <PropertyGroup Label="PropertySheets">
+    <IncludeMakeFile Condition="'$(NTTARGETFILE0)'!='' or '$(NTTARGETFILE1)'!='' or '$(NTTARGETFILE2)'!='' or '$(NTTARGETFILES)'!=''">true</IncludeMakeFile>
+  </PropertyGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(MakeFileInc)" Condition="'$(IncludeMakeFile)'=='true' and Exists($(MakeFileInc))" />
+    <Import Project="$(PostToolsetRules)" />
+    <!-- Import PostToolsetRules to map nmake properties/macros to msbuild properties/items/metadata -->
+    <!-- /For Conversion-->
+  </ImportGroup>
+  <!-- The WrappedTaskItems label is used by the conversion tool to identify the location where items 
+        associated with wrapped tasks will reside.-->
+  <ItemGroup Label="WrappedTaskItems" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|x64'">
+    <IncludePath>$(CRT_INC_PATH);$(DDK_INC_PATH);$(KIT_SHARED_INC_PATH);C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\atlmfc\include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|arm'">
+    <IncludePath>$(CRT_INC_PATH);$(DDK_INC_PATH);$(KIT_SHARED_INC_PATH);C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\atlmfc\include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|Win32'">
+    <IncludePath>$(CRT_INC_PATH);$(DDK_INC_PATH);$(KIT_SHARED_INC_PATH);C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\atlmfc\include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|arm'">
+    <IncludePath>$(CRT_INC_PATH);$(DDK_INC_PATH);$(KIT_SHARED_INC_PATH);C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\atlmfc\include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|Win32'">
+    <IncludePath>$(CRT_INC_PATH);$(DDK_INC_PATH);$(KIT_SHARED_INC_PATH);C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\atlmfc\include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|x64'">
+    <IncludePath>$(CRT_INC_PATH);$(DDK_INC_PATH);$(KIT_SHARED_INC_PATH);C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\atlmfc\include</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level2</WarningLevel>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|arm'">
+    <ClCompile>
+      <WarningLevel>Level2</WarningLevel>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|x64'">
+    <ClCompile>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppKernelMode>true</WppKernelMode>
+      <WppAddAlternateNameToMessageGUID>QCUSBSER</WppAddAlternateNameToMessageGUID>
+      <WppGenerateUsingTemplateFile>{km-WdfDefault.tpl}*.tmh</WppGenerateUsingTemplateFile>
+      <WppScanConfigurationData>QCWPP.h</WppScanConfigurationData>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|arm'">
+    <ClCompile>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppKernelMode>true</WppKernelMode>
+      <WppAddAlternateNameToMessageGUID>QCUSBSER</WppAddAlternateNameToMessageGUID>
+      <WppGenerateUsingTemplateFile>{km-WdfDefault.tpl}*.tmh</WppGenerateUsingTemplateFile>
+      <WppScanConfigurationData>QCWPP.h</WppScanConfigurationData>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level2</WarningLevel>
+      <WppEnabled>true</WppEnabled>
+      <WppKernelMode>true</WppKernelMode>
+      <WppAddAlternateNameToMessageGUID>QCUSBSER</WppAddAlternateNameToMessageGUID>
+      <WppGenerateUsingTemplateFile>{km-WdfDefault.tpl}*.tmh</WppGenerateUsingTemplateFile>
+      <WppScanConfigurationData>QCWPP.h</WppScanConfigurationData>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level2</WarningLevel>
+      <WppEnabled>true</WppEnabled>
+      <WppKernelMode>true</WppKernelMode>
+      <WppAddAlternateNameToMessageGUID>QCUSBSER</WppAddAlternateNameToMessageGUID>
+      <WppGenerateUsingTemplateFile>{km-WdfDefault.tpl}*.tmh</WppGenerateUsingTemplateFile>
+      <WppScanConfigurationData>QCWPP.h</WppScanConfigurationData>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|arm'">
+    <ClCompile>
+      <WarningLevel>Level2</WarningLevel>
+      <WppEnabled>true</WppEnabled>
+      <WppKernelMode>true</WppKernelMode>
+      <WppAddAlternateNameToMessageGUID>QCUSBSER</WppAddAlternateNameToMessageGUID>
+      <WppGenerateUsingTemplateFile>{km-WdfDefault.tpl}*.tmh</WppGenerateUsingTemplateFile>
+      <WppScanConfigurationData>QCWPP.h</WppScanConfigurationData>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows 7 Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level2</WarningLevel>
+      <WppEnabled>true</WppEnabled>
+      <WppKernelMode>true</WppKernelMode>
+      <WppAddAlternateNameToMessageGUID>QCUSBSER</WppAddAlternateNameToMessageGUID>
+      <WppGenerateUsingTemplateFile>{km-WdfDefault.tpl}*.tmh</WppGenerateUsingTemplateFile>
+      <WppScanConfigurationData>QCWPP.h</WppScanConfigurationData>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|arm'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|arm'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|arm'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|arm'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Developer Preview Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Windows Vista Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Includes);$(User_Includes);$(IntDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <!-- We only add items (e.g. form ClSourceFiles) that do not already exist (e.g in the ClCompile list), this avoids duplication -->
+    <ClCompile Include="@(ClSourceFiles)" Exclude="@(ClCompile)" />
+    <ResourceCompile Include="@(RcSourceFiles)" Exclude="@(ResourceCompile)" />
+    <Midl Include="@(IdlSourceFiles)" Exclude="@(Midl)" />
+    <MessageCompile Include="@(McSourceFiles)" Exclude="@(MessageCompile)" />
+    <MASM Include="@(AsmSourceFiles)" Exclude="@(MASM)" />
+    <GenerateBmf Include="@(MofSourceFiles)" Exclude="@(GenerateBmf);@(InvokedTargetsList)" />
+  </ItemGroup>
+  <!-- Set default environment variables, e.g. for stampinf -->
+  <ItemGroup>
+    <BuildMacro Include="SDK_INC_PATH">
+      <Value>$(KIT_SHARED_INC_PATH)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="*.inf" />
+    <FilesToPackage Include="$(TargetPath)" />
+  </ItemGroup>
+  <!-- Necessary to pick up propper files from local directory when in the IDE-->
+  <ItemGroup>
+    <None Include="*.txt;*.htm;*.html" />
+    <None Include="*.ico;*.cur;*.bmp;*.dlg;*.rct;*.gif;*.jpg;*.jpeg;*.wav;*.jpe;*.tiff;*.tif;*.png;*.rc2" />
+    <None Include="*.def;*.bat;*.hpj;*.asmx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="*.h;*.hpp;*.hxx;*.hm;*.inl;*.xsd" />
+  </ItemGroup>
+  <!-- /Necessary to pick up propper files from local directory when in the IDE-->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Condition="'$(PlatformToolset)'=='Windows8.0SDK'" Project="$(WDKContentRoot)build\WindowsDriver8.0.Common.targets" />
+  <Import Condition="'$(Platform)'!='arm'" Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  <Import Condition="'$(Platform)'!='arm'" Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+</Project>

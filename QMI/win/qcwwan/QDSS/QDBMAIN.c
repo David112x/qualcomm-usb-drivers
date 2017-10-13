@@ -1,0 +1,135 @@
+/*====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*
+
+                          Q D B M A I N . C
+
+GENERAL DESCRIPTION
+  This is the file which contains main functions for QDSS function driver.
+
+  Copyright (c) 2014 Qualcomm Technologies, Inc.
+  All rights reserved.
+
+*====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
+
+#include "QDBMAIN.h"
+#include "QDBPNP.h"
+
+LONG DevInstanceNumber = 0;
+
+NTSTATUS DriverEntry
+(
+   PDRIVER_OBJECT  DriverObject,
+   PUNICODE_STRING RegPath
+)
+{
+   NTSTATUS              ntStatus;
+   WDF_DRIVER_CONFIG     qdbConfig;
+   WDF_OBJECT_ATTRIBUTES qdbAttributes;
+
+   QDB_DbgPrintG
+   (
+      0, 0,
+      ("-->DriverEntry (Build: %s/%s)\n", __DATE__, __TIME__)
+   );
+
+   WDF_OBJECT_ATTRIBUTES_INIT(&qdbAttributes);
+
+   QDB_DbgPrintG(0, 0, ("DriverEntry: drv attr size: %u\n", qdbAttributes.Size));
+   qdbAttributes.EvtCleanupCallback = QDBPNP_EvtDriverCleanupCallback;
+   qdbAttributes.EvtDestroyCallback = NULL;
+   QDB_DbgPrintG(0, 0, ("DriverEntry: ContextSizeOverride: %u\n", qdbAttributes.ContextSizeOverride));
+
+   WDF_DRIVER_CONFIG_INIT(&qdbConfig, QDBPNP_EvtDriverDeviceAdd);
+
+   ntStatus = WdfDriverCreate
+              (
+                 DriverObject,
+                 RegPath,
+                 &qdbAttributes,
+                 &qdbConfig,
+                 WDF_NO_HANDLE
+              );
+
+   if (NT_SUCCESS(ntStatus))
+   {
+      QDB_DbgPrintG(0, 0, ("<--DriverEntry ST 0x%X DriverObj 0x%x\n", ntStatus, DriverObject));
+   }
+   else
+   {
+      QDB_DbgPrintG(0, 0, ("<--DriverEntry failure 0x%X DriverObj 0x%x\n", ntStatus, DriverObject));
+   }
+
+   return ntStatus;
+
+}  // DriverEntry
+
+NTSTATUS QDBMAIN_AllocateUnicodeString(PUNICODE_STRING Ustring, SIZE_T Size, ULONG Tag)
+{
+   Ustring->Buffer = (PWSTR)ExAllocatePoolWithTag(NonPagedPool, Size, Tag);
+   if (Ustring->Buffer == NULL)
+   {
+     return STATUS_NO_MEMORY;
+   }
+   Ustring->MaximumLength = (USHORT)Size;
+   Ustring->Length = (USHORT)Size;
+   return STATUS_SUCCESS;
+}  // QDBMAIN_AllocateUnicodeString
+
+VOID QDBMAIN_GetRegistrySettings(WDFDEVICE Device)
+{
+   PDEVICE_CONTEXT pDevContext;
+   NTSTATUS        ntStatus;
+   WDFKEY          hKey = NULL;
+   DECLARE_CONST_UNICODE_STRING(valueFunctionName, L"QCDeviceFunction");
+
+   pDevContext = QdbDeviceGetContext(Device);
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_READ,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> -->QDBMAIN_GetRegistrySettings\n", pDevContext->PortName)
+   );
+
+   pDevContext->FunctionType = QDB_FUNCTION_TYPE_QDSS; // default
+
+   ntStatus = WdfDeviceOpenRegistryKey
+              (
+                 Device,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 STANDARD_RIGHTS_READ,
+                 NULL,
+                 &hKey
+              );
+
+   if (NT_SUCCESS(ntStatus))
+   {
+       ntStatus = WdfRegistryQueryULong
+                  (
+                     hKey,
+                     &valueFunctionName,
+                     &(pDevContext->FunctionType)
+                  );
+       if (!NT_SUCCESS(ntStatus))
+       {
+          QDB_DbgPrint
+          (
+             QDB_DBG_MASK_READ,
+             QDB_DBG_LEVEL_ERROR,
+             ("<%s> QDBMAIN_GetRegistrySettings: use default for funcType\n", pDevContext->PortName)
+          );
+          pDevContext->FunctionType = 0;
+          return;
+       }
+       WdfRegistryClose(hKey);
+   }
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_READ,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> <--QDBMAIN_GetRegistrySettings (ST 0x%x) Type %d \n",
+        pDevContext->PortName, ntStatus, pDevContext->FunctionType)
+   );
+
+   return;
+
+}  // QDBMAIN_GetRegistrySettings
