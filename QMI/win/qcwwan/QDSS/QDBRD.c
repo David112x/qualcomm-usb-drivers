@@ -207,20 +207,19 @@ VOID QDBRD_ReadUSB
    PREQUEST_CONTEXT rxContext = NULL;
    WDFMEMORY        hRxBufferObj;
    WDFUSBPIPE       pipeIN;
-   WDFIOTARGET      ioTarget;
    BOOLEAN          bResult;
+   ULONG            reqIdx;
 
    pDevContext = QdbDeviceGetContext(WdfIoQueueGetDevice(Queue));
+   rxContext = QdbRequestGetContext(Request);
+   rxContext->Index = reqIdx = InterlockedIncrement(&(pDevContext->RxCount));
 
    QDB_DbgPrint
    (
       QDB_DBG_MASK_READ,
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> -->QDBRD_ReadUSB: 0x%p (%dB)\n", pDevContext->PortName, Request, Length)
+      ("<%s> -->QDBRD_ReadUSB: [%u] 0x%p (%dB)\n", pDevContext->PortName, reqIdx, Request, Length)
    );
-
-   rxContext = QdbRequestGetContext(Request);
-   rxContext->Index = InterlockedIncrement(&(pDevContext->RxCount));
 
    fileContext = QdbFileGetContext(WdfRequestGetFileObject(Request));
    if ((fileContext->Type == QDB_FILE_TYPE_TRACE) || (fileContext->Type == QDB_FILE_TYPE_DPL))
@@ -271,7 +270,6 @@ VOID QDBRD_ReadUSB
       return;
    }
 
-   ioTarget = WdfUsbTargetPipeGetIoTarget(pipeIN);
    rxContext->IoBlock = hRxBufferObj;
 
    WdfRequestSetCompletionRoutine(Request, QDBRD_ReadUSBCompletion, pDevContext);
@@ -288,8 +286,15 @@ VOID QDBRD_ReadUSB
 
    InterlockedIncrement(&(pDevContext->Stats.OutstandingRx));
 
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_READ,
+      QDB_DBG_LEVEL_DETAIL,
+      ("<%s> QDBRD_ReadUSB: Sending [%u] to 0x%p\n", pDevContext->PortName, reqIdx, pDevContext->MyIoTarget)
+   );
+
    // forward to USB layer
-   bResult = WdfRequestSend(Request, ioTarget, WDF_NO_SEND_OPTIONS);
+   bResult = WdfRequestSend(Request, pDevContext->MyIoTarget, WDF_NO_SEND_OPTIONS);
    if (bResult == FALSE)
    {
       ntStatus = WdfRequestGetStatus(Request);
@@ -308,7 +313,7 @@ VOID QDBRD_ReadUSB
    (
       QDB_DBG_MASK_READ,
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> <--QDBRD_ReadUSB: 0x%p (%dB)\n", pDevContext->PortName, Request, Length)
+      ("<%s> <--QDBRD_ReadUSB: [%u] 0x%p (%dB)\n", pDevContext->PortName, reqIdx, Request, Length)
    );
 }  // QDBRD_ReadUSB
 
@@ -334,7 +339,7 @@ VOID QDBRD_ReadUSBCompletion
    (
       QDB_DBG_MASK_READ,
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> -->QDBRD_ReadUSBCompletion:[%u] 0x%p)\n", pDevContext->PortName, 
+      ("<%s> -->QDBRD_ReadUSBCompletion:[%u] 0x%p\n", pDevContext->PortName, 
         rxContext->Index, Request)
    );
 
@@ -580,6 +585,12 @@ VOID QDBRD_SendIOBlock(PDEVICE_CONTEXT pDevContext, INT Index)
 
    if (pDevContext->FunctionType != QDB_FUNCTION_TYPE_DPL)
    {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_READ,
+         QDB_DBG_LEVEL_ERROR,
+         ("<%s> QDBRD_SendIOBlock: wrong dev type %u\n", pDevContext->PortName, pDevContext->FunctionType)
+      );
       return;
    }
 
@@ -681,6 +692,12 @@ NTSTATUS QDBRD_PipeDrainStop(PDEVICE_CONTEXT pDevContext)
 
    if (pDevContext->FunctionType != QDB_FUNCTION_TYPE_DPL)
    {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_READ,
+         QDB_DBG_LEVEL_ERROR,
+         ("<%s> QDBRD_PipeDrainStop: wrong dev type %u\n", pDevContext->PortName, pDevContext->FunctionType)
+      );
       return STATUS_NOT_SUPPORTED;
    }
 
@@ -695,10 +712,12 @@ NTSTATUS QDBRD_PipeDrainStop(PDEVICE_CONTEXT pDevContext)
    pDevContext->PipeDrain = FALSE;
    KeReleaseSpinLock(&pDevContext->RxLock, oldLevel);
 
+/***
    for (i = 0; i < pDevContext->NumOfRxReqs; i++)
    {
       WdfRequestCancelSentRequest(pDevContext->RxRequest[i].IoRequest);
    }
+***/
 
    return STATUS_SUCCESS;
 
@@ -718,6 +737,7 @@ VOID QDBRD_PipeDrainCompletion
    ULONG           readLength = 0;
    WDF_REQUEST_REUSE_PARAMS reqPrams;
    BOOLEAN         sendAgain = TRUE;
+   PWDF_USB_REQUEST_COMPLETION_PARAMS usbInfo;
 
    UNREFERENCED_PARAMETER(Request);
    UNREFERENCED_PARAMETER(Target);
@@ -725,6 +745,7 @@ VOID QDBRD_PipeDrainCompletion
    ioReq = (PQDB_IO_REQUEST)Context;
    pDevContext = ioReq->DeviceContext;
 
+   usbInfo   = CompletionParams->Parameters.Usb.Completion;
    ntStatus  = CompletionParams->IoStatus.Status;
    QDB_DbgPrint
    (
@@ -743,7 +764,7 @@ VOID QDBRD_PipeDrainCompletion
    }
    else
    {
-      readLength = (ULONG)CompletionParams->Parameters.Read.Length;
+      readLength = (ULONG)usbInfo->Parameters.PipeRead.Length;
       pDevContext->Stats.BytesDrained += readLength;
       QDB_DbgPrint
       (

@@ -2168,7 +2168,7 @@ VOID MPQOSC_ComposeQosSetClientIpPrefReq
 
    qmuxPtr = (PQCQMUX)qmux;
    qmuxPtr->CtlFlags = QMUX_CTL_FLAG_SINGLE_MSG | QMUX_CTL_FLAG_TYPE_CMD;
-   qmuxPtr->TransactionId = (USHORT)InterlockedIncrement(&(pAdapter->QMUXTransactionId));
+   qmuxPtr->TransactionId = GetQMUXTransactionId(pAdapter);
    qmux_msg = (PQMUX_MSG)&(qmuxPtr->Message);
 
    qmux_msg->QosSetClientIpPrefReq.Type = QMI_QOS_SET_CLIENT_IP_PREF_REQ;

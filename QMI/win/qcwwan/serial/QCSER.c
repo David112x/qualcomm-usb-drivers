@@ -129,6 +129,11 @@ NTSTATUS QCSER_Open(PVXD_WDM_IO_CONTROL_BLOCK pIOBlock)
                QCSER_DBG_LEVEL_ERROR,
                ("<%s> _Open: ResetInput/Output ResetPort %d err 0x%x\n", pDevExt->PortName, i, ntStatus)
             );
+
+            if (!inDevState(DEVICE_STATE_PRESENT_AND_STARTED))
+            {
+               break;
+            }
          
             // Sleep for 0.4sec
             KeDelayExecutionThread( KernelMode, FALSE, &timeoutValue );

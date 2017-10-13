@@ -64,6 +64,12 @@ VOID QCPWR_PowrerManagement
    // On failure, the function returns failure status and the PnP
    // dispatch function completes the IRP.
 
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_POWER,
+      QCSER_DBG_LEVEL_DETAIL,
+      ("<%s> -->QCPWR_PowrerManagement: PIRP 0x%p\n", pDevExt->PortName, Irp)
+   );
    switch (IrpStack->MinorFunction)
    {
       case IRP_MN_QUERY_POWER:
@@ -84,6 +90,12 @@ VOID QCPWR_PowrerManagement
 
                if (NT_SUCCESS(nts))
                {
+                  QCSER_DbgPrint
+                  (
+                     QCSER_DBG_MASK_POWER,
+                     QCSER_DBG_LEVEL_DETAIL,
+                     ("<%s> _PowrerManagement: _QuerySystemPowerState 0x%X, set ComplRtn\n", pDevExt->PortName, nts)
+                  );
                   // completion routine starts the next IRP
                   IoCopyCurrentIrpStackLocationToNext(Irp);
                   IoSetCompletionRoutine
@@ -95,6 +107,12 @@ VOID QCPWR_PowrerManagement
                }
                else
                {
+                  QCSER_DbgPrint
+                  (
+                     QCSER_DBG_MASK_POWER,
+                     QCSER_DBG_LEVEL_DETAIL,
+                     ("<%s> _PowrerManagement: _QuerySystemPowerState 0x%X, start next Po\n", pDevExt->PortName, nts)
+                  );
                   PoStartNextPowerIrp(Irp);
                }
                break;
@@ -290,6 +308,12 @@ VOID QCPWR_PowrerManagement
       }
    }
 
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_POWER,
+      QCSER_DBG_LEVEL_DETAIL,
+      ("<%s> <--QCPWR_PowrerManagement (0x%x): PIRP 0x%p\n", pDevExt->PortName, nts, Irp)
+   );
 } // QCPWR_PowrerManagement
 
 BOOLEAN QCPWR_Prelude

@@ -12,6 +12,40 @@ GENERAL DESCRIPTION
 #include "QDBMAIN.h"
 #include "QDBDSP.h"
 
+VOID QDBDSP_IoCompletion
+(
+   WDFREQUEST                  Request,
+   WDFIOTARGET                 Target,
+   PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+   WDFCONTEXT                  Context
+)
+{
+   NTSTATUS         ntStatus;
+   PDEVICE_CONTEXT  pDevContext;
+
+   pDevContext = (PDEVICE_CONTEXT)Context;
+   ntStatus  = CompletionParams->IoStatus.Status;
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> -->QDBDSP_IoCompletion: 0x%p ST 0x%x\n", pDevContext->PortName, Request, ntStatus)
+   );
+
+   WdfRequestComplete(Request, ntStatus);
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> <--QDBDSP_IoCompletion: 0x%p ST 0x%x\n", pDevContext->PortName, Request, ntStatus)
+   );
+
+   return;
+}  // QDBDSP_IoCompletion
+
+
 VOID QDBDSP_IoDeviceControl
 (
    WDFQUEUE   Queue,
@@ -47,7 +81,7 @@ VOID QDBDSP_IoDeviceControl
       (
          QDB_DBG_MASK_CONTROL,
          QDB_DBG_LEVEL_DETAIL,
-         ("<%s> QDBDSP_IoDeviceControl: [TRACE] 0x%p \n", pDevContext->PortName)
+         ("<%s> QDBDSP_IoDeviceControl: [TRACE]\n", pDevContext->PortName)
       );
    }
    else if (fileContext->Type == QDB_FILE_TYPE_DEBUG)
@@ -56,7 +90,7 @@ VOID QDBDSP_IoDeviceControl
       (
          QDB_DBG_MASK_CONTROL,
          QDB_DBG_LEVEL_DETAIL,
-         ("<%s> QDBDSP_IoDeviceControl: [DEBUG] 0x%p \n", pDevContext->PortName)
+         ("<%s> QDBDSP_IoDeviceControl: [DEBUG]\n", pDevContext->PortName)
       );
    }
    else if (fileContext->Type == QDB_FILE_TYPE_DPL)
@@ -65,7 +99,7 @@ VOID QDBDSP_IoDeviceControl
       (
          QDB_DBG_MASK_CONTROL,
          QDB_DBG_LEVEL_DETAIL,
-         ("<%s> QDBDSP_IoDeviceControl: [DPL] 0x%p \n", pDevContext->PortName)
+         ("<%s> QDBDSP_IoDeviceControl: [DPL]\n", pDevContext->PortName)
       );
    }
 
@@ -101,12 +135,35 @@ VOID QDBDSP_IoDeviceControl
          break;
       }
 
+      case IOCTL_QCDEV_REQUEST_DEVICEID:
+      {
+         ntStatus = WdfRequestRetrieveOutputBuffer(Request, 0, &outBuffer, &bufferSize);
+
+         QDB_DbgPrint
+         (
+            QDB_DBG_MASK_CONTROL,
+            QDB_DBG_LEVEL_DETAIL,
+            ("<%s> QDBDSP_IoDeviceControl: IOCTL_QCDEV_REQUEST_DEVICEID (IN/OUT %d/%d/%d)\n",
+              pDevContext->PortName, InputBufferLength, OutputBufferLength, bufferSize)
+         );
+
+         if (NT_SUCCESS(ntStatus))
+         {
+            ntStatus = QDBDSP_GetParentId(pDevContext, outBuffer, OutputBufferLength);
+            if (NT_SUCCESS(ntStatus))
+            {
+               WdfRequestSetInformation(Request, sizeof(ULONGLONG));
+            }
+         }
+         break;
+      }
+
       default:
       {
          ntStatus = STATUS_INVALID_DEVICE_REQUEST;
          break;
       }
-   }
+   }  // switch
 
    WdfRequestComplete(Request, ntStatus);
 
@@ -116,6 +173,7 @@ VOID QDBDSP_IoDeviceControl
       QDB_DBG_LEVEL_TRACE,
       ("<%s> <--QDBDSP_IoDeviceControl: code 0x%x (NTS 0x%x)\n", pDevContext->PortName, IoControlCode, ntStatus)
    );
+
    return;
 }  // QDBDSP_IoDeviceControl
 
@@ -202,3 +260,108 @@ VOID QDBDSP_IoResume
 
    return;
 }  // QDBDSP_IoResume
+
+NTSTATUS QDBDSP_IrpIoCompletion
+(
+   PDEVICE_OBJECT DeviceObject,
+   PIRP           Irp,
+   PVOID          Context
+)
+{
+   PDEVICE_CONTEXT pDevContext = (PDEVICE_CONTEXT)Context;
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> -->QDBDSP_IrpIoCompletion: (IRP 0x%p IoStatus: 0x%x)\n", pDevContext->PortName,
+        Irp, Irp->IoStatus.Status)
+   );
+
+   KeSetEvent(Irp->UserEvent, 0, FALSE);
+
+   return STATUS_MORE_PROCESSING_REQUIRED;
+}  // QDBDSP_IrpIoCompletion
+
+NTSTATUS QDBDSP_GetParentId
+(
+   PDEVICE_CONTEXT pDevContext,
+   PVOID           IoBuffer,
+   ULONG           BufferLen
+)
+{
+   PIRP               pIrp;
+   PIO_STACK_LOCATION nextstack;
+   NTSTATUS           ntStatus;
+   KEVENT             event;
+   ULONGLONG          pid = 0;
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> -->QDBDSP_GetParentId\n", pDevContext->PortName)
+   );
+   KeInitializeEvent(&event, SynchronizationEvent, FALSE);
+
+   pIrp = IoAllocateIrp((CCHAR)(pDevContext->MyDevice->StackSize+1), FALSE);
+   if( pIrp == NULL )
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_ERROR,
+         ("<%s> QDBDSP_GetParentId: failed to allocate IRP\n", pDevContext->PortName)
+      );
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   pIrp->AssociatedIrp.SystemBuffer = IoBuffer;
+
+   // set the event
+   pIrp->UserEvent = &event;
+
+   nextstack = IoGetNextIrpStackLocation(pIrp);
+   nextstack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+   nextstack->Parameters.DeviceIoControl.IoControlCode = IOCTL_QCDEV_REQUEST_DEVICEID;
+   nextstack->Parameters.DeviceIoControl.OutputBufferLength = BufferLen;
+
+   IoSetCompletionRoutine
+   (
+      pIrp,
+      (PIO_COMPLETION_ROUTINE)QDBDSP_IrpIoCompletion,
+      (PVOID)pDevContext,
+      TRUE,TRUE,TRUE
+   );
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_ERROR,
+      ("<%s> QDBDSP_GetParentId: IRP 0x%p DO StackSize %d\n", pDevContext->PortName, pIrp,
+        pDevContext->MyDevice->StackSize)
+   );
+
+   ntStatus = IoCallDriver(pDevContext->TargetDevice, pIrp);
+
+   KeWaitForSingleObject(&event, Executive, KernelMode, TRUE, 0);
+
+   ntStatus = pIrp->IoStatus.Status;
+
+   IoFreeIrp(pIrp);
+
+   if (ntStatus == STATUS_SUCCESS)
+   {
+      pid = *((PULONGLONG)IoBuffer);
+   }
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> <--QDBDSP_GetParentId: 0x%I64x\n", pDevContext->PortName, pid)
+   );
+   return ntStatus;
+
+}  // QDBDSP_GetParentId
+

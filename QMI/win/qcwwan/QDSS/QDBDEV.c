@@ -33,7 +33,7 @@ VOID QDBDEV_EvtDeviceFileCreate
    (
       (QDB_DBG_MASK_READ | QDB_DBG_MASK_WRITE),
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> -->QDBDEV_EvtDeviceFileCreate\n", pDevContext->PortName)
+      ("<%s> -->QDBDEV_EvtDeviceFileCreate: FileObject 0x%p\n", pDevContext->PortName, FileObject)
    );
 
    fileName = WdfFileObjectGetFileName(FileObject);
@@ -119,7 +119,8 @@ VOID QDBDEV_EvtDeviceFileCreate
    (
       (QDB_DBG_MASK_READ | QDB_DBG_MASK_WRITE),
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> <--QDBDEV_EvtDeviceFileCreate ST 0x%X\n", pDevContext->PortName, ntStatus)
+      ("<%s> <--QDBDEV_EvtDeviceFileCreate: FileObject 0x%p ST 0x%X\n",
+        pDevContext->PortName, FileObject, ntStatus)
    );
 
    return;
@@ -139,7 +140,8 @@ VOID QDBDEV_EvtDeviceFileClose(WDFFILEOBJECT FileObject)
    (
       (QDB_DBG_MASK_READ | QDB_DBG_MASK_WRITE),
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> -->QDBDEV_EvtDeviceFileClose <%wZ>\n", pDevContext->PortName, fileName)
+      ("<%s> -->QDBDEV_EvtDeviceFileClose <%wZ> FileObject 0x%p\n",
+        pDevContext->PortName, fileName, FileObject)
    );
 
    QDBRD_PipeDrainStart(pDevContext);   
@@ -148,7 +150,8 @@ VOID QDBDEV_EvtDeviceFileClose(WDFFILEOBJECT FileObject)
    (
       (QDB_DBG_MASK_READ | QDB_DBG_MASK_WRITE),
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> <--QDBDEV_EvtDeviceFileClose <%wZ>\n", pDevContext->PortName, fileName)
+      ("<%s> <--QDBDEV_EvtDeviceFileClose <%wZ> FileObject 0x%p\n",
+        pDevContext->PortName, fileName, FileObject)
    );
    return;
 }  // QDBDEV_EvtDeviceFileClose
@@ -167,7 +170,8 @@ VOID QDBDEV_EvtDeviceFileCleanup(WDFFILEOBJECT FileObject)
    (
       (QDB_DBG_MASK_READ | QDB_DBG_MASK_WRITE),
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> -->QDBDEV_EvtDeviceFileCleanup <%wZ>\n", pDevContext->PortName, fileName)
+      ("<%s> -->QDBDEV_EvtDeviceFileCleanup <%wZ> FileObject 0x%p\n",
+        pDevContext->PortName, fileName, FileObject)
    );
 
    QDBRD_PipeDrainStart(pDevContext);   
@@ -176,7 +180,8 @@ VOID QDBDEV_EvtDeviceFileCleanup(WDFFILEOBJECT FileObject)
    (
       (QDB_DBG_MASK_READ | QDB_DBG_MASK_WRITE),
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> <--QDBDEV_EvtDeviceFileCleanup <%wZ>\n", pDevContext->PortName, fileName)
+      ("<%s> <--QDBDEV_EvtDeviceFileCleanup <%wZ> FileObject 0x%p\n",
+        pDevContext->PortName, fileName, FileObject)
    );
    return;
 }  // QDBDEV_EvtDeviceFileCleanup

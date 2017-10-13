@@ -263,6 +263,11 @@ GENERAL DESCRIPTION
 #define PARAM_DisableQMAPFC_MIN      0
 #define PARAM_DisableQMAPFC_MAX      1
 
+#define PARAM_MaxPendingQMIReqs "QCMPMaxPendingQMIReqs"
+#define PARAM_MaxPendingQMIReqs_DEFAULT MAX_CTRL_PENDING_REQUESTS
+#define PARAM_MaxPendingQMIReqs_MIN  3
+#define PARAM_MaxPendingQMIReqs_MAX  0xFFFF
+
 NDIS_STATUS MPParam_GetConfigValues
 (
    IN NDIS_HANDLE AdapterHandle,

@@ -344,4 +344,8 @@ NTSTATUS MPIOC_GetPeerDeviceNameCompletion
 
 NTSTATUS MPIOC_GetPeerDeviceName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen);
 
+PMP_ADAPTER GetPrimaryAdapter(PMP_ADAPTER pAdapter);
+
+NTSTATUS MPIOC_GetPrimaryAdapterName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen);
+
 #endif // MPIOC_H

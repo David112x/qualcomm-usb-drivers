@@ -48,8 +48,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 4,0,3,7
- PRODUCTVERSION 4,0,3,7
+ FILEVERSION 4,0,3,8
+ PRODUCTVERSION 4,0,3,8
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -67,14 +67,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "QUALCOMM Incorporated\0"
             VALUE "FileDescription", "USB NDIS Miniport Driver\0"
-            VALUE "FileVersion", "4. 0. 3. 7\0"
+            VALUE "FileVersion", "4. 0. 3. 8\0"
             VALUE "InternalName", "qcwwan\0"
             VALUE "LegalCopyright", "Copyright © 2015\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "qcwwan.sys\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "QUALCOMM Incorporated USB NDIS Miniport Driver\0"
-            VALUE "ProductVersion", "4. 0. 3. 7\0"
+            VALUE "ProductVersion", "4. 0. 3. 8\0"
             VALUE "SpecialBuild", "\0"
         END
         BLOCK "040904b0"
@@ -82,14 +82,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Qualcomm Inc.\0"
             VALUE "FileDescription", "USB NDIS Miniport Driver\0"
-            VALUE "FileVersion", "4. 0. 3. 7\0"
+            VALUE "FileVersion", "4. 0. 3. 8\0"
             VALUE "InternalName", "Qualcomm Proprietary USB Device Driver\0"
             VALUE "LegalCopyright", "Copyright © 2015\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "qcusbwwan.sys\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Qualcomm Inc. USB NDIS Miniport Driver\0"
-            VALUE "ProductVersion", "4. 0. 3. 7\0"
+            VALUE "ProductVersion", "4. 0. 3. 8\0"
             VALUE "SpecialBuild", "\0"
         END
     END

@@ -5977,19 +5977,7 @@ LONG GetPhysicalAdapterQCTLTransactionId(PMP_ADAPTER pAdapter)
    PDEVICE_EXTENSION pDevExt = (PDEVICE_EXTENSION)pAdapter->USBDo->DeviceExtension;
    if(pDevExt->MuxInterface.MuxEnabled == 0)
    {
-       InterlockedIncrement(&(pAdapter->QMICTLTransactionId));
-       
-#ifdef QCMP_SUPPORT_CTRL_QMIC
-       #error code not present
-#endif // QCMP_SUPPORT_CTRL_QMIC
-       
-       {
-          if (pAdapter->QMICTLTransactionId > 255)
-          {
-             pAdapter->QMICTLTransactionId = 0;
-          }
-       }
-       return pAdapter->QMICTLTransactionId;
+       return GetQCTLTransactionId(pAdapter);
    }
    else
    {
@@ -6013,18 +6001,7 @@ LONG GetPhysicalAdapterQCTLTransactionId(PMP_ADAPTER pAdapter)
                  (pDevExt->MuxInterface.FilterDeviceObj == pTempDevExt->MuxInterface.FilterDeviceObj))
              {
                  NdisReleaseSpinLock(&GlobalData.Lock);
-                InterlockedIncrement(&(pTempAdapter->QMICTLTransactionId));
-                
-#ifdef QCMP_SUPPORT_CTRL_QMIC
-                #error code not present
-#endif // QCMP_SUPPORT_CTRL_QMIC
-                 {
-                    if (pTempAdapter->QMICTLTransactionId > 255)
-                   {
-                       pTempAdapter->QMICTLTransactionId = 0;
-                    }
-                 }
-                 return pTempAdapter->QMICTLTransactionId;
+                 return GetQCTLTransactionId(pTempAdapter);
              }
              peekEntry = peekEntry->Flink;
           }
@@ -6032,8 +6009,26 @@ LONG GetPhysicalAdapterQCTLTransactionId(PMP_ADAPTER pAdapter)
        NdisReleaseSpinLock(&GlobalData.Lock);
    
    }
-   return  pAdapter->QMICTLTransactionId;
+   return  pAdapter->QMICTLTransactionId; // shall we use 0x0 to indicate the unexpected?
 }
+
+LONG GetQCTLTransactionId(PMP_ADAPTER pAdapter)
+{
+   UCHAR tid;
+
+   tid = (UCHAR)InterlockedIncrement(&(pAdapter->QMICTLTransactionId));
+
+#ifdef QCMP_SUPPORT_CTRL_QMIC
+   #error code not present
+#endif // QCMP_SUPPORT_CTRL_QMIC
+   {
+      while (tid == 0)
+      {
+         tid = (UCHAR)InterlockedIncrement(&(pAdapter->QMICTLTransactionId));
+      }
+   }
+   return (LONG)tid;
+} // GetQCTLTransactionId
 
 VOID IncrementAllQmiSync(PMP_ADAPTER pAdapter)
 {
@@ -6124,12 +6119,15 @@ BOOLEAN DisconnectedAllAdapters(PMP_ADAPTER pAdapter, PMP_ADAPTER* returnAdapter
 
 LONG GetQMUXTransactionId(PMP_ADAPTER pAdapter)
 {
-   InterlockedIncrement(&(pAdapter->QMUXTransactionId));
-   if (pAdapter->QMUXTransactionId > 0xFFFF)
+   USHORT tid;
+
+   tid = (USHORT)InterlockedIncrement(&(pAdapter->QMUXTransactionId));
+   while (tid == 0)
    {
-      pAdapter->QMUXTransactionId = 0;
+      tid = (USHORT)InterlockedIncrement(&(pAdapter->QMUXTransactionId));
    }
-   return pAdapter->QMUXTransactionId;
+
+   return tid;
 }
 
 ULONG GetNextTxPacketSize(PMP_ADAPTER pAdapter, PLIST_ENTRY listEntry)

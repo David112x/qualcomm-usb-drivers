@@ -208,6 +208,11 @@ GENERAL DESCRIPTION
                                               METHOD_BUFFERED, \
                                               FILE_ANY_ACCESS)
 
+#define IOCTL_QCDEV_GET_PRIMARY_ADAPTER_NAME CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                              QCDEV_IOCTL_INDEX+35, \
+                                              METHOD_BUFFERED, \
+                                              FILE_ANY_ACCESS)
+
 #define IOCTL_QCDEV_IPV4_MTU_NOTIFY CTL_CODE(FILE_DEVICE_UNKNOWN, \
                                              QCDEV_IOCTL_INDEX+50, \
                                              METHOD_BUFFERED, \
@@ -220,6 +225,16 @@ GENERAL DESCRIPTION
 
 #define IOCTL_QCDEV_QMI_READY CTL_CODE(FILE_DEVICE_UNKNOWN, \
                                        QCDEV_IOCTL_INDEX+52, \
+                                       METHOD_BUFFERED, \
+                                       FILE_ANY_ACCESS)
+
+#define IOCTL_QCDEV_GET_QMI_QUEUE_SIZE CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                       QCDEV_IOCTL_INDEX+53, \
+                                       METHOD_BUFFERED, \
+                                       FILE_ANY_ACCESS)
+
+#define IOCTL_QCDEV_PURGE_QMI_QUEUE CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                       QCDEV_IOCTL_INDEX+54, \
                                        METHOD_BUFFERED, \
                                        FILE_ANY_ACCESS)
 

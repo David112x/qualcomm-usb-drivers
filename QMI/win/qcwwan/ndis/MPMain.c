@@ -4866,8 +4866,8 @@ NTSTATUS MPMAIN_GetDeviceInstance(PMP_ADAPTER pAdapter)
 NTSTATUS MPMAIN_GetDeviceFriendlyName(PMP_ADAPTER pAdapter)
 {
    NTSTATUS nts = STATUS_UNSUCCESSFUL;
-   ULONG    bufLen = 512, resultLen = 0;
-   WCHAR     driverKey[512];
+   ULONG    bufLen = 510, resultLen = 0;
+   WCHAR    driverKey[512];
 
    QCNET_DbgPrint
    (
@@ -4910,6 +4910,8 @@ NTSTATUS MPMAIN_GetDeviceFriendlyName(PMP_ADAPTER pAdapter)
       {
          strcpy(pAdapter->FriendlyName, FriendlyNameA.Buffer);
       }
+      pAdapter->FriendlyNameWLen = resultLen;
+      RtlCopyMemory(pAdapter->FriendlyNameW, driverKey, resultLen);
       QCNET_DbgPrint
       (
          MP_DBG_MASK_CONTROL,
@@ -4919,7 +4921,7 @@ NTSTATUS MPMAIN_GetDeviceFriendlyName(PMP_ADAPTER pAdapter)
       
       RtlFreeAnsiString( &FriendlyNameA );
    }
-   else
+   else if (nts != STATUS_BUFFER_TOO_SMALL)
    {
        nts = IoGetDeviceProperty
              (
@@ -4940,6 +4942,8 @@ NTSTATUS MPMAIN_GetDeviceFriendlyName(PMP_ADAPTER pAdapter)
           {
              strcpy(pAdapter->FriendlyName, FriendlyNameA.Buffer);
           }
+          pAdapter->FriendlyNameWLen = resultLen;
+          RtlCopyMemory(pAdapter->FriendlyNameW, driverKey, resultLen);
           QCNET_DbgPrint
           (
              MP_DBG_MASK_CONTROL,

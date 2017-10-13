@@ -225,6 +225,8 @@ PMP_ADAPTER FindStackDeviceObject(PMP_ADAPTER pAdapter);
 
 LONG GetPhysicalAdapterQCTLTransactionId(PMP_ADAPTER pAdapter);
 
+LONG GetQCTLTransactionId(PMP_ADAPTER pAdapter);
+
 LONG GetQMUXTransactionId(PMP_ADAPTER pAdapter);
 
 BOOLEAN DisconnectedAllAdapters(PMP_ADAPTER pAdapter, PMP_ADAPTER* returnAdapter);

@@ -1786,10 +1786,11 @@ qcfinal:
     {
         SetupDiDestroyDeviceInfoList(qcdevs);
     }
-    return failcode;
 
     gExecutionMode = EXEC_MODE_REMOVE_OEM;
     MainRemovalTask();
+
+    return failcode;
 }
 
 /*===========================================================================

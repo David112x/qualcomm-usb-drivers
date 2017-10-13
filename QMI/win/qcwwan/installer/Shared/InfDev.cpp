@@ -34,11 +34,12 @@ VOID DisplayTime(PCHAR Title, BOOL NewLine)
 
 INT MainRemovalTask(VOID)
 {
-   if (CheckOSCompatibility() == FALSE)
-   {
-      return 1;
-   }
+   //if (CheckOSCompatibility() == FALSE)
+   //{
+   //   return 1;
+   //}
 
+   // MessageBox(NULL, TEXT("MAIN_REMOVAL_TASK"),NULL,MB_YESNO);
    DisplayTime("=== Start of Scanning ===", FALSE);
    if (gExecutionMode == EXEC_MODE_PREVIEW)
    {
@@ -47,6 +48,7 @@ INT MainRemovalTask(VOID)
    else
    {
       printf("   Mode: Removal\n\n");
+	  // MessageBox(NULL, TEXT("OEM"),NULL,MB_YESNO);
    }
 
    gFileDataRaw = (PUCHAR)malloc(INF_SIZE_MAX);
@@ -55,6 +57,9 @@ INT MainRemovalTask(VOID)
       printf("error: no memory for gFileDataRaw\n");
       return 1;
    }
+
+   // MessageBox(NULL, TEXT(MATCH_VID),NULL,MB_YESNO);
+
    // 1. remove devnode
    ScanAndRemoveDevice(TEXT(MATCH_VID));
    // 2. remove INF
@@ -64,7 +69,7 @@ INT MainRemovalTask(VOID)
 
    free(gFileDataRaw);
 
-   PackageRemoval(TEXT("Qualcomm USB Drivers For Windows"));
+   // PackageRemoval(TEXT("Qualcomm USB Drivers For Windows"));
 
    DisplayTime("=== End of Scanning ===", TRUE);
 

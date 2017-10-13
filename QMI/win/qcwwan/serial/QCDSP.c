@@ -28,6 +28,28 @@ GENERAL DESCRIPTION
 
 extern NTKERNELAPI VOID IoReuseIrp(IN OUT PIRP Irp, IN NTSTATUS Iostatus);
 
+VOID QCDSP_ObtainStackTop(PDEVICE_EXTENSION pDevExt)
+{
+   #ifdef QCSER_TARGET_XP
+   KLOCK_QUEUE_HANDLE levelOrHandle;
+   #else
+   KIRQL levelOrHandle;
+   #endif
+
+   QcAcquireSpinLock(&pDevExt->ControlSpinLock, &levelOrHandle);
+
+   if (pDevExt->FDO == NULL)
+   {
+      QcReleaseSpinLock(&pDevExt->ControlSpinLock, levelOrHandle);
+      return;
+   }
+   pDevExt->StackTopDO = IoGetAttachedDeviceReference(pDevExt->FDO);
+   ObDereferenceObject(pDevExt->StackTopDO);
+
+   QcReleaseSpinLock(&pDevExt->ControlSpinLock, levelOrHandle);
+
+} // QCDSP_ObtainStackTop
+
 NTSTATUS QCDSP_DirectDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
 {
    PIO_STACK_LOCATION     irpStack;
@@ -74,8 +96,9 @@ NTSTATUS QCDSP_DirectDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
    (
       QCSER_DBG_MASK_CIRP,
       QCSER_DBG_LEVEL_DETAIL,
-      ("<%s> CIRP: 0x%p => t 0x%p[%d/%d:%d]\n", pDevExt->PortName, Irp,
-        KeGetCurrentThread(), Irp->CurrentLocation, Irp->StackCount, irql)
+      ("<%s> CIRP: 0x%p => t 0x%p[%d/%d:%d] TopDO 0x%p FDO 0x%p\n", pDevExt->PortName, Irp,
+        KeGetCurrentThread(), Irp->CurrentLocation, Irp->StackCount, irql,
+        pDevExt->StackTopDO, pDevExt->FDO)
    );
 
    if (pDevExt->StackDeviceObject == NULL)
@@ -92,7 +115,7 @@ NTSTATUS QCDSP_DirectDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
    #ifdef QCUSB_STACK_IO_ON
    if ((CalledDO == DeviceObject) && inDevState(DEVICE_STATE_PRESENT_AND_STARTED))
    {
-      if (pDevExt->ucDeviceType == DEVICETYPE_CDC)
+      if ((pDevExt->ucDeviceType == DEVICETYPE_CDC) && (pDevExt->StackTopDO != pDevExt->FDO))
       {
          if (pDevExt->bStackOpen == TRUE)
          {
@@ -209,8 +232,8 @@ NTSTATUS QCDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
    #ifdef TEST_CODE_CLOSE
    if (irpStack->MajorFunction == IRP_MJ_CLOSE)  // TEST CODE
    {
-      DbgPrint("<%s> CLOSE 0x%p => t 0x%p[%d/%d:%d] FDO %p [0x%x,0x%x]\n", pDevExt->PortName, Irp,
-        KeGetCurrentThread(), Irp->CurrentLocation, Irp->StackCount, irql, pDevExt->FDO,
+      DbgPrint("<%s> CLOSE 0x%p => t 0x%p[%d/%d:%d] FDO %p topDO %p [0x%x,0x%x]\n", pDevExt->PortName, Irp,
+        KeGetCurrentThread(), Irp->CurrentLocation, Irp->StackCount, irql, pDevExt->FDO, pDevExt->StackTopDO,
         irpStack->MajorFunction, irpStack->MinorFunction);
    }
    #endif // TEST_CODE_CLOSE
@@ -219,8 +242,8 @@ NTSTATUS QCDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
    (
       QCSER_DBG_MASK_CIRP,
       QCSER_DBG_LEVEL_DETAIL,
-      ("<%s> CIRP: 0x%p => t 0x%p[%d/%d:%d] FDO %p [0x%x,0x%x]\n", pDevExt->PortName, Irp,
-        KeGetCurrentThread(), Irp->CurrentLocation, Irp->StackCount, irql, pDevExt->FDO,
+      ("<%s> CIRP: 0x%p => t 0x%p[%d/%d:%d] FDO %p topDO %p [0x%x,0x%x]\n", pDevExt->PortName, Irp,
+        KeGetCurrentThread(), Irp->CurrentLocation, Irp->StackCount, irql, pDevExt->FDO, pDevExt->StackTopDO,
         irpStack->MajorFunction, irpStack->MinorFunction)
    );
 
@@ -244,6 +267,7 @@ NTSTATUS QCDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
          {
             setDevState(DEVICE_STATE_DEVICE_REMOVED0);
          }
+         QCSER_PostRemovalNotification(pDevExt);
       }
       if (irpStack->MinorFunction == IRP_MN_QUERY_REMOVE_DEVICE)
       {
@@ -251,6 +275,10 @@ NTSTATUS QCDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
          {
             setDevState(DEVICE_STATE_DEVICE_QUERY_REMOVE);
          }
+      }
+      if (irpStack->MinorFunction == IRP_MN_SURPRISE_REMOVAL)
+      {
+         clearDevState(DEVICE_STATE_PRESENT_AND_STARTED);
       }
    }
 
@@ -261,7 +289,7 @@ NTSTATUS QCDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
    #ifdef QCUSB_STACK_IO_ON
    if ((CalledDO == DeviceObject) && inDevState(DEVICE_STATE_PRESENT_AND_STARTED))
    {
-      if (pDevExt->ucDeviceType == DEVICETYPE_CDC)
+      if ((pDevExt->ucDeviceType == DEVICETYPE_CDC) && (pDevExt->StackTopDO != pDevExt->FDO))
       {
          if (pDevExt->bStackOpen == TRUE)
          {
@@ -295,16 +323,16 @@ NTSTATUS QCDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
          );
          return QcCompleteRequest(Irp, STATUS_UNSUCCESSFUL, 0);
       }
-      if (is64BitIoctl == TRUE)
-      {
-         QCSER_DbgPrint
-         (
-            QCSER_DBG_MASK_CIRP,
-            QCSER_DBG_LEVEL_ERROR,
-            ("<%s> CIRP: (Ce 0x%x) 0x%p 64-bit ioctl, no support\n", pDevExt->PortName, STATUS_UNSUCCESSFUL, Irp)
-         );
-         return QcCompleteRequest(Irp, STATUS_UNSUCCESSFUL, 0);
-      }
+      // if (is64BitIoctl == TRUE)
+      // {
+      //    QCSER_DbgPrint
+      //    (
+      //       QCSER_DBG_MASK_CIRP,
+      //       QCSER_DBG_LEVEL_ERROR,
+      //       ("<%s> CIRP: (Ce 0x%x) 0x%p 64-bit ioctl, no support\n", pDevExt->PortName, STATUS_UNSUCCESSFUL, Irp)
+      //    );
+      //    return QcCompleteRequest(Irp, STATUS_UNSUCCESSFUL, 0);
+      // }
    }
 
    if (irpStack->MajorFunction == IRP_MJ_POWER)
@@ -2147,6 +2175,20 @@ NTSTATUS QCDSP_Dispatch
                                         );
                break;
             }
+
+            case IOCTL_QCDEV_REQUEST_DEVICEID:
+            {
+               QCSER_DbgPrint
+               (
+                  QCSER_DBG_MASK_CONTROL,
+                  QCSER_DBG_LEVEL_ERROR,
+                  ("<%s>: IOCTL_QCDEV_REQUEST_DEVICEID, relay\n", pDevExt->PortName)
+               );
+               IoSkipCurrentIrpStackLocation(Irp);
+               ntStatus = IoCallDriver(pDevExt->StackDeviceObject, Irp);
+               QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
+               goto QCDSP_Dispatch_Done;
+            }
 			
             default:
                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
@@ -2263,6 +2305,8 @@ NTSTATUS QCDSP_Dispatch
             }  // IRP_MN_QUERY_CAPABILITIES
 
             case IRP_MN_START_DEVICE:  // PASSIVE_LEVEL
+               QCDSP_ObtainStackTop(pDevExt);
+
                IoCopyCurrentIrpStackLocationToNext(Irp);
 
                // after the copy set the completion routine

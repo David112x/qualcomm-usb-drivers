@@ -1314,6 +1314,67 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 break;
              }
 
+             case IOCTL_QCDEV_GET_PRIMARY_ADAPTER_NAME:
+             {
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL, 
+                   ("<%s> MPIOC: IOCTL_QCDEV_GET_PRIMARY_ADAPTER_NAME\n", pAdapter->PortName)
+                );
+                status = MPIOC_GetPrimaryAdapterName(pAdapter, Irp, outlen);
+                break;
+             }
+
+             case IOCTL_QCDEV_GET_QMI_QUEUE_SIZE:
+             {
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL, 
+                   ("<%s> MPIOC: IOCTL_QCDEV_GET_QMI_QUEUE_SIZE\n", pAdapter->PortName)
+                );
+                if ((buffer == NULL) || (outlen == 0) || (outlen < sizeof(LONG)))
+                {
+                   QCNET_DbgPrint
+                   (
+                      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_ERROR,
+                      ("<%s> MPIOC: insufficient input for IOCTL_QCDEV_GET_QMI_QUEUE_SIZE\n", pAdapter->PortName)
+                   );
+                   status = STATUS_UNSUCCESSFUL;
+                }
+                else if (pIocDev->Type == MP_DEV_TYPE_CLIENT)
+                {
+                   (*(LONG *)buffer) = pAdapter->PendingCtrlRequests[pIocDev->QMIType];
+                   Irp->IoStatus.Information = sizeof(LONG);
+                   status = STATUS_SUCCESS;
+                }
+                else
+                {
+                   QCNET_DbgPrint
+                   (
+                      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_ERROR,
+                      ("<%s> MPIOC: IOCTL_QCDEV_GET_QMI_QUEUE_SIZE not for dev type %d\n",
+                        pAdapter->PortName, pIocDev->Type)
+                   );
+                   status = STATUS_UNSUCCESSFUL;
+                }
+                break;
+             }
+
+             case IOCTL_QCDEV_PURGE_QMI_QUEUE:
+             {
+                MPIOC_PurgeQueue
+                (
+                   pIocDev,
+                   &pIocDev->WriteIrpQueue,
+                   &pIocDev->IoLock,
+                   5
+                );
+                pAdapter->PendingCtrlRequests[pIocDev->QMIType] = 0;
+                status = STATUS_SUCCESS;
+
+                break;
+             }
+
              default:
              {
                 QCNET_DbgPrint
@@ -3225,7 +3286,7 @@ void MPIOC_WriteThread
       NdisAcquireSpinLock(&pIocDev->IoLock);
       if ((!IsListEmpty(&pIocDev->WriteIrpQueue)) &&
           (pIocDev->bWriteActive == FALSE) &&
-          (pAdapter->PendingCtrlRequests[pIocDev->QMIType] < MAX_CTRL_PENDING_REQUESTS))
+          (pAdapter->PendingCtrlRequests[pIocDev->QMIType] < pAdapter->MaxPendingQMIReqs))
       {
          PLIST_ENTRY        headOfList;
          PIO_STACK_LOCATION irpStack;
@@ -5079,5 +5140,84 @@ NTSTATUS MPIOC_GetPeerDeviceName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen)
    );
    return Status;
 }  // MPIOC_GetPeerDeviceName
+
+// Retrieve the primary adapter
+PMP_ADAPTER GetPrimaryAdapter(PMP_ADAPTER pAdapter)
+{
+   PMP_ADAPTER       pTempAdapter;
+
+   DisconnectedAllAdapters(pAdapter, &pTempAdapter);
+
+   return pTempAdapter;
+}  // GetPrimaryAdapter
+
+NTSTATUS MPIOC_GetPrimaryAdapterName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen)
+{
+   PMP_ADAPTER pPrimaryAdapter;
+   NTSTATUS ntStatus = STATUS_SUCCESS;
+   int nameLen;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_ERROR,
+      ("<%s> -->MPIOC_GetPrimaryAdapterName\n", pAdapter->PortName)
+   );
+
+   pPrimaryAdapter = GetPrimaryAdapter(pAdapter);
+
+   if (pPrimaryAdapter == NULL)
+   {
+      ntStatus = STATUS_UNSUCCESSFUL;
+      Irp->IoStatus.Status = ntStatus;
+      Irp->IoStatus.Information = 0;
+
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_ERROR,
+         ("<%s> MPIOC_GetPrimaryAdapterName: failed to get primary adapter\n", pAdapter->PortName)
+      );
+      return ntStatus;
+   }
+
+   // nameLen = strlen(pPrimaryAdapter->FriendlyName);
+   nameLen = pAdapter->FriendlyNameWLen;
+
+   if (BufLen <= nameLen)
+   {
+      ntStatus = STATUS_BUFFER_TOO_SMALL;
+      Irp->IoStatus.Status = ntStatus;
+      Irp->IoStatus.Information = 0;
+
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_ERROR,
+         ("<%s> MPIOC_GetPrimaryAdapterName: buffer too small\n", pAdapter->PortName)
+      );
+      return ntStatus;
+   }
+
+   RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, BufLen);
+   RtlCopyMemory
+   (
+      Irp->AssociatedIrp.SystemBuffer,
+      pPrimaryAdapter->FriendlyNameW,
+      nameLen
+   );
+   Irp->IoStatus.Status = ntStatus;
+   Irp->IoStatus.Information = nameLen;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> <--MPIOC_GetPrimaryAdapterName <%ws> %dB\n", pAdapter->PortName,
+        pPrimaryAdapter->FriendlyNameW, pAdapter->FriendlyNameWLen)
+   );
+
+   return ntStatus;
+}  // MPIOC_GetPrimaryAdapterName
 
 #endif  // defined(IOCTL_INTERFACE)

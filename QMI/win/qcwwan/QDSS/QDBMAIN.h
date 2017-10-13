@@ -110,6 +110,11 @@ extern ULONG SimData[2724];
                                        METHOD_BUFFERED, \
                                        FILE_ANY_ACCESS)
 
+#define IOCTL_QCDEV_REQUEST_DEVICEID CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                              QCDEV_IOCTL_INDEX+1304, \
+                                              METHOD_BUFFERED, \
+                                              FILE_ANY_ACCESS)
+
 typedef struct _QDB_IO_REQUEST
 {
    LIST_ENTRY List;
@@ -144,6 +149,8 @@ typedef struct _DEVICE_CONTEXT
 {
    WDFIOTARGET                   MyIoTarget;
    WDFUSBDEVICE                  WdfUsbDevice;
+   PDEVICE_OBJECT                MyDevice;
+   PDEVICE_OBJECT                TargetDevice;
    PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc; // dynamically allocated
    UCHAR                         FriendlyName[MAX_NAME_LEN];
    WCHAR                         FriendlyNameHolder[MAX_NAME_LEN];

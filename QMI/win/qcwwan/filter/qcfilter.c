@@ -1012,6 +1012,18 @@ QCFilterDispatchIo( PDEVICE_OBJECT DeviceObject, PIRP Irp )
                      DBG_LEVEL_TRACE,
                      ("MPFILTER: IRP_MJ_DEVICE_CONTROL sub command IOCTL_QCDEV_REQUEST_DEVICEID\n")
                   );
+
+                  if (outlen < sizeof(int))
+                  {
+                     QCFLT_DbgPrint
+                     (
+                        DBG_LEVEL_TRACE,
+                        ("MPFILTER: IOCTL_QCDEV_REQUEST_DEVICEID: buf len too small\n")
+                     );
+                     status = Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                     Irp->IoStatus.Information = 0;
+                     break;
+                  }
                    
                   QcAcquireSpinLockWithLevel(&deviceExtension->FilterSpinLock, &levelOrHandle, irql);
                   if (Irp->Cancel)
@@ -1027,9 +1039,9 @@ QCFilterDispatchIo( PDEVICE_OBJECT DeviceObject, PIRP Irp )
                      break;
                   }
 
-				  status = STATUS_SUCCESS;
-				  *(PULONG *)buffer = (PULONG)DeviceObject;
-				  Irp->IoStatus.Information = sizeof(PDEVICE_OBJECT);
+                  status = STATUS_SUCCESS;
+                  *(PULONG *)buffer = (PULONG)DeviceObject;
+                  Irp->IoStatus.Information = sizeof(PDEVICE_OBJECT);
                   QcReleaseSpinLockWithLevel(&deviceExtension->FilterSpinLock, levelOrHandle, irql);
                   break;
                }   

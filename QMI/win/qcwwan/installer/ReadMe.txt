@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.37
-07/08/2015
+Qualcomm USB Host Drivers Version 1.00.38
+10/08/2015
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,7 +20,33 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.37) 07/08/2015
+This Release (Qualcomm USB Host Drivers Version 1.00.38) 10/08/2015
+USB Driver updates:
+   a.   Added the rogue driver cleanup in Installer.
+   b.   Added support for configuring QMI request threshold.
+   Serial driver 2.1.2.1
+      a. Made changes so that an ACM device enumerated under Port class.
+      b. Added IOCTL for retrieving parent device ID.
+      c. Added error handling to facilitate device removal when device
+         disconnects during the process of port opening.
+      d. Made changes to speed up the cancellation of read threads.
+   Network driver 4.0.3.8
+      a. Added handling for RX buffer allocation failure.
+      b. Added new feature to support Fuzzing test.
+      c. Made the thresold of pending QMI requests configurable.
+      d. Added support for device/parent ID retrival.
+      e. Added IOCTLs for primary adapter name and parent device ID.
+      f. Added IOCTLs to support fuzzing test.
+      g. Added the tx_id fix to always start from 0x01.
+   Filter driver 1.0.3.0
+      a. Added correct check for size when handling IOCTL_QCDEV_REQUEST_DEVICEID.
+   QDSS/DPL driver 1.0.0.7
+      a. Added IOCTL for retrieving parent device ID.
+      b. Removed explicit cancellation of internal requests for DPL when receiving
+         requests from applications. This is done to avoid potential timing issue
+         at bus layer.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.37) 07/08/2015
 USB Driver updates:
    Serial driver 2.1.1.9
       a. Added support for device name pairing between DIAG and network adapter
@@ -32,7 +58,7 @@ USB Driver updates:
       a. Added support for device name pairing between DIAG and network adapter
    QDSS/DPL driver 1.0.0.6
 
-This Release (Qualcomm USB Host Drivers Version 1.00.36) 05/27/2015
+Prior Release (Qualcomm USB Host Drivers Version 1.00.36) 05/27/2015
 USB Driver updates:
    a.   Updated the installer to sign the drivers with verisign cross certificate.
    b.   Removed installation of test certificate and stopped turning on testsigning.
@@ -46,7 +72,7 @@ USB Driver updates:
       a.   Added PID 90B9.
    QDSS/DPL driver 1.0.0.6
 
-This Release (Qualcomm USB Host Drivers Version 1.00.35) 04/10/2015
+Prior Release (Qualcomm USB Host Drivers Version 1.00.35) 04/10/2015
 USB Driver updates:
    Serial driver 2.1.1.8
       a.   Made changes to initialize PnP IRP with STATUS_NOT_SUPPORTED.
@@ -61,7 +87,7 @@ USB Driver updates:
    Filter driver 1.0.2.7
    QDSS/DPL driver 1.0.0.6
 
-This Release (Qualcomm USB Host Drivers Version 1.00.34) 01/22/2015
+Prior Release (Qualcomm USB Host Drivers Version 1.00.34) 01/22/2015
 USB Driver updates:
    Serial driver 2.1.1.7
    Network driver 4.0.3.4

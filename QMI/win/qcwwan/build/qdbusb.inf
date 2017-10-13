@@ -8,7 +8,7 @@ Signature="$WINDOWS NT$"
 Class=USB
 ClassGuid={36FC9E60-C465-11CF-8056-444553540000}
 Provider=%QCOM%
-DriverVer = 01/27/2015, 1.0.0.6
+DriverVer = 10/08/2015, 1.0.0.7
 Catalogfile= qdbusb.cat
 
 [Manufacturer]

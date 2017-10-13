@@ -385,6 +385,8 @@ NTSTATUS QDBPNP_EvtDevicePrepareHW
    pDevContext->RxCount = 0;
    pDevContext->TxCount = 0;
    pDevContext->MyIoTarget = WdfDeviceGetIoTarget(Device);
+   pDevContext->MyDevice = WdfDeviceWdmGetDeviceObject(Device);
+   pDevContext->TargetDevice = WdfIoTargetWdmGetTargetDeviceObject(pDevContext->MyIoTarget);
 
    // TODO: for DPL only
    pDevContext->PipeDrain = FALSE;

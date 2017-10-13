@@ -589,7 +589,7 @@ BOOLEAN MPWork_PostWriteRequests( PMP_ADAPTER pAdapter )
            pList = RemoveHeadList( &pAdapter->CtrlWriteList );
         QMIElement = CONTAINING_RECORD( pList, QCWRITEQUEUE, QCWRITERequest);
         QMI = (PQCQMI)QMIElement->Buffer;
-        if (pAdapter->PendingCtrlRequests[QMI->QMIType] < MAX_CTRL_PENDING_REQUESTS)
+        if (pAdapter->PendingCtrlRequests[QMI->QMIType] < pAdapter->MaxPendingQMIReqs)
         {
            // For now we can release the CtrlRead list
            NdisReleaseSpinLock( &pAdapter->CtrlWriteLock );

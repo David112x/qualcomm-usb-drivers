@@ -302,6 +302,13 @@ NDIS_STATUS MPINI_MiniportInitialize
          ("<%s> MPDisableQoS: %d\n", pAdapter->PortName, pAdapter->MPDisableQoS)
       );
 
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_DETAIL,
+         ("<%s> MPMaxPendingQMIReqs: %d\n", pAdapter->PortName, pAdapter->MaxPendingQMIReqs)
+      );
+
       // We can't call alloc buffers until after the parse registry because some of
       // the buffer counts are setup from registry values.
       Status = MPINI_AllocAdapterBuffers(pAdapter);
@@ -2098,6 +2105,13 @@ NDIS_STATUS MPINI_AllocateReceiveNBL(PMP_ADAPTER pAdapter)
    PNET_BUFFER                     nb;
    int i;
 
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> -->MPINI_AllocateReceiveNBL\n", pAdapter->PortName)
+   );
+
    NdisZeroMemory(&poolParams, sizeof(NET_BUFFER_LIST_POOL_PARAMETERS));
    poolParams.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
    poolParams.Header.Revision = NET_BUFFER_LIST_POOL_PARAMETERS_REVISION_1;
@@ -2117,7 +2131,13 @@ NDIS_STATUS MPINI_AllocateReceiveNBL(PMP_ADAPTER pAdapter)
 
    if (pAdapter->RxPacketPoolHandle == NULL)
    {
-       return NDIS_STATUS_FAILURE;
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_ERROR,
+         ("<%s> MPINI_AllocateReceiveNBL: alloc failure-0\n", pAdapter->PortName)
+      );
+      return NDIS_STATUS_FAILURE;
    }
 
    pAdapter->RxBufferMem = ExAllocatePoolWithTag
@@ -2128,7 +2148,15 @@ NDIS_STATUS MPINI_AllocateReceiveNBL(PMP_ADAPTER pAdapter)
                            );
    if (pAdapter->RxBufferMem == NULL)
    {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_ERROR,
+         ("<%s> MPINI_AllocateReceiveNBL: alloc failure-1 %dB\n", pAdapter->PortName,
+            (pAdapter->MaxDataReceives * sizeof(MPUSB_RX_NBL)))
+      );
       MPINI_FreeReceiveNBL(pAdapter);
+      return NDIS_STATUS_FAILURE;
    }
    NdisZeroMemory(pAdapter->RxBufferMem, (pAdapter->MaxDataReceives * sizeof(MPUSB_RX_NBL)));
 
@@ -2145,6 +2173,13 @@ NDIS_STATUS MPINI_AllocateReceiveNBL(PMP_ADAPTER pAdapter)
       {
          if (i == 0)
          {
+            QCNET_DbgPrint
+            (
+               MP_DBG_MASK_CONTROL,
+               MP_DBG_LEVEL_ERROR,
+               ("<%s> MPINI_AllocateReceiveNBL: alloc failure-2 %dB[%d]\n", pAdapter->PortName,
+                 QCMP_MAX_DATA_PKT_SIZE, i)
+            );
             MPINI_FreeReceiveNBL(pAdapter);
             return NDIS_STATUS_FAILURE;
          }
@@ -2170,6 +2205,13 @@ NDIS_STATUS MPINI_AllocateReceiveNBL(PMP_ADAPTER pAdapter)
          {
             if (i == 0)
             {
+               QCNET_DbgPrint
+               (
+                  MP_DBG_MASK_CONTROL,
+                  MP_DBG_LEVEL_ERROR,
+                  ("<%s> MPINI_AllocateReceiveNBL: alloc failure-3 %dB[%d]\n", pAdapter->PortName,
+                    QCMP_MAX_DATA_PKT_SIZE, i)
+               );
                MPINI_FreeReceiveNBL(pAdapter);
                return NDIS_STATUS_FAILURE;
             }
@@ -2205,6 +2247,13 @@ NDIS_STATUS MPINI_AllocateReceiveNBL(PMP_ADAPTER pAdapter)
          }
       }
    } // for
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> <--MPINI_AllocateReceiveNBL\n", pAdapter->PortName)
+   );
 
    return NDIS_STATUS_SUCCESS;
 

@@ -1150,6 +1150,7 @@ typedef struct _MP_ADAPTER
    ULONG                   NumClients;
    UCHAR                   ClientId[QMUX_TYPE_MAX+1];
    LONG                    PendingCtrlRequests[QMUX_TYPE_MAX+1];
+   LONG                    MaxPendingQMIReqs;
    BOOLEAN                 IsQMIOutOfService;
    UCHAR                   QMIType;
    NDIS_SPIN_LOCK          QMICTLLock;
@@ -1408,6 +1409,8 @@ typedef struct _MP_ADAPTER
 
    BOOLEAN IgnoreQMICTLErrors;
    UCHAR   FriendlyName[256];
+   USHORT  FriendlyNameWLen;
+   WCHAR   FriendlyNameW[256];
    ULONG   MTUSize;
 
    ULONG Deregister;

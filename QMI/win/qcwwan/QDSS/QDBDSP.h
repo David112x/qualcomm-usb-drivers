@@ -35,4 +35,18 @@ VOID QDBDSP_IoResume
    WDFREQUEST Request
 );
 
+NTSTATUS QDBDSP_IrpIoCompletion
+(
+   PDEVICE_OBJECT DeviceObject,
+   PIRP           Irp,
+   PVOID          Context
+);
+
+NTSTATUS QDBDSP_GetParentId
+(
+   PDEVICE_CONTEXT pDevContext,
+   PVOID           IoBuffer,
+   ULONG           BufferLen
+);
+
 #endif // QDBDSP_H

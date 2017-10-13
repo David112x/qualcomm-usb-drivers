@@ -74,6 +74,8 @@ NTSTATUS CancelReadThread(PDEVICE_EXTENSION pDevExt, UCHAR cookie)
    
       if (pDevExt->pL1ReadThread != NULL)
       {
+         pDevExt->bL1Stopped = TRUE;  // to stop L1 direct completion
+
          QCSER_DbgPrint
          (
             QCSER_DBG_MASK_READ,
