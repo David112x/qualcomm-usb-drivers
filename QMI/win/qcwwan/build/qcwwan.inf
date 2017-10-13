@@ -269,6 +269,8 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90AF86%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_86
 %qcwwan.DeviceDesc90AF87%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_87
 %qcwwan.DeviceDesc90AF88%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_88
+%qcwwan.DeviceDesc90B03%    = qcwwan.ndi, USB\VID_05C6&PID_90B0&MI_03
+%qcwwan.DeviceDesc90B23%    = qcwwan.ndi, USB\VID_05C6&PID_90B2&MI_03
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [QCOM.NTia64.6.1]
@@ -510,6 +512,8 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90AF86%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_86
 %qcwwan.DeviceDesc90AF87%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_87
 %qcwwan.DeviceDesc90AF88%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_88
+%qcwwan.DeviceDesc90B03%    = qcwwan.ndi, USB\VID_05C6&PID_90B0&MI_03
+%qcwwan.DeviceDesc90B23%    = qcwwan.ndi, USB\VID_05C6&PID_90B2&MI_03
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [QCOM.NTamd64.6.1]
@@ -751,6 +755,8 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90AF86%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_86
 %qcwwan.DeviceDesc90AF87%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_87
 %qcwwan.DeviceDesc90AF88%    = qcwwan.ndi, USB\VID_05C6&PID_90AF&MI_88
+%qcwwan.DeviceDesc90B03%    = qcwwan.ndi, USB\VID_05C6&PID_90B0&MI_03
+%qcwwan.DeviceDesc90B23%    = qcwwan.ndi, USB\VID_05C6&PID_90B2&MI_03
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [qcwwan.ndi]
@@ -1103,6 +1109,8 @@ qcwwan.DeviceDesc90AF85     = "Qualcomm HS-USB WWAN Adapter 90AF-85(NET1_MUX6)"
 qcwwan.DeviceDesc90AF86     = "Qualcomm HS-USB WWAN Adapter 90AF-86(NET1_MUX7)"
 qcwwan.DeviceDesc90AF87     = "Qualcomm HS-USB WWAN Adapter 90AF-87(NET1_MUX8)"
 qcwwan.DeviceDesc90AF88     = "Qualcomm HS-USB WWAN Adapter 90AF-88(NET1_MUX9)"
+qcwwan.DeviceDesc90B03      = "Qualcomm HS-USB WWAN Adapter 90B0"
+qcwwan.DeviceDesc90B23      = "Qualcomm HS-USB WWAN Adapter 90B2"
 qcwwan.DeviceDesc920D0      = "Qualcomm Gobi 3000 HS-USB Mobile Broadband Adapter 920D"
 qcwwan.Service.DispName     = "Qualcomm USB-NDIS WWAN miniport"
 DiskId1 = "Qualcomm USB-NDIS Miniport Device Installation Disk #1"
