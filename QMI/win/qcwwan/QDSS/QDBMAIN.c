@@ -25,6 +25,9 @@ NTSTATUS DriverEntry
    WDF_DRIVER_CONFIG     qdbConfig;
    WDF_OBJECT_ATTRIBUTES qdbAttributes;
 
+   //call this to make sure NonPagedPoolNx is passed to ExAllocatePool in Win10 and above
+   ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+
    QDB_DbgPrintG
    (
       0, 0,

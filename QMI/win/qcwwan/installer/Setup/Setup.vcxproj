@@ -113,7 +113,8 @@
       <AdditionalManifestFiles>Manifest.txt;%(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PostBuildEvent>
-      <Command>signtool.exe sign /v /f .\..\..\private\qcusbdrv.pfx -p Qualcomm1 /t http://timestamp.verisign.com/scripts/timstamp.dll $(OutDir)$(ProjectName).exe</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

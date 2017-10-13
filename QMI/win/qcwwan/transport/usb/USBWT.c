@@ -98,7 +98,7 @@ NTSTATUS USBWT_Write(IN PDEVICE_OBJECT DeviceObject, IN PIRP pIrp)
                  ntStatus, pIrp->IoStatus.Information, pIrp)
             );
             QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, 2);
-            IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+            QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
             goto Exit;
          }
       }
@@ -127,7 +127,7 @@ NTSTATUS USBWT_Write(IN PDEVICE_OBJECT DeviceObject, IN PIRP pIrp)
            ntStatus, pIrp->IoStatus.Information, pIrp)
       );
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, 2);
-      IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
       goto Exit;
    }
 
@@ -152,7 +152,7 @@ NTSTATUS USBWT_Write(IN PDEVICE_OBJECT DeviceObject, IN PIRP pIrp)
          ("<%s> WIRP 0x%p(Cns 0x%x)\n", pDevExt->PortName, pIrp, ntStatus)
       );
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, 2);
-      IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
       goto Exit;
    } 
 
@@ -168,7 +168,7 @@ NTSTATUS USBWT_Write(IN PDEVICE_OBJECT DeviceObject, IN PIRP pIrp)
            ntStatus, pIrp)
       );
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, 2);
-      IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
       goto Exit;
    }
 
@@ -204,7 +204,7 @@ NTSTATUS USBWT_Write(IN PDEVICE_OBJECT DeviceObject, IN PIRP pIrp)
          ("<%s> WIRP 0x%p(C 0x%x)\n", pDevExt->PortName, pIrp, ntStatus)
       );
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, 2);
-      IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
    }
 
 Exit:

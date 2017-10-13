@@ -793,7 +793,9 @@ typedef struct _DEVICE_EXTENSION
    PUSB_DEVICE_DESCRIPTOR pUsbDevDesc;	// ptr since there is only 1 dev desc
    PUSB_CONFIGURATION_DESCRIPTOR pUsbConfigDesc;
    PUSBD_INTERFACE_INFORMATION Interface[MAX_INTERFACE];
+   CHAR DevSerialNumber[256];  // to hold USB_STRING_DESCRIPTOR of the serial number
    USHORT usCommClassInterface;         // CDC
+   ULONG IfProtocol;
    // handle to configuration that was selected
    USBD_CONFIGURATION_HANDLE ConfigurationHandle;
    BOOLEAN bClosing;

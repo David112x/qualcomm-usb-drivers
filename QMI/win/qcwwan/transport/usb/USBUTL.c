@@ -996,7 +996,7 @@ VOID QcEmptyCompletionQueue
          }
 
          QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, rmLockIdx);
-         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+         QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
       }
       else
       {
@@ -1152,7 +1152,7 @@ VOID USBUTL_PurgeQueue
                   InsertTailList(&pDevExt->WtCompletionQueue, &pIrp->Tail.Overlay.ListEntry);
                   break;
                default:
-                  _IoCompleteRequest(pIrp, IO_NO_INCREMENT);  // best effort
+                  QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);  // best effort
                   break;
             }
 
@@ -1774,7 +1774,7 @@ VOID USBUTL_CheckPurgeStatus(PDEVICE_EXTENSION pDevExt, USHORT newBit)
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pPurgeIrp, 0);
       pPurgeIrp->IoStatus.Status = STATUS_SUCCESS;
       pPurgeIrp->IoStatus.Information = 0;
-      _IoCompleteRequest(pPurgeIrp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(pPurgeIrp, IO_NO_INCREMENT);
    }
 }  // USBUTL_CheckPurgeStatus
 

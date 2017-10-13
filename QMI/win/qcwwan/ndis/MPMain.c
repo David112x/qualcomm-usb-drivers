@@ -162,6 +162,9 @@ NDIS_STATUS DriverEntry(PVOID DriverObject, PVOID RegistryPath)
 
 #endif
 
+   //call this to make sure NonPagedPoolNx is passed to ExAllocatePool in Win10 and above
+   ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+
    MPMAIN_DetermineNdisVersion();
    MPOID_GetSupportedOidListSize();
    MPOID_GetSupportedOidGuidsSize();

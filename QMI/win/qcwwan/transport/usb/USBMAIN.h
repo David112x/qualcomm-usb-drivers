@@ -752,6 +752,8 @@ typedef struct _DEVICE_EXTENSION
    BOOLEAN IsEcmModel;
    USHORT usCommClassInterface;
    USBD_CONFIGURATION_HANDLE ConfigurationHandle;
+   CHAR DevSerialNumber[256];  // to hold USB_STRING_DESCRIPTOR of the serial number
+   ULONG IfProtocol;
    _MUTEX muPnPMutex;
    BOOLEAN bInService;                  //set in create, cleared in close
 
@@ -1172,7 +1174,8 @@ extern char gServiceName[255];
 #endif
 
 #ifdef NDIS_WDM
-#define QcIoDeleteDevice(_d_) {ExFreePool(_d_->DeviceExtension);ExFreePool(_d_);_d_=NULL;}
+// #define QcIoDeleteDevice(_d_) {ExFreePool(_d_->DeviceExtension);ExFreePool(_d_);_d_=NULL;}
+#define QcIoDeleteDevice(_d_) {IoDeleteDevice(_d_);_d_=NULL;}
 #else
 #define QcIoDeleteDevice(_d_) IoDeleteDevice(_d_);
 #endif
@@ -1195,7 +1198,9 @@ NTSTATUS USBMAIN_IrpCompletionSetEvent
 );
 
 NTSTATUS _QcIoCompleteRequest(IN PIRP Irp, IN CCHAR  PriorityBoost);
+NTSTATUS QCIoCompleteRequest(IN PIRP Irp, IN CCHAR  PriorityBoost);
 NTSTATUS QcCompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG_PTR info);
+NTSTATUS QcCompleteRequest2(IN PIRP Irp, IN NTSTATUS status, IN ULONG_PTR info);
 VOID QCUSB_DispatchDebugOutput
 (
    PIRP               Irp,

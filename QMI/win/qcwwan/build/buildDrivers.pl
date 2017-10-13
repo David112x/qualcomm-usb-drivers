@@ -482,7 +482,7 @@ sub BuildDrivers
                my $InstallArchDir = "$TargetDriverDir\\$ArchDir{$BuildArch}[1]\\";
 
                BuildVSProject( "$DriverPath\\$Projects{$Driver}[$PROJ_SOLN].sln", $Projects{$Driver}[$PROJ_CONFIG], $BuildType, $BuildArch);
-
+               
                # Copy .sys and .pdb to target build directory
                Run(qq(xcopy /R /F /Y /I $DriverPath\\$outputDir\\$BuildArchDir\\$Projects{$Driver}[$PROJ_TARGET_NAME].sys $InstallArchDir));
                Run(qq(xcopy /R /F /Y /I $DriverPath\\$outputDir\\$BuildArchDir\\$Projects{$Driver}[$PROJ_TARGET_NAME].pdb $InstallArchDir));
@@ -510,19 +510,19 @@ sub BuildDrivers
    my $File;
    my @Files = <$TargetDir\\*\\*.cat>;
    
-   foreach $File (@Files) 
-   {
-      $SignCommand = "$WDKPath\\signtool.exe sign /v /f ".
-                     "$DriversDir\\private\\qcusbdrv.pfx -p ".
-                     "Qualcomm1 /ac $DriversDir\\private\\verisign.cer /t http://timestamp.verisign.com/scripts/timstamp.dll ".
-                     "$File";
-      Run( $SignCommand );
+# !  foreach $File (@Files) 
+# !  {
+# !      $SignCommand = "$WDKPath\\signtool.exe sign /v /f ".
+# !                     "$DriversDir\\private\\qcusbdrv.pfx -p ".
+# !                     "Qualcomm1 /ac $DriversDir\\private\\verisign.cer /t http://timestamp.verisign.com/scripts/timstamp.dll ".
+# !                     "$File";
+# !      Run( $SignCommand );
 
-      if ($? != 0)
-      {
-         TRACE "Error Signing $File. Correct Problems and Try Again.\n";
-         ExitScript( 1 );
-      }
+# !      if ($? != 0)
+# !      {
+# !         TRACE "Error Signing $File. Correct Problems and Try Again.\n";
+# !         ExitScript( 1 );
+# !      }
       
 #      $SignCommand = "$WDKPath\\signtool.exe sign /ac ".
 #                     "$DriversDir\\private\\verisign.cer ".
@@ -536,8 +536,13 @@ sub BuildDrivers
 #         ExitScript( 1 );
 #      }
       
-   }
+# !   }
+   
    #Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\ReadMe.rtf $TargetDir));
+
+   # Signing 
+   Run(qq(perl $DriversDir\\build\\tc.pl $TargetDir\\chk $TargetDir\\chk ));
+   Run(qq(perl $DriversDir\\build\\tc.pl $TargetDir\\fre $TargetDir\\fre ));
 
    CreateInstallDirs();
 }

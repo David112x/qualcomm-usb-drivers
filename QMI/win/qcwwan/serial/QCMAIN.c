@@ -94,6 +94,9 @@ NTSTATUS DriverEntry
    WPP_INIT_TRACING(DriverObject,RegistryPath);
 #endif
 
+   //call this to make sure NonPagedPoolNx is passed to ExAllocatePool in Win10 and above
+   ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+
    // Create dispatch points for device control, create, close.
    gDeviceName[0] = 0;
    KeInitializeSpinLock(&gPnpSpinLock);
@@ -162,7 +165,7 @@ NTSTATUS DriverEntry
       ("\n<%s> DriverEntry\n", gDeviceName)
    );
 #endif
-   QCSER_DbgPrintG2
+   QCSER_DbgPrintG
    (
       QCSER_DBG_MASK_CONTROL,
       QCSER_DBG_LEVEL_DETAIL,

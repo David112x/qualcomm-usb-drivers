@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.44
-10/31/2016
+Qualcomm USB Host Drivers Version 1.00.46
+07/07/2017
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,7 +20,64 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.44) 10/31/2016
+This Release (Qualcomm USB Host Drivers Version 1.00.47) 08/03/2017
+USB Driver updates:
+   Serial driver 2.1.2.7
+      a. Added support for ADB serial number
+      b. Added support for composition 90D9
+      c. Added tracking for power settings
+   Network driver 4.0.4.7
+      a. Added support for ADB serial number
+      b. Increased RX timeout for QMI CTL service to accommodate slower device
+   Filter driver 1.0.4.7
+      a. Added support for composition 90D9
+   QDSS/DPL driver 1.0.1.3
+      a. Added support for ADB serial number
+
+This Release (Qualcomm USB Host Drivers Version 1.00.46) 07/07/2017
+USB Driver updates:
+   Serial driver 2.1.2.6
+      a. Renames some of the device names in INF file.
+   Network driver 4.0.4.6
+      a. Fixed the IMSI issue when UIM_READ_TRANSPARANT returns non correct IMSI format.
+      b. Fixed passing correct TLV info for SET_SYS_SELECTION.
+   Filter driver 1.0.4.6
+      a. Added 90CA, 90CB, 90CC, 90CD, 90D0, 90D1, 90D2, 90D3, 90D4, 90D5 and 90D6 support.
+      b. Added NonPagedPoolNx support to pass WHCK on WIn8 and later OS.
+      c. Added support for POOL_NX_OPTIN
+   QDSS/DPL driver 1.0.1.2
+      a. Added new Qualcomm Class support.
+      b. Added NonPagedPoolNx support to pass WHCK on WIn8 and later OS.
+      c. Refined retrieval of device serial number
+      d. Added support for custom protocol tied to each function
+      e. Added support for POOL_NX_OPTIN
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.45) 03/02/2017
+USB Driver updates:
+   Serial driver 2.1.2.5
+      a. Added 90CA, 90CB, 90CC, 90CD, 90D0, 90D1, 90D2, 90D3, 90D4, 90D5 and 90D6 support.
+      b. Added NonPagedPoolNx support to pass WHCK on WIn8 and later OS.
+      c. Refined retrieval of device serial number
+      d. Added support for custom protocol tied to each function
+      e. Added support for POOL_NX_OPTIN
+   Network driver 4.0.4.5
+      a. Added 90CA, 90CB, 90CC, 90CD, 90D0, 90D1, 90D2, 90D3, 90D4 90D5 and 90D6 support.
+      b. Added NonPagedPoolNx support to pass WHCK on WIn8 and later OS.
+      c. Refined retrieval of device serial number
+      d. Added support for custom protocol tied to each function
+      e. Added support for POOL_NX_OPTIN
+   Filter driver 1.0.4.6
+      a. Added 90CA, 90CB, 90CC, 90CD, 90D0, 90D1, 90D2, 90D3, 90D4, 90D5 and 90D6 support.
+      b. Added NonPagedPoolNx support to pass WHCK on WIn8 and later OS.
+      c. Added support for POOL_NX_OPTIN
+   QDSS/DPL driver 1.0.1.1
+      a. Added new Qualcomm Class support.
+      b. Added NonPagedPoolNx support to pass WHCK on WIn8 and later OS.
+      c. Refined retrieval of device serial number
+      d. Added support for custom protocol tied to each function
+      e. Added support for POOL_NX_OPTIN
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.44) 10/31/2016
 USB Driver updates:
    Serial driver 2.1.2.3
    Network driver 4.0.4.4

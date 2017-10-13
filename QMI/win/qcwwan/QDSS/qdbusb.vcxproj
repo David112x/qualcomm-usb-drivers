@@ -181,7 +181,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;QDB_DBGPRINT</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING;QDB_DBGPRINT;POOL_NX_OPTIN=1</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);EVENT_TRACING</PreprocessorDefinitions>

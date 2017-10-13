@@ -15,6 +15,18 @@ GENERAL DESCRIPTION
 #include <wdf.h>
 
 #define DEVICE_LINK_NAME_PATH L"\\??\\"
+#define VEN_DEV_TIME          L"QCDeviceStamp"
+#define VEN_DEV_SERNUM        L"QCDeviceSerialNumber"
+#define VEN_DEV_MSM_SERNUM    L"QCDeviceMsmSerialNumber"
+#define VEN_DEV_PROTOC        L"QCDeviceProtocol"
+#define DEVICE_HW_KEY_ROOT    L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Enum\\"
+
+NTSTATUS QDBPNP_SetStamp
+(
+   PDEVICE_OBJECT PhysicalDeviceObject,
+   HANDLE         hRegKey,
+   BOOLEAN        Startup
+);
 
 NTSTATUS QDBPNP_EvtDriverDeviceAdd
 (

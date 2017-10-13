@@ -3,7 +3,7 @@
 ;
 ; Qualcomm Wireless Network Device
 ;
-; Copyright (c) 2014 Qualcomm Technologies, Inc.
+; Copyright (c) 2017 Qualcomm Technologies, Inc.
 ; All rights reserved.
 
 [version]
@@ -11,7 +11,7 @@ Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider    = %QCOM%
-DriverVer   = 10/31/2016,4.0.4.4
+DriverVer   = 08/02/2017,4.0.4.7
 Catalogfile = qcnet.cat
 
 [ControlFlags]
@@ -210,6 +210,10 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90C75%    = qcwwan.ndi, USB\VID_05C6&PID_90C7&MI_05
 %qcwwan.DeviceDesc90C84%    = qcwwan.ndi, USB\VID_05C6&PID_90C8&MI_04
 %qcwwan.DeviceDesc90C94%    = qcwwan.ndi, USB\VID_05C6&PID_90C9&MI_04
+%qcwwan.DeviceDesc90D22%    = qcwwan.ndi, USB\VID_05C6&PID_90D2&MI_02
+%qcwwan.DeviceDesc90D32%    = qcwwan.ndi, USB\VID_05C6&PID_90D3&MI_02
+%qcwwan.DeviceDesc90D76%    = qcwwan.ndi, USB\VID_05C6&PID_90D7&MI_06
+%qcwwan.DeviceDesc90D86%    = qcwwan.ndi, USB\VID_05C6&PID_90D8&MI_06
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 %qcwwan.DeviceDesc920D5%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_05
 
@@ -390,6 +394,10 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90C75%    = qcwwan.ndi, USB\VID_05C6&PID_90C7&MI_05
 %qcwwan.DeviceDesc90C84%    = qcwwan.ndi, USB\VID_05C6&PID_90C8&MI_04
 %qcwwan.DeviceDesc90C94%    = qcwwan.ndi, USB\VID_05C6&PID_90C9&MI_04
+%qcwwan.DeviceDesc90D22%    = qcwwan.ndi, USB\VID_05C6&PID_90D2&MI_02
+%qcwwan.DeviceDesc90D32%    = qcwwan.ndi, USB\VID_05C6&PID_90D3&MI_02
+%qcwwan.DeviceDesc90D76%    = qcwwan.ndi, USB\VID_05C6&PID_90D7&MI_06
+%qcwwan.DeviceDesc90D86%    = qcwwan.ndi, USB\VID_05C6&PID_90D8&MI_06
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 %qcwwan.DeviceDesc920D5%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_05
 
@@ -574,6 +582,10 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90C75%    = qcwwan.ndi, USB\VID_05C6&PID_90C7&MI_05
 %qcwwan.DeviceDesc90C84%    = qcwwan.ndi, USB\VID_05C6&PID_90C8&MI_04
 %qcwwan.DeviceDesc90C94%    = qcwwan.ndi, USB\VID_05C6&PID_90C9&MI_04
+%qcwwan.DeviceDesc90D22%    = qcwwan.ndi, USB\VID_05C6&PID_90D2&MI_02
+%qcwwan.DeviceDesc90D32%    = qcwwan.ndi, USB\VID_05C6&PID_90D3&MI_02
+%qcwwan.DeviceDesc90D76%    = qcwwan.ndi, USB\VID_05C6&PID_90D7&MI_06
+%qcwwan.DeviceDesc90D86%    = qcwwan.ndi, USB\VID_05C6&PID_90D8&MI_06
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 %qcwwan.DeviceDesc920D5%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_05
 
@@ -871,6 +883,10 @@ qcwwan.DeviceDesc90C65      = "Qualcomm Wireless HS-USB Ethernet Adapter 90C6"
 qcwwan.DeviceDesc90C75      = "Qualcomm Wireless HS-USB Ethernet Adapter 90C7"
 qcwwan.DeviceDesc90C84      = "Qualcomm Wireless HS-USB Ethernet Adapter 90C8"
 qcwwan.DeviceDesc90C94      = "Qualcomm Wireless HS-USB Ethernet Adapter 90C9"
+qcwwan.DeviceDesc90D22      = "Qualcomm Wireless HS-USB Ethernet Adapter 90D2"
+qcwwan.DeviceDesc90D32      = "Qualcomm Wireless HS-USB Ethernet Adapter 90D3"
+qcwwan.DeviceDesc90D76      = "Qualcomm Wireless HS-USB Ethernet Adapter 90D7"
+qcwwan.DeviceDesc90D86      = "Qualcomm Wireless HS-USB Ethernet Adapter 90D8"
 qcwwan.DeviceDesc920D0      = "Qualcomm Gobi 3000 Wireless HS-USB Ethernet Adapter 920D"
 qcwwan.DeviceDesc920D5      = "Qualcomm Gobi 3000 Wireless HS-USB Ethernet Adapter 920D"
 qcwwan.Service.DispName     = "Qualcomm USB-NDIS miniport"

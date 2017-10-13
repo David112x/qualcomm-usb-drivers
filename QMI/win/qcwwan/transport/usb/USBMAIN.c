@@ -229,7 +229,62 @@ NTSTATUS _QcIoCompleteRequest(IN PIRP Irp, IN CCHAR  PriorityBoost)
    return nts;
 }
 
+NTSTATUS QCIoCompleteRequest(IN PIRP Irp, IN CCHAR  PriorityBoost)
+{
+   NTSTATUS nts = Irp->IoStatus.Status;
+   PIO_STACK_LOCATION currentStack;
+   PDEVICE_OBJECT devObj;
+   PVOID ctxt;
+
+   QCUSB_DbgPrintG
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_CRITICAL,
+      ("<%s> QCIoCompleteRequest: IRP 0x%p\n", gDeviceName, Irp)
+   );
+
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+if (0)
+{
+
+   if (nts == STATUS_PENDING)
+   {
+      QCUSB_DbgPrintG
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_CRITICAL,
+         ("<%s> ERROR: IRP STATUS_PENDING\n", gDeviceName)
+      );
+      #ifdef DEBUG_MSGS
+      KdBreakPoint();
+      #endif
+   }
+   currentStack = IoGetCurrentIrpStackLocation(Irp);
+   devObj = currentStack->DeviceObject;
+   ctxt = currentStack->Context;
+   IoSkipCurrentIrpStackLocation(Irp);
+
+   if (currentStack->CompletionRoutine != NULL)
+   {
+      currentStack->CompletionRoutine(devObj, Irp, ctxt); 
+   }
+
+   RtlZeroMemory(currentStack, sizeof(IO_STACK_LOCATION));
+}
+
+   return nts;
+}  // QCIoCompleteRequest
+
 NTSTATUS QcCompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG_PTR info)
+{
+   Irp->IoStatus.Status = status;
+   Irp->IoStatus.Information = info;
+   QCIoCompleteRequest(Irp, IO_NO_INCREMENT);
+   return status;
+} // QcCompleteRequest
+
+NTSTATUS QcCompleteRequest2(IN PIRP Irp, IN NTSTATUS status, IN ULONG_PTR info)
 {
    Irp->IoStatus.Status = status;
    Irp->IoStatus.Information = info;

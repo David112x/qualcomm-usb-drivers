@@ -10,6 +10,8 @@ GENERAL DESCRIPTION
 
 *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 #include <stdio.h>
+#include <wdm.h>
+#include <ntstrsafe.h>
 #include "QDBMAIN.h"
 #include "QDBPNP.h"
 #include "QDBDEV.h"
@@ -211,6 +213,7 @@ NTSTATUS QDBPNP_EvtDriverDeviceAdd
 
 
    // 8. Symbolic link to friendly name
+   pDevContext->PhysicalDeviceObject = WdfDeviceWdmGetPhysicalDevice(wdfDevice);
    ntStatus = QDBPNP_CreateSymbolicName(wdfDevice);
 
    if (!NT_SUCCESS(ntStatus))
@@ -294,6 +297,7 @@ VOID QDBPNP_EvtDeviceCleanupCallback(WDFOBJECT Object)
       pDevContext->SymbolicLink.Buffer = NULL;
       pDevContext->SymbolicLink.Length = 0;
    }
+   QDBPNP_SetStamp(pDevContext->PhysicalDeviceObject, 0, 0);
 
    QDBPNP_WaitForDrainToStop(pDevContext);
    QDBRD_FreeIoBuffer(pDevContext);
@@ -385,6 +389,7 @@ NTSTATUS QDBPNP_EvtDevicePrepareHW
    pDevContext->RxCount = 0;
    pDevContext->TxCount = 0;
    pDevContext->MyIoTarget = WdfDeviceGetIoTarget(Device);
+   pDevContext->PhysicalDeviceObject = WdfDeviceWdmGetPhysicalDevice(Device);
    pDevContext->MyDevice = WdfDeviceWdmGetDeviceObject(Device);
    pDevContext->TargetDevice = WdfIoTargetWdmGetTargetDeviceObject(pDevContext->MyIoTarget);
 
@@ -413,6 +418,7 @@ NTSTATUS QDBPNP_EvtDevicePrepareHW
    nts = QDBPNP_EnableSelectiveSuspend(Device);
 
    QDBMAIN_GetRegistrySettings(Device);
+   QDBPNP_SetStamp(pDevContext->PhysicalDeviceObject, 0, 1);
 
    // Start to drain IN pipe for DPL
    QDBRD_AllocateRequestsRx(pDevContext);
@@ -426,6 +432,230 @@ NTSTATUS QDBPNP_EvtDevicePrepareHW
 
    return ntStatus;
 }  // QDBPNP_EvtDevicePrepareHW
+
+NTSTATUS QDBPNP_GetDeviceSerialNumber(IN WDFDEVICE Device, UCHAR Index, BOOLEAN MatchPrefix)
+{
+   PDEVICE_CONTEXT  pDevContext;
+   NTSTATUS         ntStatus;
+   USHORT           strLen = 128;
+   UNICODE_STRING   ucValueName;
+   HANDLE           hRegKey;
+   PCHAR            pSerLoc = NULL;
+   BOOLEAN          bSetEntry = FALSE;
+
+   pDevContext = QdbDeviceGetContext(Device);
+
+   if (Index == 0)
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> <--_GetDeviceSerialNumber: index is NULL\n", pDevContext->PortName)
+      );
+      goto UpdateRegistry;
+   }
+
+   RtlZeroMemory(pDevContext->SerialNumber, 256);
+
+   ntStatus = WdfUsbTargetDeviceQueryString
+              (
+                 pDevContext->WdfUsbDevice,
+                 NULL,
+                 NULL,
+                 (PUSHORT)pDevContext->SerialNumber,
+                 &strLen,
+                 (UCHAR)Index,
+                 0x0409
+              );
+   if (ntStatus != STATUS_SUCCESS)
+   {
+      RtlZeroMemory(pDevContext->SerialNumber, 256);
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> QDBPNP_GetDeviceSerialNumber: failure 0x%x\n", pDevContext->PortName, ntStatus)
+      );
+      goto UpdateRegistry;
+   }
+   else
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> _GetDeviceSerialNumber: QueryString 0x%x (%dB)\n", pDevContext->PortName, ntStatus, strLen)
+      );
+   }
+
+   pSerLoc = (PCHAR)pDevContext->SerialNumber;
+   bSetEntry = TRUE;
+
+   // search for "_SN:"
+   if ((MatchPrefix == TRUE) && (strLen > 0))
+   {
+      USHORT idx, adjusted = 0;
+      PCHAR p = (PCHAR)pSerLoc;
+      BOOLEAN bMatchFound = FALSE;
+
+      for (idx = 0; idx < strLen*2; idx++)
+      {
+         if ((*p == '_') && (*(p+1) == 0))
+         {
+            if ((*(p+2) == 'S') && (*(p+3) == 0))
+            {
+              if ((*(p+4) == 'N') && (*(p+5) == 0))
+              {
+                 if ((*(p+6) == ':') && (*(p+7) == 0))
+                 {
+                    pSerLoc = p + 8;
+                    adjusted += 8;
+                    bMatchFound = TRUE;
+                    break;
+                 }
+              }
+            }
+         }
+         p++;
+         adjusted++;
+      }
+
+      // Adjust length
+      if (bMatchFound == TRUE)
+      {
+         strLen -= (adjusted / 2);
+         if (strLen > 8)
+         {
+            strLen = 8;
+         }
+      }
+      else
+      {
+         QDB_DbgPrint
+         (
+            QDB_DBG_MASK_CONTROL,
+            QDB_DBG_LEVEL_TRACE,
+            ("<%s> <--QDBPNP_GetDeviceSerialNumber: no SN found\n", pDevContext->PortName)
+         );
+         ntStatus = STATUS_UNSUCCESSFUL;
+         bSetEntry = FALSE;
+      }
+   }
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> _GetDeviceSerialNumber: adjusted strLen %d\n", pDevContext->PortName, strLen)
+   );
+
+UpdateRegistry:
+
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevContext->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> _GetDeviceSerialNumber: reg access failure 0x%x\n", pDevContext->PortName, ntStatus)
+      );
+      return ntStatus;
+   }
+
+   if (MatchPrefix == FALSE)
+   {
+      RtlInitUnicodeString(&ucValueName, VEN_DEV_SERNUM);
+   }
+   else
+   {
+      RtlInitUnicodeString(&ucValueName, VEN_DEV_MSM_SERNUM);
+   }
+   if (bSetEntry == TRUE)
+   {
+      ntStatus = ZwSetValueKey
+                 (
+                    hRegKey,
+                    &ucValueName,
+                    0,
+                    REG_SZ,
+                    (PVOID)pSerLoc,
+                    (strLen * 2)
+                 );
+   }
+   else
+   {
+      ZwDeleteValueKey(hRegKey, &ucValueName);
+   }
+   ZwClose(hRegKey);
+
+   return ntStatus; 
+
+} // QDBPNP_GetDeviceSerialNumber
+
+NTSTATUS QDBPNP_SetFunctionProtocol(IN WDFDEVICE Device, ULONG ProtocolCode)
+{
+   PDEVICE_CONTEXT pDevContext;
+   NTSTATUS        ntStatus;
+   UNICODE_STRING  ucValueName;
+   HANDLE          hRegKey;
+
+   pDevContext = QdbDeviceGetContext(Device);
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> -->_SetFunctionProtocol: 0x%x\n", pDevContext->PortName, ProtocolCode)
+   );
+
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevContext->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> <--_SetFunctionProtocol: failed to open registry 0x%x\n", pDevContext->PortName, ntStatus)
+      );
+      return ntStatus;
+   }
+
+   RtlInitUnicodeString(&ucValueName, VEN_DEV_PROTOC);
+   ntStatus = ZwSetValueKey
+              (
+                 hRegKey,
+                 &ucValueName,
+                 0,
+                 REG_DWORD,
+                 (PVOID)&ProtocolCode,
+                 sizeof(ULONG)
+              );
+   ZwClose(hRegKey);
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> <--_SetFunctionProtocol: 0x%x ST 0x%x\n", pDevContext->PortName, ProtocolCode, ntStatus)
+   );
+
+   return ntStatus;
+}  // QDBPNP_SetFunctionProtocol
 
 NTSTATUS QDBPNP_EnumerateDevice(IN WDFDEVICE Device)
 {
@@ -467,6 +697,36 @@ NTSTATUS QDBPNP_EnumerateDevice(IN WDFDEVICE Device)
       pDevContext->WdfUsbDevice,
       &usbDeviceDesc
    );
+
+   ntStatus = QDBPNP_GetDeviceSerialNumber(Device, usbDeviceDesc.iProduct, TRUE);
+   if ((!NT_SUCCESS(ntStatus)) && (usbDeviceDesc.iProduct != 2))
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_ERROR,
+         ("<%s> QDBPNP_EnumerateDevice: _SERN: Failed with iProduct 0x%x, try default\n",
+           pDevContext->PortName, usbDeviceDesc.iProduct)
+      );
+      QDBPNP_GetDeviceSerialNumber(Device, 0x02, TRUE);
+   }
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_ERROR,
+      ("<%s> QDBPNP_EnumerateDevice: _SERN: tried iProduct: ST(0x%x)\n",
+        pDevContext->PortName, ntStatus)
+   );
+
+   QDBPNP_GetDeviceSerialNumber(Device, usbDeviceDesc.iSerialNumber, FALSE);
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_ERROR,
+      ("<%s> QDBPNP_EnumerateDevice: _SERN: tried iSerialNumber 0x%x ST(0x%x)\n",
+        pDevContext->PortName, usbDeviceDesc.iSerialNumber, ntStatus)
+   );
+   ntStatus = STATUS_SUCCESS; // make possible failure none-critical
 
    if (usbDeviceDesc.bNumConfigurations == 0)
    {
@@ -766,6 +1026,18 @@ NTSTATUS QDBPNP_SelectInterfaces(WDFDEVICE Device)
                   usbInterface, i, numEPs, numPipes)
             );
 
+            if (numEPs > 0)
+            {
+               USB_INTERFACE_DESCRIPTOR interfaceDesc;
+
+               WdfUsbInterfaceGetDescriptor(usbInterface, 0, &interfaceDesc);
+               pDevContext->IfProtocol = (ULONG)interfaceDesc.bInterfaceProtocol        |
+                                         ((ULONG)interfaceDesc.bInterfaceClass)   << 8  |
+                                         ((ULONG)interfaceDesc.bAlternateSetting) << 16 |
+                                         ((ULONG)interfaceDesc.bInterfaceNumber)  << 24;
+               QDBPNP_SetFunctionProtocol(Device, pDevContext->IfProtocol);
+            }
+
             switch (numPipes)
             {
                case 1:  // TRACE or DPL
@@ -1007,6 +1279,293 @@ NTSTATUS QDBPNP_SelectInterfaces(WDFDEVICE Device)
    return ntStatus;
 }
 
+NTSTATUS QDBPNP_SetFriendlyName(WDFDEVICE Device, PUNICODE_STRING FriendlyName, PWCHAR TargetDriverKey)
+{
+#define QC_NAME_LEN 1024
+   PDEVICE_CONTEXT pDevContext;
+   NTSTATUS        nts;
+   ULONG           bufLen, actualLen;
+   CHAR            hwId[QC_NAME_LEN], swKey[QC_NAME_LEN], devKey[QC_NAME_LEN];
+   PWCHAR          pId;
+   DWORD           idLen, restLen, subKeyIdx, subKeyLen;
+   int             selected = 0;
+   LONG            regResult;
+   HANDLE          hwKeyHandle;
+   UNICODE_STRING  ucHwKeyPath;
+   OBJECT_ATTRIBUTES oa;
+
+   pDevContext = QdbDeviceGetContext(Device);
+
+   RtlZeroMemory(hwId,  QC_NAME_LEN);
+   RtlZeroMemory(swKey, QC_NAME_LEN);
+   RtlZeroMemory(devKey, QC_NAME_LEN);
+
+   // get HW IDs
+   bufLen = QC_NAME_LEN;
+   nts = IoGetDeviceProperty
+         (
+            pDevContext->PhysicalDeviceObject,
+            DevicePropertyHardwareID,
+            bufLen,
+            (PVOID)hwId,
+            &actualLen
+         );
+   if (!NT_SUCCESS(nts))
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> QDBPNP_SetFriendlyName: IoGetDeviceProperty (HWID) failure\n", pDevContext->PortName)
+      );
+      return nts;
+   }
+   else
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> QDBPNP_SetFriendlyName: IoGetDeviceProperty (HWID) len: %u\n", pDevContext->PortName, actualLen)
+      );
+   }
+   pId = (PWCHAR)hwId;
+   restLen = actualLen;
+
+   while ((idLen = wcsnlen(pId, restLen)) > 0)
+   {
+      if (idLen >= restLen) break;
+      selected = 1;
+      if (wcsstr(pId, L"REV_") != NULL)
+      { selected = 0;
+      }
+      else
+      {
+         break;
+      }
+      pId += (idLen + 1); // including NULL
+      restLen -= (idLen + 1);
+   }
+
+   if (selected == 0)
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> QDBPNP_SetFriendlyName: failed to find devID\n", pDevContext->PortName)
+      );
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   // HW ID: pId, idLen
+   // construct full HW key
+   nts = RtlStringCbCopyW((PWCHAR)devKey, QC_NAME_LEN, DEVICE_HW_KEY_ROOT);
+   if (nts != STATUS_SUCCESS)
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> QDBPNP_SetFriendlyName: HW key root failure\n", pDevContext->PortName)
+      );
+      return nts;
+   }
+   nts = RtlStringCbCatW((PWCHAR)devKey, QC_NAME_LEN, pId);
+   if (nts != STATUS_SUCCESS)
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> QDBPNP_SetFriendlyName: RtlStringCbCat failed\n", pDevContext->PortName)
+      );
+      return nts;
+   }
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> QDBPNP_SetFriendlyName: devKey <%ws>\n", pDevContext->PortName, (PWCHAR)devKey)
+   );
+
+   // open HW key
+   RtlInitUnicodeString(&ucHwKeyPath, (PWCHAR)devKey);
+   InitializeObjectAttributes
+   (
+      &oa,
+      &ucHwKeyPath,
+      (OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE),
+      NULL, NULL
+   );
+   nts = ZwOpenKey
+         (
+            &hwKeyHandle,
+            GENERIC_ALL,
+            &oa
+         );
+   if (nts != STATUS_SUCCESS)
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> QDBPNP_SetFriendlyName: ZwOpenKey failed 0x%x\n", pDevContext->PortName, nts)
+      );
+      return nts;
+   }
+
+   // enum subkeys
+   subKeyIdx = 0;
+   while (nts == STATUS_SUCCESS)
+   {
+      CHAR           subKeyInfo[QC_NAME_LEN];
+      UNICODE_STRING ucSubKeyPath;
+      PKEY_BASIC_INFORMATION keyName;
+      OBJECT_ATTRIBUTES      oa;
+
+      RtlZeroMemory(subKeyInfo, QC_NAME_LEN);
+      nts = ZwEnumerateKey
+            (
+               hwKeyHandle,
+               subKeyIdx,
+               KeyBasicInformation,
+               (PVOID)subKeyInfo,
+               QC_NAME_LEN,
+               &subKeyLen
+            );
+      // open each subkey for R/W and find a match with SW key
+      if (nts == STATUS_SUCCESS)
+      {
+         HANDLE subKeyHandle;
+         CHAR   driverInfo[QC_NAME_LEN];
+         DWORD  infoLen;
+         UNICODE_STRING ucRegEntryName;
+
+         keyName = (PKEY_BASIC_INFORMATION)subKeyInfo;
+         QDB_DbgPrint
+         (
+            QDB_DBG_MASK_CONTROL,
+            QDB_DBG_LEVEL_TRACE,
+            ("<%s> QDBPNP_SetFriendlyName: subKey[%d]: <%ws>\n", pDevContext->PortName, subKeyIdx, keyName->Name)
+         );
+
+         RtlInitUnicodeString(&ucSubKeyPath, keyName->Name);
+         InitializeObjectAttributes
+         (
+            &oa,
+            &ucSubKeyPath,
+            (OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE),
+            hwKeyHandle,
+            NULL
+         );
+         nts = ZwOpenKey
+               (
+                  &subKeyHandle,
+                  GENERIC_ALL,
+                  &oa
+               );
+         if (nts != STATUS_SUCCESS)
+         {
+            QDB_DbgPrint
+            (
+               QDB_DBG_MASK_CONTROL,
+               QDB_DBG_LEVEL_TRACE,
+               ("<%s> QDBPNP_SetFriendlyName: ZwOpenKey failed (sub): 0x%x\n", pDevContext->PortName, nts)
+            );
+            break;
+         }
+
+         // retrieve driver key and match
+         RtlZeroMemory(driverInfo, QC_NAME_LEN);
+         RtlInitUnicodeString(&ucRegEntryName, L"Driver");
+         nts = ZwQueryValueKey
+               (
+                  subKeyHandle,
+                  &ucRegEntryName,
+                  KeyValueFullInformation,
+                  (PKEY_VALUE_FULL_INFORMATION)&driverInfo,
+                  QC_NAME_LEN,
+                  &infoLen
+               );
+         if (nts == STATUS_SUCCESS)
+         {
+            UNICODE_STRING swKey1, swKey2;
+            PKEY_VALUE_FULL_INFORMATION pDriverKey;
+            PCHAR pDrvKeyVal;
+
+            pDriverKey = (PKEY_VALUE_FULL_INFORMATION)&driverInfo;
+            pDrvKeyVal = (PCHAR)&driverInfo;
+            pDrvKeyVal += pDriverKey->DataOffset;
+            QDB_DbgPrint
+            (
+               QDB_DBG_MASK_CONTROL,
+               QDB_DBG_LEVEL_TRACE,
+               ("<%s> QDBPNP_SetFriendlyName: retrived %uB swKey <%ws>vs<%ws>\n", pDevContext->PortName,
+                 infoLen, (PWCHAR)pDrvKeyVal, TargetDriverKey)
+            );
+            RtlInitUnicodeString(&swKey1, TargetDriverKey);
+            RtlInitUnicodeString(&swKey2, (PWCHAR)pDrvKeyVal);
+            if (TRUE == RtlEqualUnicodeString(&swKey1, &swKey2, TRUE))
+            {
+               UNICODE_STRING ucSetEntryName;
+
+               // set FriendlyName
+               RtlInitUnicodeString(&ucSetEntryName, L"FriendlyName");
+               nts = ZwSetValueKey
+                     (
+                        subKeyHandle,
+                        &ucSetEntryName,
+                        0,
+                        REG_SZ,
+                        FriendlyName->Buffer,
+                        FriendlyName->Length+2
+                     );
+               if (!NT_SUCCESS(nts))
+               {
+                  QDB_DbgPrint
+                  (
+                     QDB_DBG_MASK_CONTROL,
+                     QDB_DBG_LEVEL_TRACE,
+                     ("<%s> QDBPNP_SetFriendlyName: failed to set FriendlyName: 0x%x\n", pDevContext->PortName, nts)
+                  );
+               }
+            }
+         }
+         else
+         {
+            QDB_DbgPrint
+            (
+               QDB_DBG_MASK_CONTROL,
+               QDB_DBG_LEVEL_TRACE,
+               ("<%s> QDBPNP_SetFriendlyName: ZwQueryValueKey (swKey) failure 0x%x\n", pDevContext->PortName, nts)
+            );
+         }
+         ZwClose(subKeyHandle);
+      }
+      else
+      {
+         QDB_DbgPrint
+         (
+            QDB_DBG_MASK_CONTROL,
+            QDB_DBG_LEVEL_TRACE,
+            ("<%s> QDBPNP_SetFriendlyName: ZwEnumerateKey failed/exhausted 0x%x\n", pDevContext->PortName, nts)
+         );
+         if (nts == STATUS_NO_MORE_ENTRIES)
+         {
+            nts = STATUS_SUCCESS;
+         }
+         break;
+      }
+      subKeyIdx++;
+   }  // while
+   ZwClose(hwKeyHandle);
+
+   return nts;
+
+   // if match found, write FriendlyName
+}  // QDBPNP_SetFriendlyName
+
 NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
 {
    PDEVICE_CONTEXT pDevContext;
@@ -1014,6 +1573,12 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
    ULONG           bufLen = MAX_NAME_LEN, resultLen = 0;
    UNICODE_STRING  friendlyNameU, tempUcString;
    ANSI_STRING     friendlyNameA;
+   CHAR            driverKey[512];
+   PCHAR           pSwInstance = NULL;
+   BOOLEAN         bMatched = FALSE;
+
+#define LEFT_P L" ("
+#define RIGHT_P L")"
 
    pDevContext = QdbDeviceGetContext(Device);
 
@@ -1024,6 +1589,7 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
       ("<%s> -->QDBPNP_CreateSymbolicName: Device 0x%p\n", pDevContext->PortName, Device)
    );
 
+   RtlZeroMemory(driverKey, 512);
    RtlZeroMemory(pDevContext->FriendlyNameHolder, bufLen*sizeof(WCHAR));
    RtlZeroMemory(pDevContext->FriendlyName, MAX_NAME_LEN);
    pDevContext->SymbolicLink.Buffer = NULL;
@@ -1091,6 +1657,50 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
    }
    else
    {
+      // FriendlyName not found, create one
+      bufLen = 512;
+      nts = WdfDeviceQueryProperty
+            (
+               Device,
+               DevicePropertyDriverKeyName,
+               bufLen,
+               (PVOID)driverKey,
+               &resultLen
+            );
+
+      if (nts == STATUS_SUCCESS)
+      {
+         PCHAR pStart, pEnd;
+
+         QDB_DbgPrint
+         (
+            QDB_DBG_MASK_CONTROL,
+            QDB_DBG_LEVEL_DETAIL,
+            ("<%s> QDBPNP_CreateSymbolicName(SwKey): <%ws>\n", pDevContext->PortName, (PWCHAR)driverKey)
+         );
+         pStart = (PCHAR)driverKey;
+         pEnd = pStart + resultLen;
+
+         // look for '\', little-endian byte order: 0x5C 0x00
+         while (pEnd > pStart)
+         {
+            if (*pEnd != 0x5C)  // look for '\'
+            {
+               pEnd--;
+            }
+            else
+            {
+               bMatched = TRUE;
+               break;
+            }
+         }
+         if (bMatched == TRUE)
+         {
+            pSwInstance = (pEnd + 2);
+         }
+      }
+
+      bufLen = MAX_NAME_LEN;
       nts = WdfDeviceQueryProperty
             (
                Device,
@@ -1102,8 +1712,12 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
 
       if (nts == STATUS_SUCCESS)
       {
-         RtlInitUnicodeString(&tempUcString, DEVICE_LINK_NAME_PATH);       //"\??\"
+         RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, LEFT_P);
+         RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, (PCWSTR)pSwInstance);
+         RtlStringCbCatW(pDevContext->FriendlyNameHolder, MAX_NAME_LEN, RIGHT_P);
          RtlInitUnicodeString(&friendlyNameU, pDevContext->FriendlyNameHolder);
+
+         RtlInitUnicodeString(&tempUcString, DEVICE_LINK_NAME_PATH);       //"\??\"
          RtlCopyUnicodeString(&pDevContext->SymbolicLink, &tempUcString); //"\??\"
          RtlAppendUnicodeStringToString
          (
@@ -1122,12 +1736,14 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device)
                (
                   QDB_DBG_MASK_CONTROL,
                   QDB_DBG_LEVEL_DETAIL,
-                  ("<%s> -->QDBPNP_CreateSymbolicName(DeviceDesc): <%s>\n", pDevContext->PortName,
+                  ("<%s> QDBPNP_CreateSymbolicName(DeviceDesc): <%s>\n", pDevContext->PortName,
                     pDevContext->FriendlyName)
                );
                RtlFreeAnsiString(&friendlyNameA);
                nts = WdfDeviceCreateSymbolicLink(Device, &pDevContext->SymbolicLink);
             }
+            // Create FriendlyName in registry
+            nts = QDBPNP_SetFriendlyName(Device, &friendlyNameU, (PWCHAR)driverKey);
          }
       }
    }
@@ -1180,3 +1796,68 @@ NTSTATUS QDBPNP_EnableSelectiveSuspend(WDFDEVICE Device)
 
    return nts;
 }  // QDBPNP_EnableSelectiveSuspend
+
+NTSTATUS QDBPNP_SetStamp
+(
+   PDEVICE_OBJECT PhysicalDeviceObject,
+   HANDLE         hRegKey,
+   BOOLEAN        Startup
+)
+{
+   UNICODE_STRING ucValueName;
+   NTSTATUS ntStatus = STATUS_SUCCESS;
+   ULONG stampValue = 0;
+   BOOLEAN bSelfOpen = FALSE;
+
+   if (hRegKey == 0)
+   {
+      ntStatus = IoOpenDeviceRegistryKey
+                 (
+                    PhysicalDeviceObject,
+                    PLUGPLAY_REGKEY_DRIVER,
+                    KEY_ALL_ACCESS,
+                    &hRegKey
+                 );
+      if (!NT_SUCCESS(ntStatus))
+      {
+         return ntStatus;
+      }
+      bSelfOpen = TRUE;
+   }
+
+   RtlInitUnicodeString(&ucValueName, VEN_DEV_TIME);
+   if (Startup == TRUE)
+   {
+      stampValue = 1;
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_DWORD,
+         (PVOID)&stampValue,
+         sizeof(ULONG)
+      );
+   }
+   else
+   {
+      // ZwDeleteValueKey(hRegKey, &ucValueName);
+      stampValue = 0;
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_DWORD,
+         (PVOID)&stampValue,
+         sizeof(ULONG)
+      );
+   }
+
+   if (bSelfOpen == TRUE)
+   {
+      ZwClose(hRegKey);
+   }
+
+   return STATUS_SUCCESS;
+}  // QDBPNP_SetStamp

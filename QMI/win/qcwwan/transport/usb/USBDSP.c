@@ -313,7 +313,7 @@ disp_enq_exit:
          ("<%s> CIRP (C 0x%x) 0x%p\n", pDevExt->PortName, ntStatus, Irp)
       );
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
-      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(Irp, IO_NO_INCREMENT);
    }
 
    return ntStatus;
@@ -624,7 +624,7 @@ VOID DispatchThread(PVOID pContext)
                );
                pDispatchIrp->IoStatus.Status = STATUS_CANCELLED;
                QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pDispatchIrp, 0);
-               _IoCompleteRequest(pDispatchIrp, IO_NO_INCREMENT);
+               QCIoCompleteRequest(pDispatchIrp, IO_NO_INCREMENT);
                pDispatchIrp = pDevExt->pCurrentDispatch = NULL;
                QCPWR_SetIdleTimer(pDevExt, QCUSB_BUSY_CTRL, TRUE, 12);
                continue;
@@ -2130,6 +2130,8 @@ NTSTATUS USBDSP_Dispatch
                QcReleaseSpinLock(&pDevExt->ControlSpinLock, levelOrHandle);
                QcReleaseDspPass(&pDevExt->DSPSyncEvent);
 
+               QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
+
                #ifdef NDIS_WDM
                Irp->IoStatus.Status = ntStatus;
                Irp->IoStatus.Information = 0;
@@ -2146,6 +2148,7 @@ NTSTATUS USBDSP_Dispatch
                setDevState(DEVICE_STATE_SURPRISE_REMOVED);
                QcReleaseSpinLock(&pDevExt->ControlSpinLock, levelOrHandle);
 
+               QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
                USBENC_PurgeQueue(pDevExt, &pDevExt->EncapsulatedDataQueue, FALSE, 5);
                USBPWR_StopExWdmDeviceMonitor(pDevExt);
                // USBIF_Close(DeviceObject);
@@ -2177,6 +2180,7 @@ NTSTATUS USBDSP_Dispatch
                // USBIF_Close(DeviceObject);
                clearDevState(DEVICE_STATE_PRESENT_AND_STARTED);
                setDevState(DEVICE_STATE_DEVICE_REMOVED0);
+               QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
                pDevExt->bDeviceRemoved = TRUE;
                pDevExt->bDeviceSurpriseRemoved = TRUE;
 
@@ -2383,19 +2387,19 @@ USBDSP_Dispatch_Done0:
            irpStack->MinorFunction == IRP_MN_REMOVE_DEVICE) ||
            (irpStack->MajorFunction == IRP_MJ_CREATE))
       {
-         _IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         QCIoCompleteRequest(Irp, IO_NO_INCREMENT);
       }
       else
       {
          if (irpStack->MajorFunction == IRP_MJ_CLOSE &&
              ntCloseStatus == STATUS_UNSUCCESSFUL)
          {
-            _IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            QCIoCompleteRequest(Irp, IO_NO_INCREMENT);
          }
          else
          {
             QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
-            _IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            QCIoCompleteRequest(Irp, IO_NO_INCREMENT);
          }
       }
    }

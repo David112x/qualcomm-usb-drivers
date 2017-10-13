@@ -77,7 +77,7 @@ enc_enq_exit:
          ("<%s> CIRP (Cx 0x%x) 0x%p\n", pDevExt->PortName, ntStatus, Irp)
       );
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
-      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(Irp, IO_NO_INCREMENT);
    }
 
    return ntStatus;

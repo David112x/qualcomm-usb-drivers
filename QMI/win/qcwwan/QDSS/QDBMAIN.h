@@ -151,9 +151,12 @@ typedef struct _DEVICE_CONTEXT
 {
    WDFIOTARGET                   MyIoTarget;
    WDFUSBDEVICE                  WdfUsbDevice;
+   PDEVICE_OBJECT                PhysicalDeviceObject;
    PDEVICE_OBJECT                MyDevice;
    PDEVICE_OBJECT                TargetDevice;
    PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc; // dynamically allocated
+   CHAR                          SerialNumber[256];
+   LONG                          IfProtocol;
    UCHAR                         FriendlyName[MAX_NAME_LEN];
    WCHAR                         FriendlyNameHolder[MAX_NAME_LEN];
    UNICODE_STRING                SymbolicLink;

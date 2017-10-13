@@ -259,7 +259,7 @@ VOID QCPWR_PowrerManagement
          QCUSB_DBG_LEVEL_DETAIL,
          ("<%s> PIRP: (Ce 0x%x) 0x%p\n", pDevExt->PortName, nts, Irp)
       );
-      QcCompleteRequest(Irp, nts, 0);
+      QcCompleteRequest2(Irp, nts, 0);
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
    }
    else
@@ -308,7 +308,7 @@ BOOLEAN QCPWR_Prelude
          QCUSB_DBG_LEVEL_ERROR,
          ("<%s> PIRP: (Cdp) 0x%p\n", pDevExt->PortName, Irp)
       );
-      *pNtStatus = QcCompleteRequest(Irp, STATUS_DELETE_PENDING, 0);
+      *pNtStatus = QcCompleteRequest2(Irp, STATUS_DELETE_PENDING, 0);
       ret = TRUE;
    }
    else if (!inDevState(DEVICE_STATE_PRESENT_AND_STARTED))

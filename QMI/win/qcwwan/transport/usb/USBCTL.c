@@ -1182,6 +1182,12 @@ NTSTATUS QCUSB_CallUSBD
 
    if (pDevExt->NoTimeoutOnCtlReq == TRUE)
    {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_DETAIL,
+         ("<%s> CallUSBD: 0-sending IRP 0x%p\n", pDevExt->PortName, irp)
+      );
       ntStatus = IoCallDriver( pDevExt -> StackDeviceObject, irp );
 
       if (ntStatus == STATUS_PENDING)
@@ -1209,6 +1215,12 @@ NTSTATUS QCUSB_CallUSBD
       TRUE, TRUE, TRUE
    );
 
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> CallUSBD: 1-sending IRP 0x%p\n", pDevExt->PortName, irp)
+   );
    ntStatus = IoCallDriver( pDevExt -> StackDeviceObject, irp );
    if (ntStatus == STATUS_PENDING) 
    {
@@ -1229,7 +1241,7 @@ NTSTATUS QCUSB_CallUSBD
          (
             QCUSB_DBG_MASK_CONTROL,
             QCUSB_DBG_LEVEL_ERROR,
-            ("<%s> timeout on control req - 1 Urb 0x%p\n", pDevExt->PortName, Urb)
+            ("<%s> timeout on control req - 1 Urb 0x%p IRP 0x%p\n", pDevExt->PortName, Urb, irp)
          );
          IoCancelIrp(irp);  // cancel the irp
          KeWaitForSingleObject
@@ -1242,15 +1254,16 @@ NTSTATUS QCUSB_CallUSBD
          );
 
          Urb->UrbHeader.Status = USBD_STATUS_DEV_NOT_RESPONDING;
-         // to complete the irp???
-         // I don't think I want the above timeout with the Irp remaining
-         // in the lower level driver. It's too dangerous to timeout.
-         // So this case shouldn't happen.
-      } else
+      }
+      else
       {
-         // #ifdef QCUSB_DBGPRINT2
-         // DbgPrint("<qcnetxxx> Wait for single object successful, ntStatus: 0x%x\n", ntStatus);
-         // #endif // QCUSB_DBGPRINT2
+         QCUSB_DbgPrint
+         (
+            QCUSB_DBG_MASK_CONTROL,
+            QCUSB_DBG_LEVEL_DETAIL,
+            ("<%s> CallUSBD - returned IRP 0x%p (ST 0x%x) URB 0x%p(ST 0x%x)\n",
+              pDevExt->PortName, irp, irp->IoStatus.Status, Urb, Urb->UrbHeader.Status)
+         );
       }
    }
    else  // success or failure
@@ -1297,7 +1310,7 @@ NTSTATUS QCUSB_CallUSBD
       pDevExt->ControlPipeStatus = ntStatus;
    }
 
-   IoCompleteRequest(irp, IO_NO_INCREMENT);
+   QCIoCompleteRequest(irp, IO_NO_INCREMENT);
 
 ExitCallUSBD:
 

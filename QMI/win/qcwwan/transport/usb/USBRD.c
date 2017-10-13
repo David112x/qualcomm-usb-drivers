@@ -153,7 +153,7 @@ Exit:
           pIrp->IoStatus.Information, pIrp)
       );
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, 1);
-      IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+      QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
    }
 
    return ntStatus;

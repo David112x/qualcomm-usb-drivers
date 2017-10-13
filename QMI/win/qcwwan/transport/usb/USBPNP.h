@@ -14,6 +14,11 @@ GENERAL DESCRIPTION
 
 #include "USBMAIN.h"
 
+#define VEN_DEV_TIME        L"QCDeviceStamp"
+#define VEN_DEV_SERNUM L"QCDeviceSerialNumber"
+#define VEN_DEV_MSM_SERNUM L"QCDeviceMsmSerialNumber"
+#define VEN_DEV_PROTOC L"QCDeviceProtocol"
+
 NTSTATUS USBPNP_AddDevice
 (
    IN PDRIVER_OBJECT pDriverObject,
@@ -23,6 +28,12 @@ NTSTATUS USBPNP_GetDeviceCapabilities
 (
    PDEVICE_EXTENSION deviceExtension,
    BOOLEAN bPowerManagement
+);
+NTSTATUS QCPNP_SetStamp
+(
+   PDEVICE_OBJECT PhysicalDeviceObject,
+   HANDLE         hRegKey,
+   BOOLEAN        Startup
 );
 NTSTATUS QCUSB_VendorRegistryProcess
 (
@@ -78,6 +89,14 @@ BOOLEAN USBPNP_ValidateDeviceDescriptor
 (
    PDEVICE_EXTENSION      pDevExt,
    PUSB_DEVICE_DESCRIPTOR DevDesc
+);
+
+NTSTATUS QCPNP_GetStringDescriptor
+(
+   PDEVICE_OBJECT DeviceObject,
+   UCHAR          Index,
+   USHORT         LanguageId,
+   BOOLEAN        MatchPrefix
 );
 
 #endif // USBPNP_H

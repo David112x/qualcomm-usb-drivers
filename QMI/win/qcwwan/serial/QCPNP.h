@@ -14,6 +14,11 @@ GENERAL DESCRIPTION
 
 #include "QCMAIN.h"
 
+#define VEN_DEV_TIME   L"QCDeviceStamp"
+#define VEN_DEV_SERNUM L"QCDeviceSerialNumber"
+#define VEN_DEV_MSM_SERNUM L"QCDeviceMsmSerialNumber"
+#define VEN_DEV_PROTOC L"QCDeviceProtocol"
+
 NTSTATUS QCPNP_AddDevice
 (
    IN PDRIVER_OBJECT pDriverObject,
@@ -23,6 +28,12 @@ NTSTATUS QCPNP_GetDeviceCapabilities
 (
    PDEVICE_EXTENSION deviceExtension,
    BOOLEAN bPowerManagement
+);
+NTSTATUS QCPNP_SetStamp
+(
+   PDEVICE_OBJECT PhysicalDeviceObject,
+   HANDLE         hRegKey,
+   BOOLEAN        Startup
 );
 NTSTATUS QCSER_VendorRegistryProcess
 (

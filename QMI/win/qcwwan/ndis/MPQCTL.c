@@ -231,7 +231,7 @@ NDIS_STATUS MPQCTL_SetInstanceId
       {
          NTSTATUS nts;
 
-         timeoutValue.QuadPart = -(5 * 1000 * 1000);   // .5 sec
+         timeoutValue.QuadPart = QMICTL_TIMEOUT_RX; // -(5 * 1000 * 1000);   // .5 sec
 
          // wait for signal
          nts = KeWaitForSingleObject
@@ -382,7 +382,7 @@ NDIS_STATUS MPQCTL_GetQMICTLVersion
       {
          NTSTATUS nts;
 
-         timeoutValue.QuadPart = -(10 * 1000 * 1000);   // 1.0 sec
+         timeoutValue.QuadPart = QMICTL_TIMEOUT_RX; // -(10 * 1000 * 1000);   // 1.0 sec
 
          // wait for signal
          nts = KeWaitForSingleObject
@@ -463,7 +463,7 @@ NDIS_STATUS MPQCTL_GetQMICTLVersion
              NTSTATUS nts;
              PMP_ADAPTER returnAdapter = NULL;
              
-             timeoutValue.QuadPart = -(10 * 1000 * 1000);   // 1.0 sec
+             timeoutValue.QuadPart = QMICTL_TIMEOUT_RX; // -(10 * 1000 * 1000);   // 1.0 sec
 
              DisconnectedAllAdapters(pAdapter, &returnAdapter);
              // wait for signal
@@ -564,7 +564,7 @@ NDIS_STATUS MPQCTL_GetClientId
    {
       NTSTATUS nts;
 
-      timeoutValue.QuadPart = -(50 * 1000 * 1000);   // 5.0 sec
+      timeoutValue.QuadPart = QMICTL_TIMEOUT_RX; // -(50 * 1000 * 1000);   // 5.0 sec
 
       // wait for signal
       nts = KeWaitForSingleObject
@@ -671,7 +671,7 @@ NDIS_STATUS MPQCTL_ReleaseClientId
 
       if (pAdapter->IsQMIOutOfService == FALSE)
       {
-         timeoutValue.QuadPart = -(50 * 1000 * 1000);   // 5.0 sec
+         timeoutValue.QuadPart = QMICTL_TIMEOUT_RX; // -(50 * 1000 * 1000);   // 5.0 sec
 
          // wait for signal
          nts = KeWaitForSingleObject
@@ -777,7 +777,7 @@ NDIS_STATUS MPQCTL_SetDataFormat
    {
       NTSTATUS nts;
 
-      timeoutValue.QuadPart = -(20 * 1000 * 1000);   // 2.0 sec
+      timeoutValue.QuadPart = QMICTL_TIMEOUT_RX; // -(20 * 1000 * 1000);   // 2.0 sec
 
       // wait for signal
       nts = KeWaitForSingleObject
@@ -2388,7 +2388,7 @@ NDIS_STATUS MPQCTL_SendQMICTLSync
       {
          NTSTATUS nts;
 
-         timeoutValue.QuadPart = -(10 * 1000 * 1000);   // 1.0 sec
+         timeoutValue.QuadPart = QMICTL_TIMEOUT_RX; // -(10 * 1000 * 1000);   // 1.0 sec
 
          // wait for signal
          nts = KeWaitForSingleObject

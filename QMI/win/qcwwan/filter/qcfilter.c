@@ -73,6 +73,9 @@ DriverEntry ( PDRIVER_OBJECT  driverObject, PUNICODE_STRING registryPath )
 
    DbgPrint("Entered the Driver Entry\n");
 
+   //call this to make sure NonPagedPoolNx is passed to ExAllocatePool in Win10 and above
+   ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+
    // Store the device name
    status = RtlUnicodeStringToAnsiString
               (

@@ -332,12 +332,14 @@ PDEVICE_OBJECT USBIF_CreateUSBComponent
       ("<%s> CreateUSBComponent: Creating FDO...\n", myPortName)
    );
 
+   /***
    fdo = (PDEVICE_OBJECT)ExAllocatePoolWithTag
          (
             NonPagedPool,
             sizeof(DEVICE_OBJECT),
             (ULONG)'0001'
          );
+
    if (fdo != NULL)
    {
       fdo->DeviceExtension = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_EXTENSION), (ULONG)'0002');
@@ -347,6 +349,23 @@ PDEVICE_OBJECT USBIF_CreateUSBComponent
          fdo = NULL;
       }
    }
+   ***/
+
+   ntStatus = IoCreateDevice
+              (
+                 Pdo->DriverObject,
+                 sizeof(DEVICE_EXTENSION),
+                 NULL,                // unnamed
+                 FILE_DEVICE_UNKNOWN,
+                 0,                   // DeviceCharacteristics
+                 FALSE,
+                 &fdo
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      fdo = NULL;
+   }
+
 
    if (fdo != NULL)
    {

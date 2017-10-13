@@ -14,7 +14,8 @@ GENERAL DESCRIPTION
 
 #include "MPQMI.h"
 
-#define QMICTL_RETRIES 120
+#define QMICTL_RETRIES 40
+#define QMICTL_TIMEOUT_RX -(30 * 1000 * 1000)
 
 #pragma pack(push, 1)
 

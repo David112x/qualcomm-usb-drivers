@@ -2716,6 +2716,9 @@ NTSTATUS QCDSP_Dispatch
                clearDevState(DEVICE_STATE_PRESENT_AND_STARTED);
                setDevState(DEVICE_STATE_SURPRISE_REMOVED);
 
+               // Remove device startup stamp
+               QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, FALSE);
+
                // Disable registered interfaces
                if (pDevExt->ucsIfaceSymbolicLinkName.Length > 0)
                {
@@ -2747,6 +2750,7 @@ NTSTATUS QCDSP_Dispatch
                break;
             }
             case IRP_MN_REMOVE_DEVICE:  // PASSIVE_LEVEL
+               QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, FALSE);
                if (pDevExt->RefCount <= 1)
                {
                   InterlockedDecrement(&(pDevExt->RefCount));

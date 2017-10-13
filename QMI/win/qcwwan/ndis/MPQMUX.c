@@ -3914,6 +3914,14 @@ ULONG MPQMUX_ComposeQMUXReq
       return 0;
    }
 
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> MPQMUX_ComposeQMUXReq: service msgId (0x%02X, 0x%04X) Client %d\n",
+        pAdapter->PortName, nQMIService, nQMIRequest, pAdapter->ClientId[nQMIService])
+   );
+
    QMI           = &QMIElement->QMI;
    QMI->ClientId = pAdapter->ClientId[nQMIService];
 
@@ -21452,7 +21460,7 @@ USHORT MPQMUX_ComposeNasSetSystemSelPrefReqSend
       qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.TLV2Type = 0x16;
       qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.TLV2Length = 0x05;
       qmux_msg->SetSystemSelPrefReq.QmiNasNetSelPref.NetSelPref = 0x00;
-      qmux_msg->SetSystemSelPrefReq.Length = sizeof(QMINAS_SET_SYSTEM_SELECTION_PREF_REQ) - 4;
+      qmux_msg->SetSystemSelPrefReq.Length = sizeof(QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG) - 4;
       pAdapter->RegisterMode = DeviceWWanRegisteredAutomatic;
          }
    else
@@ -21506,7 +21514,7 @@ USHORT MPQMUX_ComposeNasSetSystemSelPrefReqSend
          qmux_msg->SetSystemSelPrefReq.QmiNasModePref.ModePref = 0x04;
          pAdapter->RegisterRadioAccess = 0x04;
                }
-      qmux_msg->SetSystemSelPrefReq.Length = sizeof(QMINAS_SET_SYSTEM_SELECTION_PREF_REQ) - 4;
+      qmux_msg->SetSystemSelPrefReq.Length = sizeof(QMINAS_SET_SYSTEM_SEL_PREF_REQ_MSG) - 4;
       pAdapter->RegisterMode = DeviceWWanRegisteredManual;
             }
 
@@ -25970,6 +25978,8 @@ BOOLEAN ParseUIMReadTransparant( PMP_ADAPTER pAdapter, PQMUX_MSG   qmux_msg)
                         ((pUimContent->content_len*2)+2)
                      );
                      RtlCopyMemory(Imsi,&pUimContent->content, pUimContent->content_len);
+                     if (Imsi[0] <= pUimContent->content_len)
+                     {
                      while (i <= Imsi[0])
                      {
                         pAdapter->DeviceIMSI[i*2] = (Imsi[i+1] & 0x0F) + 48;
@@ -25978,6 +25988,11 @@ BOOLEAN ParseUIMReadTransparant( PMP_ADAPTER pAdapter, PQMUX_MSG   qmux_msg)
                      }
                      pAdapter->DeviceIMSI[(i-1)*2] = '\0';
                      RtlCopyMemory((char *)pAdapter->DeviceIMSI, (char *)&pAdapter->DeviceIMSI[1],(i-1)*2);
+                  }
+                  else
+                  {
+                        RtlCopyMemory(pAdapter->DeviceIMSI,&pUimContent->content, pUimContent->content_len);
+                     }
                   }
                   else
                   {

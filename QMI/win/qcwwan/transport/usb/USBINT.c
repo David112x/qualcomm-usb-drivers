@@ -210,7 +210,7 @@ VOID ReadInterruptPipe(IN PVOID pContext)
          pDevExt->pInterruptBuffer = NULL;
       }
       _closeHandle(pDevExt->hInterruptThreadHandle, "I-1");
-      PsTerminateSystemThread(STATUS_UNSUCCESSFUL);
+      return; // PsTerminateSystemThread(STATUS_UNSUCCESSFUL);
    }
 
    if (pDevExt -> InterruptPipe != (UCHAR)-1)
@@ -232,7 +232,7 @@ VOID ReadInterruptPipe(IN PVOID pContext)
             pDevExt->pInterruptBuffer = NULL;
          }
          _closeHandle(pDevExt->hInterruptThreadHandle, "I-2");
-         PsTerminateSystemThread(STATUS_NO_MEMORY);
+         return; // PsTerminateSystemThread(STATUS_NO_MEMORY);
       }
 
       // allocate an irp for the iocontrol call to the lower driver
@@ -254,7 +254,7 @@ VOID ReadInterruptPipe(IN PVOID pContext)
             pDevExt->pInterruptBuffer = NULL;
          }
          _closeHandle(pDevExt->hInterruptThreadHandle, "I-3");
-         PsTerminateSystemThread(STATUS_NO_MEMORY);
+         return; // PsTerminateSystemThread(STATUS_NO_MEMORY);
       }
    }
 
@@ -288,7 +288,7 @@ VOID ReadInterruptPipe(IN PVOID pContext)
          pDevExt->pInterruptBuffer = NULL;
       }
       _closeHandle(pDevExt->hInterruptThreadHandle, "I-4");
-      PsTerminateSystemThread(STATUS_NO_MEMORY);
+      return; // PsTerminateSystemThread(STATUS_NO_MEMORY);
    }
 
    if (pDevExt->InterruptPipe != (UCHAR)-1)
@@ -1020,7 +1020,7 @@ wait_for_completion:
 
    KeSetEvent(&pDevExt->InterruptPipeClosedEvent, IO_NO_INCREMENT, FALSE );
 
-   PsTerminateSystemThread(STATUS_SUCCESS);  // end this thread
+   return; // PsTerminateSystemThread(STATUS_SUCCESS);  // end this thread
 }
 
 NTSTATUS InterruptPipeCompletion

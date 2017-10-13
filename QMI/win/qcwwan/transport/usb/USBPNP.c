@@ -365,6 +365,344 @@ NTSTATUS USBPNP_GetDeviceCapabilities
    return ntStatus;
 }
 
+NTSTATUS QCPNP_SetStamp
+(
+   PDEVICE_OBJECT PhysicalDeviceObject,
+   HANDLE         hRegKey,
+   BOOLEAN        Startup
+)
+{
+   UNICODE_STRING ucValueName;
+   NTSTATUS ntStatus = STATUS_SUCCESS;
+   ULONG stampValue = 0;
+   BOOLEAN bSelfOpen = FALSE;
+
+   if (hRegKey == 0)
+   {
+      ntStatus = IoOpenDeviceRegistryKey
+                 (
+                    PhysicalDeviceObject,
+                    PLUGPLAY_REGKEY_DRIVER,
+                    KEY_ALL_ACCESS,
+                    &hRegKey
+                 );
+      if (!NT_SUCCESS(ntStatus))
+      {
+         return ntStatus;
+      }
+      bSelfOpen = TRUE;
+   }
+
+   RtlInitUnicodeString(&ucValueName, VEN_DEV_TIME);
+   if (Startup == TRUE)
+   {
+      stampValue = 1;
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_DWORD,
+         (PVOID)&stampValue,
+         sizeof(ULONG)
+      );
+   }
+   else
+   {
+      // ZwDeleteValueKey(hRegKey, &ucValueName);
+      stampValue = 0;
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_DWORD,
+         (PVOID)&stampValue,
+         sizeof(ULONG)
+      );
+   }
+
+   if (bSelfOpen == TRUE)
+   {
+      ZwClose(hRegKey);
+   }
+
+   return STATUS_SUCCESS;
+}  // QCPNP_SetStamp
+
+NTSTATUS QCPNP_GetStringDescriptor
+(
+   PDEVICE_OBJECT DeviceObject,
+   UCHAR          Index,
+   USHORT         LanguageId,
+   BOOLEAN        MatchPrefix
+)
+{
+   PDEVICE_EXTENSION pDevExt;
+   PUSB_STRING_DESCRIPTOR pSerNum;
+   URB urb;
+   NTSTATUS ntStatus;
+   PCHAR pSerLoc = NULL;
+   UNICODE_STRING ucValueName;
+   HANDLE         hRegKey;
+   USHORT         strLen;
+   BOOLEAN        bSetEntry = FALSE;
+
+   pDevExt = DeviceObject->DeviceExtension;
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> -->_GetStringDescriptor DO 0x%p idx %d\n", pDevExt->PortName, DeviceObject, Index)
+   );
+
+   if (Index == 0)
+   {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_DETAIL,
+         ("<%s> <--_GetStringDescriptor: index is NULL\n", pDevExt->PortName)
+      );
+      goto UpdateRegistry;
+   }
+
+   pSerNum = (PUSB_STRING_DESCRIPTOR)(pDevExt->DevSerialNumber);
+   RtlZeroMemory(pDevExt->DevSerialNumber, 256);
+
+   UsbBuildGetDescriptorRequest
+   (
+      &urb,
+      (USHORT)sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+      USB_STRING_DESCRIPTOR_TYPE,
+      Index,
+      LanguageId,
+      pSerNum,
+      NULL,
+      sizeof(USB_STRING_DESCRIPTOR_TYPE),
+      NULL
+   );
+
+   ntStatus = QCUSB_CallUSBD(DeviceObject, &urb);
+   if (!NT_SUCCESS(ntStatus))
+   {
+      goto UpdateRegistry;
+   }
+
+   UsbBuildGetDescriptorRequest
+   (
+      &urb,
+      (USHORT)sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+      USB_STRING_DESCRIPTOR_TYPE,
+      Index,
+      LanguageId,
+      pSerNum,
+      NULL,
+      pSerNum->bLength,
+      NULL
+   );
+
+   ntStatus = QCUSB_CallUSBD(DeviceObject, &urb);
+   if (!NT_SUCCESS(ntStatus))
+   {
+      RtlZeroMemory(pDevExt->DevSerialNumber, 256);
+   }
+   else
+   {
+      USBUTL_PrintBytes
+      (
+         (PVOID)(pDevExt->DevSerialNumber),
+         pSerNum->bLength,
+         256,
+         "SerialNumber",
+         pDevExt,
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_DETAIL
+      );
+   }
+
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_DETAIL,
+         ("<%s> _GetStringDescriptor DO 0x%p failure NTS 0x%x\n", pDevExt->PortName,
+           DeviceObject, ntStatus)
+      );
+      goto UpdateRegistry;
+   }
+   else
+   {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_DETAIL,
+         ("<%s> _GetStringDescriptor DO 0x%p NTS 0x%x (%dB)\n", pDevExt->PortName,
+           DeviceObject, ntStatus, pSerNum->bLength)
+      );
+   }
+
+   strLen = pSerNum->bLength;
+   pSerLoc = (PCHAR)pSerNum->bString;
+   bSetEntry = TRUE;
+
+   // search for "_SN:"
+   if ((MatchPrefix == TRUE) && (pSerNum->bLength > 0))
+   {
+      USHORT idx, adjusted = 0;
+      PCHAR p = pSerLoc;
+      BOOLEAN bMatchFound = FALSE;
+
+      for (idx = 0; idx < strLen; idx++)
+      {
+         if ((*p     == '_') && (*(p+1) == 0) &&
+             (*(p+2) == 'S') && (*(p+3) == 0) &&
+             (*(p+4) == 'N') && (*(p+5) == 0) &&
+             (*(p+6) == ':') && (*(p+7) == 0))
+         {
+            pSerLoc = p + 8;
+            adjusted += 8;
+            bMatchFound = TRUE;
+            break;
+         }
+         p++;
+         adjusted++;
+      }
+
+      // Adjust length
+      if (bMatchFound == TRUE)
+      {
+         strLen -= adjusted;
+         if (strLen > 18)
+         {
+            strLen = 18;
+         }
+      }
+      else
+      {
+         QCUSB_DbgPrint
+         (
+            QCUSB_DBG_MASK_CONTROL,
+            QCUSB_DBG_LEVEL_TRACE,
+            ("<%s> <--QDBPNP_GetDeviceSerialNumber: no SN found\n", pDevExt->PortName)
+         );
+         ntStatus = STATUS_UNSUCCESSFUL;
+         bSetEntry = FALSE;
+      }
+   }
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_TRACE,
+      ("<%s> _GetDeviceSerialNumber: strLen %d\n", pDevExt->PortName, strLen)
+   );
+
+UpdateRegistry:
+
+   // update registry
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevExt->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_ERROR,
+         ("<%s> QDBPNP_GetDeviceSerialNumber: reg access failure 0x%x\n", pDevExt->PortName, ntStatus)
+      );
+      return ntStatus;
+   }
+   if (MatchPrefix == FALSE)
+   {
+      RtlInitUnicodeString(&ucValueName, VEN_DEV_SERNUM);
+   }
+   else
+   {
+      RtlInitUnicodeString(&ucValueName, VEN_DEV_MSM_SERNUM);
+   }
+   if (bSetEntry == TRUE)
+   {
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_SZ,
+         (PVOID)pSerLoc,
+         (strLen-2)
+      );
+   }
+   else
+   {
+      ZwDeleteValueKey(hRegKey, &ucValueName);
+   }
+   ZwClose(hRegKey);
+
+   return ntStatus;
+
+} // QCPNP_GetStringDescriptor
+
+NTSTATUS QCPNP_SetFunctionProtocol(PDEVICE_EXTENSION pDevExt, ULONG ProtocolCode)
+{
+   NTSTATUS       ntStatus;
+   UNICODE_STRING ucValueName;
+   HANDLE         hRegKey;
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> --> _SetFunctionProtocolnter 0x%x\n", pDevExt->PortName, ProtocolCode)
+   );
+
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevExt->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_ERROR,
+         ("<%s> <-- _SetFunctionProtocolnter: failed to open registry 0x%x\n", pDevExt->PortName, ntStatus)
+      );
+      return ntStatus;
+   }
+
+   RtlInitUnicodeString(&ucValueName, VEN_DEV_PROTOC);
+   ntStatus = ZwSetValueKey
+              (
+                 hRegKey,
+                 &ucValueName,
+                 0,
+                 REG_DWORD,
+                 (PVOID)&ProtocolCode,
+                 sizeof(ULONG)
+              );
+   ZwClose(hRegKey);
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> <-- _SetFunctionProtocolnter 0x%x ST 0x%x\n", pDevExt->PortName, ProtocolCode, ntStatus)
+   );
+
+   return ntStatus;
+}  // QCPNP_SetFunctionProtocol
+
 #ifndef NDIS_WDM
 
 NTSTATUS QCUSB_VendorRegistryProcess
@@ -764,7 +1102,7 @@ NTSTATUS USBPNP_StartDevice( IN  PDEVICE_OBJECT DeviceObject, IN UCHAR cookie )
          if(NT_SUCCESS(ntStatus))
          {
 
-#ifdef QCUSB_DBGPRINT2
+// #ifdef QCUSB_DBGPRINT2
             DbgPrint
             ("Device Descriptor = %p, len %u\n",
              deviceDesc,
@@ -787,7 +1125,37 @@ NTSTATUS USBPNP_StartDevice( IN  PDEVICE_OBJECT DeviceObject, IN UCHAR cookie )
             DbgPrint("iProduct 0x%x\n", deviceDesc->iProduct);
             DbgPrint("iSerialNumber 0x%x\n", deviceDesc->iSerialNumber);
             DbgPrint("bNumConfigurations 0x%x\n", deviceDesc->bNumConfigurations);
-#endif  //QCUSB_DBGPRINT2
+// #endif  //QCUSB_DBGPRINT2
+            ntStatus = QCPNP_GetStringDescriptor(DeviceObject, deviceDesc->iProduct, 0x0409, TRUE);
+            if ((!NT_SUCCESS(ntStatus)) && (deviceDesc->iProduct != 2))
+            {
+               QCUSB_DbgPrint
+               (
+                  QCUSB_DBG_MASK_CONTROL,
+                  QCUSB_DBG_LEVEL_ERROR,
+                  ("<%s> StartDevice: _SERN: Failed with iProduct: 0x%x, try default\n",
+                    pDevExt->PortName, deviceDesc->iProduct)
+               );
+               // workaround: try default iProduct value 0x02
+               ntStatus = QCPNP_GetStringDescriptor(DeviceObject, 0x02, 0x0409, TRUE);
+            }
+            QCUSB_DbgPrint
+            (
+               QCUSB_DBG_MASK_CONTROL,
+               QCUSB_DBG_LEVEL_ERROR,
+               ("<%s> StartDevice: _SERN: tried iProduct: ST(0x%x)\n",
+                 pDevExt->PortName, ntStatus)
+            );
+
+            ntStatus = QCPNP_GetStringDescriptor(DeviceObject, deviceDesc->iSerialNumber, 0x0409, FALSE);
+            QCUSB_DbgPrint
+            (
+               QCUSB_DBG_MASK_CONTROL,
+               QCUSB_DBG_LEVEL_ERROR,
+               ("<%s> StartDevice: _SERN: tried iSerialNumber: 0x%x ST(0x%x)\n",
+                 pDevExt->PortName, deviceDesc->iSerialNumber, ntStatus)
+            );
+            ntStatus = STATUS_SUCCESS; // make possible failure none-critical
             ExFreePool( pUrb );
             pUrb = NULL;
             pDevExt -> idVendor = deviceDesc  -> idVendor;
@@ -1008,6 +1376,10 @@ StartDevice_Return:
       USBDSP_CancelDispatchThread(pDevExt, 2);
       USBINT_CancelInterruptThread(pDevExt, 1);
       // QCUSB_CleanupDeviceExtensionBuffers(DeviceObject);
+   }
+   else
+   {
+      QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 1);
    }
                   
    return ntStatus;
@@ -1359,6 +1731,11 @@ NTSTATUS USBPNP_SelectInterfaces
          DbgPrint(" - INF.bInterfaceProtocol = 0x%x\n", (UCHAR)pIntdesc->bInterfaceProtocol);
          #endif // QCUSB_DBGPRINT2
 
+         pDevExt->IfProtocol = (ULONG)pIntdesc->bInterfaceProtocol        |
+                               ((ULONG)pIntdesc->bInterfaceClass)   << 8  |
+                               ((ULONG)pIntdesc->bAlternateSetting) << 16 |
+                               ((ULONG)pIntdesc->bInterfaceNumber)  << 24;
+
          // to identify if it's an ECM model
          if ((x == 0) &&
              (pIntdesc->bInterfaceClass == CDCC_COMMUNICATION_INTERFACE_CLASS) &&
@@ -1430,6 +1807,8 @@ NTSTATUS USBPNP_SelectInterfaces
                  pDevExt->PortName, pIntdesc->bInterfaceNumber, pIntdesc->bAlternateSetting,
                  x, pIntdesc->bNumEndpoints)
             );
+
+            QCPNP_SetFunctionProtocol(pDevExt, pDevExt->IfProtocol);
          }
 
          if (x >= MAX_INTERFACE)
@@ -1679,7 +2058,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.4.0");
+             DbgPrint("Driver Version %s\n", "4.0.4.7");
              DbgPrint("   |============================|\n");
              #endif // QCNET_WHQL
           }
@@ -1700,7 +2079,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.4.0");
+             DbgPrint("Driver Version %s\n", "4.0.4.7");
              DbgPrint("   |===============================|\n");
              #endif // QCNET_WHQL
           }

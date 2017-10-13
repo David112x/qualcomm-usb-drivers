@@ -37,7 +37,7 @@ typedef enum _WDM_VERSION
    Win2kOrHigher,
    WinXpOrHigher,
    WinVistaOrHigher
-};
+}WDM_VERSION;
 
 typedef enum _QCUSB_POWER_REQ_TYPE
 {

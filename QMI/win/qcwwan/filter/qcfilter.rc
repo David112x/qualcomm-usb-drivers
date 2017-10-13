@@ -4,7 +4,7 @@
 
 GENERAL DESCRIPTION
 
-  Copyright (c) 2014 Qualcomm Technologies, Inc.
+  Copyright (c) 2017 Qualcomm Technologies, Inc.
   All rights reserved.
 
 *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
@@ -35,8 +35,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,4,4
- PRODUCTVERSION 1,0,4,4
+ FILEVERSION 1,0,4,7
+ PRODUCTVERSION 1,0,4,7
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -53,12 +53,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "QUALCOMM Incorporated"
             VALUE "FileDescription", "Filter Driver for the Qualcomm USB Driver Stack"
-            VALUE "FileVersion", "1.0.4.4"
+            VALUE "FileVersion", "1.0.4.7"
             VALUE "InternalName", "qcfilter.sys"
             VALUE "LegalCopyright", "(c) QUALCOMM, Inc.  All rights reserved."
             VALUE "OriginalFilename", "qcfilter.sys"
             VALUE "ProductName", "QUALCOMM Incorporated USB Filter Device Driver"
-            VALUE "ProductVersion", "1.0.4.4"
+            VALUE "ProductVersion", "1.0.4.7"
         END
     END
     BLOCK "VarFileInfo"
