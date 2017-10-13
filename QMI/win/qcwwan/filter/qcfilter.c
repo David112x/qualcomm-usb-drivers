@@ -1036,7 +1036,7 @@ QCFilterDispatchIo( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 #endif
                case IOCTL_QCDEV_GET_MUX_INTERFACE:
                {
-				  PMUX_INTERFACE_INFO pMuxInfo;
+                  PMUX_INTERFACE_INFO pMuxInfo;
                   UCHAR MuxInterfaceNumber = 0;
                   QCFLT_DbgPrint
                   (   
@@ -1059,7 +1059,7 @@ QCFilterDispatchIo( PDEVICE_OBJECT DeviceObject, PIRP Irp )
                   }
 
                   status = STATUS_SUCCESS;
-				  pMuxInfo = (PMUX_INTERFACE_INFO)buffer;
+                  pMuxInfo = (PMUX_INTERFACE_INFO)buffer;
                   MuxInterfaceNumber = *(UCHAR *)buffer;
 				  if (pDevExt->MuxSupport == 0x01)
 				  {
@@ -1107,6 +1107,61 @@ Success:
                      break;
 				  }
                }   
+
+               case IOCTL_QCDEV_REPORT_DEV_NAME:
+               {
+                  QCFLT_DbgPrint
+                  (   
+                     DBG_LEVEL_TRACE,
+                     ("MPFILTER: IOCTL_QCDEV_REPORT_DEV_NAME: inlen %d\n", inlen)
+                  );
+                  if (inlen >= 1024)
+                  {
+                     QCFLT_DbgPrint
+                     (   
+                        DBG_LEVEL_TRACE,
+                        ("MPFILTER: IOCTL_QCDEV_REPORT_DEV_NAME: failure\n")
+                     );
+                     status = STATUS_UNSUCCESSFUL;
+                     Irp->IoStatus.Information = 0;
+                  }
+                  else
+                  {
+                     RtlCopyMemory(pDevExt->PeerDevName, buffer, inlen);
+                     pDevExt->PeerDevNameLength = inlen;
+                     status = STATUS_SUCCESS;
+                     Irp->IoStatus.Information = inlen;
+                  }
+                  break;
+               }
+
+               case IOCTL_QCDEV_GET_PEER_DEV_NAME:
+               {
+                  QCFLT_DbgPrint
+                  (   
+                     DBG_LEVEL_TRACE,
+                     ("MPFILTER: IOCTL_QCDEV_GET_PEER_DEV_NAME: outlen %d/%d\n", outlen,
+                       pDevExt->PeerDevNameLength)
+                  );
+                  if ((outlen < pDevExt->PeerDevNameLength) || (pDevExt->PeerDevNameLength == 0))
+                  {
+                     QCFLT_DbgPrint
+                     (   
+                        DBG_LEVEL_TRACE,
+                        ("MPFILTER: IOCTL_QCDEV_GET_PEER_DEV_NAME: failure\n")
+                     );
+                     status = STATUS_UNSUCCESSFUL;
+                     Irp->IoStatus.Information = 0;
+                  }
+                  else
+                  {
+                     RtlCopyMemory(buffer, pDevExt->PeerDevName, pDevExt->PeerDevNameLength);
+                     status = STATUS_SUCCESS;
+                     Irp->IoStatus.Information = pDevExt->PeerDevNameLength;
+                  }
+                  break;
+               }
+
                default:
                {
                   IoSkipCurrentIrpStackLocation (Irp);
@@ -1642,6 +1697,9 @@ QCFilter_InitializeDeviceExt( PDEVICE_OBJECT deviceObject )
    pDevExt->FilterThread.pFilterEvents[QCFLT_FILTER_CREATE_CONTROL] = &pDevExt->FilterThread.FilterCreateControlDeviceEvent;
    pDevExt->FilterThread.pFilterEvents[QCFLT_FILTER_CLOSE_CONTROL] = &pDevExt->FilterThread.FilterCloseControlDeviceEvent;
    pDevExt->FilterThread.pFilterEvents[QCFLT_STOP_FILTER] = &pDevExt->FilterThread.FilterStopEvent;
+
+   RtlZeroMemory(pDevExt->PeerDevName, 4096);
+   pDevExt->PeerDevNameLength = 0;
 
    return ntStatus;
 }

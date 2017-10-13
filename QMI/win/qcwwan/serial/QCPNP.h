@@ -71,4 +71,34 @@ BOOLEAN QCPNP_ValidateDeviceDescriptor
    PUSB_DEVICE_DESCRIPTOR DevDesc
 );
 
+#pragma pack(push, 1)
+
+typedef struct _PEER_DEV_INFO_HDR
+{
+   UCHAR Version;
+   USHORT DeviceNameLength;
+   USHORT SymLinkNameLength;
+} PEER_DEV_INFO_HDR, *PPEER_DEV_INFO_HDR;
+
+#pragma pack(pop)
+
+#define QCDEV_NAME_LEN_MAX 1024
+
+NTSTATUS QCPNP_ReportDeviceName(PDEVICE_EXTENSION pDevExt);
+
+NTSTATUS QCPNP_RegisterDevName
+(
+   PDEVICE_EXTENSION pDevExt,
+   ULONG       IoControlCode,
+   PVOID       Buffer,
+   ULONG       BufferLength
+);
+
+NTSTATUS QCPNP_RegisterDevNameCompletion
+(
+   PDEVICE_OBJECT pDO,
+   PIRP           pIrp,
+   PVOID          pContext
+);
+
 #endif // QCPNP_H

@@ -741,6 +741,7 @@ typedef struct _QCSER_PortDeviceListType QCSER_PortDeviceListType, *PQCSER_PortD
 // HS-USB determination
 #define QC_HSUSB_VERSION         0x0200
 #define QC_HSUSB_BULK_MAX_PKT_SZ 512
+#define QC_SS_BLK_PKT_SZ         1024
 #define QC_HSUSB_VERSION_OK      0x01
 #define QC_HSUSB_ALT_SETTING_OK  0x02
 #define QC_HSUSB_BULK_MAX_PKT_OK 0x04

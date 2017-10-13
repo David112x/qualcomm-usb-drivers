@@ -193,6 +193,21 @@ GENERAL DESCRIPTION
                                        METHOD_BUFFERED, \
                                        FILE_ANY_ACCESS)
 
+#define IOCTL_QCDEV_REPORT_DEV_NAME CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                       QCDEV_IOCTL_INDEX+34, \
+                                       METHOD_BUFFERED, \
+                                       FILE_ANY_ACCESS)
+
+#define IOCTL_QCDEV_GET_PEER_DEV_NAME CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                       QCDEV_IOCTL_INDEX+32, \
+                                       METHOD_BUFFERED, \
+                                       FILE_ANY_ACCESS)
+
+#define IOCTL_QCDEV_GET_MUX_INTERFACE CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                              QCDEV_IOCTL_INDEX+33, \
+                                              METHOD_BUFFERED, \
+                                              FILE_ANY_ACCESS)
+
 #define IOCTL_QCDEV_IPV4_MTU_NOTIFY CTL_CODE(FILE_DEVICE_UNKNOWN, \
                                              QCDEV_IOCTL_INDEX+50, \
                                              METHOD_BUFFERED, \
@@ -207,11 +222,6 @@ GENERAL DESCRIPTION
                                        QCDEV_IOCTL_INDEX+52, \
                                        METHOD_BUFFERED, \
                                        FILE_ANY_ACCESS)
-
-#define IOCTL_QCDEV_GET_MUX_INTERFACE CTL_CODE(FILE_DEVICE_UNKNOWN, \
-                                              QCDEV_IOCTL_INDEX+33, \
-                                              METHOD_BUFFERED, \
-                                              FILE_ANY_ACCESS)
 
 NTSTATUS USBIOC_CacheNotificationIrp
 (

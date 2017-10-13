@@ -1679,7 +1679,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.3.6");
+             DbgPrint("Driver Version %s\n", "4.0.3.7");
              DbgPrint("   |============================|\n");
              #endif // QCNET_WHQL
           }
@@ -1700,7 +1700,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.3.6");
+             DbgPrint("Driver Version %s\n", "4.0.3.7");
              DbgPrint("   |===============================|\n");
              #endif // QCNET_WHQL
           }
@@ -2504,10 +2504,10 @@ NTSTATUS USBPNP_InitDevExt
    pDevExt->SelectiveSuspendIdleTime = 5;  // chage it to 5 by default
    pDevExt->SelectiveSuspendInMili = FALSE;   
    pDevExt->InServiceSelectiveSuspension = TRUE;   
-   pDevExt->bRemoteWakeupEnabled = FALSE;
+   pDevExt->bRemoteWakeupEnabled = FALSE;  // hardcode for now
    pDevExt->bDeviceSelfPowered = FALSE;
    pDevExt->PowerManagementEnabled = TRUE;
-   pDevExt->WaitWakeEnabled = FALSE;
+   pDevExt->WaitWakeEnabled = FALSE;  // hardcode for now
    QCPWR_GetWdmVersion(pDevExt);
    KeInitializeTimer(&pDevExt->IdleTimer);
    KeInitializeDpc(&pDevExt->IdleDpc, QCPWR_IdleDpcRoutine, pDevExt);

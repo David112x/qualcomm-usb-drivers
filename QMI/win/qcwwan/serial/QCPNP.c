@@ -279,7 +279,19 @@ QCPNP_PnPAddDevice_Return:
 
    if (NT_SUCCESS(ntStatus))
    {
+      QCSER_DbgPrintG
+      (
+         QCSER_DBG_MASK_CONTROL,
+         QCSER_DBG_LEVEL_FORCE,
+         ("<%s> QCPNP: ReportDeviceName (NT 0x%x) type %d/%d\n", myPortName, ntStatus, portDoExt->FdoDeviceType, FILE_DEVICE_SERIAL_PORT)
+      );
       initDevStateX(portDoExt, DEVICE_STATE_PRESENT);
+
+      if (portDoExt->FdoDeviceType == FILE_DEVICE_SERIAL_PORT)
+      {
+         QCPNP_ReportDeviceName(portDoExt);
+      }
+
    }
    else if (portDoExt != NULL)
    {
@@ -2095,7 +2107,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.1.9");
+             DbgPrint("Driver Version %s\n", "2.1.2.0");
              DbgPrint("   |============================|\n");
           }
           else
@@ -2118,7 +2130,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.1.9");
+             DbgPrint("Driver Version %s\n", "2.1.2.0");
              DbgPrint("   |===============================|\n");
           }
           QCSER_DbgPrint
@@ -2162,7 +2174,7 @@ NTSTATUS QCPNP_SelectInterfaces
          DbgPrint("   |   IF: CT%02d-CC%02d-DA%02d          |\n", pDevExt->ControlInterface,
                    pDevExt->usCommClassInterface, pDevExt->DataInterface);
          DbgPrint("   |   HS 0x%x       |\n", pDevExt->HighSpeedUsbOk);
-         DbgPrint("Driver Version 2.1.1.9\n");
+         DbgPrint("Driver Version 2.1.2.0\n");
          DbgPrint("   |===============================|\n\n");
       }
       else
@@ -2722,3 +2734,234 @@ BOOLEAN QCPNP_ValidateDeviceDescriptor
    return TRUE;
 
 }  // QCPNP_ValidateDeviceDescriptor
+
+NTSTATUS QCPNP_ReportDeviceName(PDEVICE_EXTENSION pDevExt)
+{
+   NTSTATUS          ntStatus;
+   CHAR              devName[QCDEV_NAME_LEN_MAX], tmpName[QCDEV_NAME_LEN_MAX];
+   ULONG             bufLen = QCDEV_NAME_LEN_MAX, resultLen = 0;
+   PCHAR             matchText = "D i a g n o s t i c s ";
+
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_CONTROL,
+      QCSER_DBG_LEVEL_TRACE,
+      ("<%s> -->ReportDeviceName PDO 0x%p\n", pDevExt->PortName, pDevExt->PhysicalDeviceObject)
+   );
+
+   RtlZeroMemory(devName, QCDEV_NAME_LEN_MAX);
+   RtlZeroMemory(tmpName, QCDEV_NAME_LEN_MAX);
+
+   ntStatus = IoGetDeviceProperty
+              (
+                 pDevExt->PhysicalDeviceObject,
+                 DevicePropertyFriendlyName,
+                 bufLen,
+                 (PVOID)devName,
+                 &resultLen
+              );
+
+   if (ntStatus != STATUS_SUCCESS)
+   {
+      ntStatus = IoGetDeviceProperty
+                 (
+                    pDevExt->PhysicalDeviceObject,
+                    DevicePropertyDeviceDescription,
+                    bufLen,
+                    (PVOID)devName,
+                    &resultLen
+                 );
+   }
+
+   if (ntStatus != STATUS_SUCCESS)
+   {
+      QCSER_DbgPrint
+      (
+         QCSER_DBG_MASK_CONTROL,
+         QCSER_DBG_LEVEL_TRACE,
+         ("<%s> <--ReportDeviceName PDO 0x%p failure 0x%X\n", pDevExt->PortName, pDevExt->PhysicalDeviceObject, ntStatus)
+      );
+      return ntStatus;
+   }
+   else
+   {
+      PTSTR matchPtr;
+      int i;
+
+      RtlCopyMemory(tmpName, devName, resultLen);
+
+      for (i = 0; i < resultLen; i++)
+      {
+         if (tmpName[i] == 0)
+         {
+            tmpName[i] = ' ';
+         }
+      }
+      tmpName[i] = 0;
+
+      matchPtr = strstr(tmpName, matchText);
+
+      QCSER_DbgPrint
+      (
+         QCSER_DBG_MASK_CONTROL,
+         QCSER_DBG_LEVEL_TRACE,
+         ("<%s> ReportDeviceName <%s> match 0x%p\n", pDevExt->PortName, tmpName, matchPtr)
+      );
+
+      if (matchPtr != NULL)
+      {
+         ntStatus = QCPNP_RegisterDevName
+                    (
+                       pDevExt,
+                       IOCTL_QCUSB_REPORT_DEV_NAME,
+                       devName,
+                       resultLen
+                    );
+      }
+   }
+
+   return ntStatus;
+
+}  // QCPNP_ReportDeviceName
+
+NTSTATUS QCPNP_RegisterDevName
+(
+   PDEVICE_EXTENSION pDevExt,
+   ULONG       IoControlCode,
+   PVOID       Buffer,
+   ULONG       BufferLength
+)
+{
+
+   PIRP pIrp = NULL;
+   PIO_STACK_LOCATION nextstack;
+   NTSTATUS Status;
+   KEVENT Event;
+   PPEER_DEV_INFO_HDR pDevInfoHdr;
+   PCHAR pLocation;
+   ULONG totalLength;
+   
+   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+   
+   pIrp = IoAllocateIrp((CCHAR)(pDevExt->StackDeviceObject->StackSize+2), FALSE);
+   if( pIrp == NULL )
+   {
+       QCSER_DbgPrint
+       (
+          QCSER_DBG_MASK_CONTROL,
+          QCSER_DBG_LEVEL_ERROR,
+          ("<%s> QCPNP_RegisterDevName failed to allocate an IRP\n", pDevExt->PortName)
+       );
+       return STATUS_UNSUCCESSFUL;
+   }
+
+   pIrp->AssociatedIrp.SystemBuffer = ExAllocatePool(NonPagedPool, 4096);
+   if (pIrp->AssociatedIrp.SystemBuffer == NULL)
+   {
+      QCSER_DbgPrint
+      (
+         QCSER_DBG_MASK_CONTROL,
+         QCSER_DBG_LEVEL_ERROR,
+         ("<%s> QCPNP_RegisterDevName failed to allocate buffer\n", pDevExt->PortName)
+      );
+      IoFreeIrp(pIrp);
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   pDevInfoHdr = (PPEER_DEV_INFO_HDR)(pIrp->AssociatedIrp.SystemBuffer);
+   pDevInfoHdr->Version = 1;
+   pDevInfoHdr->DeviceNameLength = BufferLength;
+   pDevInfoHdr->SymLinkNameLength = strlen(pDevExt->PortName);
+   totalLength = sizeof(PEER_DEV_INFO_HDR) + pDevInfoHdr->DeviceNameLength +
+                 pDevInfoHdr->SymLinkNameLength;
+
+   pLocation = (PCHAR)(pIrp->AssociatedIrp.SystemBuffer);
+   pLocation += sizeof(PEER_DEV_INFO_HDR);
+
+   // device name
+   RtlCopyMemory (pLocation, Buffer, BufferLength);
+
+   // symbolic name
+   pLocation += BufferLength;
+   RtlCopyMemory(pLocation, pDevExt->PortName, pDevInfoHdr->SymLinkNameLength);
+
+   QCUTIL_PrintBytes
+   (
+      (PVOID)(pIrp->AssociatedIrp.SystemBuffer),
+      totalLength,
+      totalLength,
+      "PeerInfo",
+      pDevExt,
+      QCSER_DBG_MASK_CONTROL,
+      QCSER_DBG_LEVEL_DETAIL
+   );
+
+   // set the event
+   pIrp->UserEvent = &Event;
+   
+   nextstack = IoGetNextIrpStackLocation(pIrp);
+   nextstack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+   nextstack->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
+   nextstack->Parameters.DeviceIoControl.InputBufferLength = totalLength;
+
+   IoSetCompletionRoutine
+   (
+      pIrp,
+      (PIO_COMPLETION_ROUTINE)QCPNP_RegisterDevNameCompletion,
+      (PVOID)pDevExt,
+      TRUE,TRUE,TRUE
+   );
+   
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_CONTROL,
+      QCSER_DBG_LEVEL_TRACE,
+      ("<%s> QCPNP_RegisterDevName (IRP 0x%p)\n", pDevExt->PortName, pIrp)
+   );
+
+   Status = IoCallDriver(pDevExt->StackDeviceObject, pIrp);
+
+   Status = KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+
+   if (Status == STATUS_SUCCESS)
+   {
+      Status = pIrp->IoStatus.Status;
+   }
+
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_CONTROL,
+      QCSER_DBG_LEVEL_TRACE,
+      ("<%s> <--- QCPNP_RegisterDevName: ST %x\n", pDevExt->PortName, Status)
+   );
+
+   if (pIrp->AssociatedIrp.SystemBuffer != NULL)
+   {
+      ExFreePool(pIrp->AssociatedIrp.SystemBuffer);
+   }
+   IoFreeIrp(pIrp);
+   
+   return Status;
+} // QCPNP_RegisterDevName
+
+NTSTATUS QCPNP_RegisterDevNameCompletion
+(
+   PDEVICE_OBJECT pDO,
+   PIRP           pIrp,
+   PVOID          pContext
+)
+{
+   PDEVICE_EXTENSION pDevExt = (PDEVICE_EXTENSION)pContext;
+
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_CONTROL,
+      QCSER_DBG_LEVEL_TRACE,
+      ("<%s> QCPNP_RegisterDevNameCompletion (IRP 0x%p IoStatus: 0x%x)\n", pDevExt->PortName, pIrp, pIrp->IoStatus.Status)
+   );
+
+   KeSetEvent(pIrp->UserEvent, 0, FALSE);
+
+   return STATUS_MORE_PROCESSING_REQUIRED;
+}  // QCPNP_RegisterDevNameCompletion
+

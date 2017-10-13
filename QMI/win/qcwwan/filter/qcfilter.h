@@ -298,6 +298,9 @@ typedef struct _DEVICE_EXTENSION
 
    INTERFACE_MUX_LIST InterfaceMuxList[NUM_MUX_INTERFACES_MUX];
 
+   CHAR  PeerDevName[4096];
+   ULONG PeerDevNameLength;
+
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct _FILTER_DEVICE_INFO

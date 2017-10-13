@@ -2476,7 +2476,7 @@ VOID QCPWR_RegisterWaitWakeIrp(PDEVICE_EXTENSION  pDevExt, UCHAR Cookie)
    (
       QCUSB_DBG_MASK_PIRP,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> RegisterWaitWake: %u\n", pDevExt->PortName, Cookie)
+      ("<%s> -->RegisterWaitWake: %u\n", pDevExt->PortName, Cookie)
    );
 
    if (pDevExt->WaitWakeEnabled == FALSE)
@@ -2485,7 +2485,7 @@ VOID QCPWR_RegisterWaitWakeIrp(PDEVICE_EXTENSION  pDevExt, UCHAR Cookie)
       (
          QCUSB_DBG_MASK_PIRP,
          QCUSB_DBG_LEVEL_ERROR,
-         ("<%s> RegisterWaitWake(%u): feature disabled\n", pDevExt->PortName, Cookie)
+         ("<%s> <--RegisterWaitWake(%u): feature disabled\n", pDevExt->PortName, Cookie)
       );
 
       return;
@@ -2501,7 +2501,7 @@ VOID QCPWR_RegisterWaitWakeIrp(PDEVICE_EXTENSION  pDevExt, UCHAR Cookie)
       (
          QCUSB_DBG_MASK_PIRP,
          QCUSB_DBG_LEVEL_ERROR,
-         ("<%s> RegisterWaitWake: already pending(%u)\n", pDevExt->PortName, Cookie)
+         ("<%s> <--RegisterWaitWake: already pending(%u)\n", pDevExt->PortName, Cookie)
       );
 
       return;
@@ -2524,7 +2524,7 @@ VOID QCPWR_RegisterWaitWakeIrp(PDEVICE_EXTENSION  pDevExt, UCHAR Cookie)
       (
          QCUSB_DBG_MASK_PIRP,
          QCUSB_DBG_LEVEL_ERROR,
-         ("<%s> RegisterWaitWake: rm lock failure(0x%x)\n", pDevExt->PortName, ntStatus)
+         ("<%s> <--RegisterWaitWake: rm lock failure(0x%x)\n", pDevExt->PortName, ntStatus)
       );
       return;
    }
@@ -2546,6 +2546,13 @@ VOID QCPWR_RegisterWaitWakeIrp(PDEVICE_EXTENSION  pDevExt, UCHAR Cookie)
       QcReleaseSpinLock(&pDevExt->SingleIrpSpinLock, levelOrHandle);
       QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pDevExt, 0);
    }
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_PIRP,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> <--RegisterWaitWake: requested IRP (0x%p)\n", pDevExt->PortName, pDevExt->WaitWakeIrp)
+   );
 
    return;
 

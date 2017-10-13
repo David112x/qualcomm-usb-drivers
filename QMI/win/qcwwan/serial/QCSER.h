@@ -208,4 +208,9 @@ NTSTATUS SerialSendEncapusulatedCmd(PDEVICE_OBJECT DeviceObject, PVOID ioBuffer,
                                   METHOD_BUFFERED, \
                                   FILE_ANY_ACCESS)
 
+#define IOCTL_QCUSB_REPORT_DEV_NAME CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                  QCOMSER_IOCTL_INDEX+34, \
+                                  METHOD_BUFFERED, \
+                                  FILE_ANY_ACCESS)
+
 #endif // QCSER_H

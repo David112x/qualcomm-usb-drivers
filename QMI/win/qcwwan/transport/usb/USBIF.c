@@ -1372,8 +1372,27 @@ NTSTATUS USBIF_DispatchFilter
 
    if (irpStack->MajorFunction == IRP_MJ_POWER)
    {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_POWER,
+         QCUSB_DBG_LEVEL_DETAIL,
+         ("<%s> DispatchFilter: PWR IRP 0x%p\n", pDevExt->PortName, Irp)
+      );
       switch (irpStack->MinorFunction)
       {
+         case IRP_MN_WAIT_WAKE:
+         {
+            QCUSB_DbgPrint
+            (
+               QCUSB_DBG_MASK_POWER,
+               QCUSB_DBG_LEVEL_DETAIL,
+               ("<%s> DispatchFilter: IRP_MN_WAIT_WAKE 0x%p/0x%p\n", pDevExt->PortName,
+                 Irp, pDevExt->WaitWakeIrp)
+            );
+            bFiltered = TRUE;  // TODO: need to further verify aginst pDevExt->WaitWakeIrp
+            break;
+         }
+
          case IRP_MN_QUERY_POWER:
          {
             switch (irpStack->Parameters.Power.Type)

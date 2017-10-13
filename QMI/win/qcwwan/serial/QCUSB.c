@@ -1351,15 +1351,39 @@ NTSTATUS QCUSB_ClearRemoteWakeup(IN PDEVICE_OBJECT pDevObj)
     urb = ExAllocatePool( NonPagedPool, size );
     if (urb == NULL)
     {
+       QCSER_DbgPrint
+       (
+          QCSER_DBG_MASK_CONTROL,
+          QCSER_DBG_LEVEL_ERROR,
+          ("<%s> ClearRemoteWakeup - NO_MEM\n", pDevExt->PortName)
+       );
        return STATUS_NO_MEMORY;
     }
 
+    QCSER_DbgPrint
+    (
+       QCSER_DBG_MASK_CONTROL,
+       QCSER_DBG_LEVEL_ERROR,
+       ("<%s> -->_ClearRemoteWakeup: FuncIF %d\n", pDevExt->PortName, pDevExt->usCommClassInterface)
+    );
+
     RtlZeroMemory(urb, size);
     urb->UrbHeader.Length = (USHORT) size;
-    urb->UrbHeader.Function = URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE;
-    urb->UrbControlFeatureRequest.UrbLink = NULL;
-    urb->UrbControlFeatureRequest.FeatureSelector = 1; // 1: remote wakeup; 0: endpoint halt; 2: test mode
-    urb->UrbControlFeatureRequest.Index = 0;
+    if (pDevExt->wMaxPktSize >= QC_SS_BLK_PKT_SZ)  // SS device
+    {
+       UCHAR ifNum = (UCHAR)pDevExt->usCommClassInterface;
+       urb->UrbHeader.Function = URB_FUNCTION_SET_FEATURE_TO_INTERFACE;
+       urb->UrbControlFeatureRequest.UrbLink = NULL;
+       urb->UrbControlFeatureRequest.FeatureSelector = 0;  // function suspend  -- wValue
+       urb->UrbControlFeatureRequest.Index = (0x0000 | (ifNum << 8));  // TODO - verify if ifNum needs shift
+    }
+    else
+    {
+       urb->UrbHeader.Function = URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE;
+       urb->UrbControlFeatureRequest.UrbLink = NULL;
+       urb->UrbControlFeatureRequest.FeatureSelector = 1; // 1: remote wakeup; 0: endpoint halt; 2: test mode
+       urb->UrbControlFeatureRequest.Index = 0;
+    }
 
     status = QCUSB_CallUSBD( pDevObj, urb );
     if (!NT_SUCCESS(status))
@@ -1372,6 +1396,14 @@ NTSTATUS QCUSB_ClearRemoteWakeup(IN PDEVICE_OBJECT pDevObj)
        );
     }
     ExFreePool( urb );
+
+    QCSER_DbgPrint
+    (
+       QCSER_DBG_MASK_CONTROL,
+       QCSER_DBG_LEVEL_ERROR,
+       ("<%s> <--_ClearRemoteWakeup: FuncIF %d\n", pDevExt->PortName, pDevExt->usCommClassInterface)
+    );
+
     return status;
 }
 

@@ -1303,6 +1303,17 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 break;
              }
 
+             case IOCTL_QCDEV_GET_PEER_DEV_NAME:
+             {
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL, 
+                   ("<%s> MPIOC: IOCTL_QCDEV_GET_PEER_DEV_NAME\n", pAdapter->PortName)
+                );
+                status = MPIOC_GetPeerDeviceName(pAdapter, Irp, outlen);
+                break;
+             }
+
              default:
              {
                 QCNET_DbgPrint
@@ -4962,5 +4973,111 @@ ExitPoint:
    return ntStatus;
 
 } // MPIOC_ResetDeviceSecurity
+
+NTSTATUS MPIOC_GetPeerDeviceNameCompletion
+(
+   PDEVICE_OBJECT pDO,
+   PIRP           pIrp,
+   PVOID          pContext
+)
+{
+   PMP_ADAPTER pAdapter = (PMP_ADAPTER)pContext;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_TRACE,
+      ("<%s> MPIOC_GetPeerDeviceNameCompletion (IRP 0x%p IoStatus: 0x%x)\n", pAdapter->PortName,
+        pIrp, pIrp->IoStatus.Status)
+   );
+
+   KeSetEvent(pIrp->UserEvent, 0, FALSE);
+
+   return STATUS_MORE_PROCESSING_REQUIRED;
+}  // MPIOC_GetPeerDeviceNameCompletion
+
+NTSTATUS MPIOC_GetPeerDeviceName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen)
+{
+   PIRP pIrp = NULL;
+   PIO_STACK_LOCATION nextstack;
+   NTSTATUS Status;
+   KEVENT Event;
+   PDEVICE_EXTENSION pDevExt = (PDEVICE_EXTENSION)pAdapter->USBDo->DeviceExtension;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_TRACE,
+      ("<%s> -->MPIOC_GetPeerDeviceName\n", pAdapter->PortName)
+   );
+
+   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+   pIrp = IoAllocateIrp((CCHAR)(pDevExt->StackDeviceObject->StackSize+2), FALSE );
+   if( pIrp == NULL )
+   {
+       QCNET_DbgPrint
+       (
+          MP_DBG_MASK_CONTROL,
+          MP_DBG_LEVEL_ERROR,
+          ("<%s> MPIOC_GetPeerDeviceName failed to allocate an IRP\n", pAdapter->PortName)
+       );
+       return NDIS_STATUS_FAILURE;
+   }
+
+   pIrp->AssociatedIrp.SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+   // set the event
+   pIrp->UserEvent = &Event;
+
+   nextstack = IoGetNextIrpStackLocation(pIrp);
+   nextstack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+   nextstack->Parameters.DeviceIoControl.IoControlCode = IOCTL_QCDEV_GET_PEER_DEV_NAME;
+   nextstack->Parameters.DeviceIoControl.OutputBufferLength = BufLen;
+
+   IoSetCompletionRoutine
+   (
+      pIrp,
+      (PIO_COMPLETION_ROUTINE)MPIOC_GetPeerDeviceNameCompletion,
+      (PVOID)pAdapter,
+      TRUE,TRUE,TRUE
+   );
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_TRACE,
+      ("<%s> MPIOC_GetPeerDeviceName (IRP 0x%p)\n", pAdapter->PortName, pIrp)
+   );
+
+   Status = IoCallDriver(pDevExt->StackDeviceObject, pIrp);
+
+   KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+
+   Status = pIrp->IoStatus.Status;
+
+   Irp->IoStatus.Status = Status;
+   Irp->IoStatus.Information = pIrp->IoStatus.Information;
+
+   MPMAIN_PrintBytes
+   (
+      Irp->AssociatedIrp.SystemBuffer,
+      Irp->IoStatus.Information,
+      Irp->IoStatus.Information,
+      "PEER-INFO",
+      pAdapter,
+      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL
+   );
+
+   IoFreeIrp(pIrp);
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_TRACE,
+      ("<%s> <--MPIOC_GetPeerDeviceName (IRP 0x%p ST 0x%x)\n", pAdapter->PortName, Irp, Status)
+   );
+   return Status;
+}  // MPIOC_GetPeerDeviceName
 
 #endif  // defined(IOCTL_INTERFACE)

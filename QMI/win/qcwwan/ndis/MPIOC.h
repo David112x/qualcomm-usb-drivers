@@ -335,4 +335,13 @@ NDIS_STATUS MPIOC_ResetDeviceSecurity
    PUNICODE_STRING DeviceLinkName
 );
 
+NTSTATUS MPIOC_GetPeerDeviceNameCompletion
+(
+   PDEVICE_OBJECT pDO,
+   PIRP           pIrp,
+   PVOID          pContext
+);
+
+NTSTATUS MPIOC_GetPeerDeviceName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen);
+
 #endif // MPIOC_H
