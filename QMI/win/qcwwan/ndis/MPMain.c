@@ -433,6 +433,8 @@ VOID MPMAIN_MiniportHaltEx(NDIS_HANDLE MiniportAdapterContext, NDIS_HALT_ACTION 
    pAdapter->Flags &= ~(fMP_STATE_INITIALIZED);
    pAdapter->Flags |= fMP_ADAPTER_HALT_IN_PROGRESS;
 
+   pAdapter->IsQMIOutOfService = TRUE;  // set the flag before cancelling any QMI service
+
    #ifdef MP_QCQOS_ENABLED
    MPQOSC_CancelQmiQosClient(pAdapter); 
    MPQOS_CancelQosThread(pAdapter); 
@@ -1452,6 +1454,15 @@ VOID CleanupTxQueues(PMP_ADAPTER pAdapter)
 #else
     PNDIS_PACKET pNdisPacket;
 #endif
+
+    // Clean up all Flow control queues
+#ifdef QCUSB_MUX_PROTOCOL
+#error code not present
+#endif
+#if defined(QCMP_QMAP_V2_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
+    MPMAIN_QMAPPurgeFlowControlledPackets(pAdapter, FALSE);
+#endif
+
     if ( pAdapter->nBusyTx > 0)
     {
        NdisAcquireSpinLock( &pAdapter->TxLock );
@@ -2094,12 +2105,25 @@ NTSTATUS MPMAIN_PnpEventWithRemoval
    PIO_STACK_LOCATION pNextStack = NULL;
    LARGE_INTEGER delayValue;
    NTSTATUS nts = STATUS_SUCCESS;
+   int concurrentCalls;
 
    QCNET_DbgPrint
    (
       MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
       ("<%s> ---> MPMAIN_PnpEventWithRemoval\n", pAdapter->PortName)
    );
+
+   // To make the function reentrant
+   while ((concurrentCalls = InterlockedIncrement(&pAdapter->RemovalInProgress)) > 1)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+         ("<%s> _PnpEventWithRemoval: concurrent calls %d, wait\n", pAdapter->PortName, concurrentCalls)
+      );
+      InterlockedDecrement(&pAdapter->RemovalInProgress);
+      MPMAIN_Wait(-(5 * 1000 * 1000));  // 500ms
+   }
 
    // Don't process NdisDevicePnPEventRemoved alone!!!
    NdisAcquireSpinLock(&pAdapter->UsbLock);
@@ -2231,6 +2255,8 @@ NTSTATUS MPMAIN_PnpEventWithRemoval
    }
 
    cleanupOIDWaitingQueue( pAdapter );
+
+   InterlockedDecrement(&pAdapter->RemovalInProgress);
 
    QCNET_DbgPrint
    (
@@ -2539,7 +2565,10 @@ exit0:
 #endif                         
    )
    {
-      MPQMUX_SetDeviceQMAPSettings(pAdapter);
+      if (pAdapter->DisableQMAPFC == 0)
+      {
+         MPQMUX_SetDeviceQMAPSettings(pAdapter);
+      }
    }
    
    MPQCTL_ReleaseClientId
@@ -3863,7 +3892,8 @@ VOID MPMAIN_MPThread(PVOID Context)
                      (
                         MP_DBG_MASK_CONTROL,
                         MP_DBG_LEVEL_DETAIL,
-                     ("<%s> MPth: Adapter sync needed value %d\n", pAdapter->PortName, pAdapter->QmiSyncNeeded )
+                        ("<%s> MPth: Adapter sync needed value %d QMIOutOfServ %d\n", pAdapter->PortName,
+                          pAdapter->QmiSyncNeeded, pAdapter->IsQMIOutOfService)
                      );
 
                   if (pAdapter->QmiSyncNeeded > 0)
@@ -4593,6 +4623,7 @@ VOID MPMAIN_DisconnectNotification(PMP_ADAPTER pAdapter)
    {
       pAdapter->IPV6Connected = pAdapter->IPV4Connected = FALSE;
       pAdapter->IPV6Address   = pAdapter->IPV4Address   = 0;
+      pAdapter->IPv4DataCall = pAdapter->IPv6DataCall = 0;
 
       MPMAIN_MediaDisconnect(pAdapter, TRUE);
 
@@ -4623,6 +4654,14 @@ VOID MPMAIN_DisconnectNotification(PMP_ADAPTER pAdapter)
 
    // reset the PendingCtrlRequests
    NdisZeroMemory(&(pAdapter->PendingCtrlRequests), sizeof(pAdapter->PendingCtrlRequests));
+
+#ifdef MP_QCQOS_ENABLED
+   MPQOSC_CancelQmiQosClient(pAdapter); 
+   MPQOS_CancelQosThread(pAdapter); 
+#endif // MP_QCQOS_ENABLED
+
+   // stop the IPv6 client
+   MPIP_CancelWdsIpClient(pAdapter);
 } // MPMAIN_DisconnectNotification
 
 #ifdef NDIS620_MINIPORT

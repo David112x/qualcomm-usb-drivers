@@ -744,6 +744,14 @@ VOID MPQMI_SendQMUXToExternalClient
             );
          }
 
+         QCNET_DbgPrint
+         (
+            MP_DBG_MASK_OID_QMI,
+            MP_DBG_LEVEL_DETAIL,
+            ("<%s> _SendQMUXToExternalClient: CType %d QMIType %d CID %d/%d\n", pAdapter->PortName,
+              pIocDev->Type, pIocDev->QMIType, pIocDev->ClientId, pIocDev->ClientIdV6)
+         );
+
          // fill a read IRP
          while (!IsListEmpty(&pIocDev->ReadIrpQueue))
          {
@@ -837,6 +845,14 @@ VOID MPQMI_SendQMUXToExternalClient
                      MPMAIN_PrintBytes
                      (
                         rdItem->Buffer, len, len, "QmiDataRx2", pAdapter,
+                        MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_VERBOSE
+                     );
+                  }
+                  else
+                  {
+                     MPMAIN_PrintBytes
+                     (
+                        rdItem->Buffer, len, len, "QmiQosRx2", pAdapter,
                         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_VERBOSE
                      );
                   }
@@ -1421,11 +1437,11 @@ VOID MPQMI_ProcessInboundQWDSIndication
                      pAdapter->IPv4DataCall = 1;
                      KeSetEvent(&pAdapter->MPThreadMediaConnectEvent, IO_NO_INCREMENT, FALSE);
                   }
-              else
-              {
-                 pAdapter->IPv6DataCall = 1;
-                 KeSetEvent(&pAdapter->MPThreadMediaConnectEventIPv6, IO_NO_INCREMENT, FALSE);
-              }
+                  else
+                  {
+                     pAdapter->IPv6DataCall = 1;
+                     KeSetEvent(&pAdapter->MPThreadMediaConnectEventIPv6, IO_NO_INCREMENT, FALSE);
+                  }
                }
                else
                {
@@ -2017,6 +2033,11 @@ ULONG MPQMUX_ProcessWdsExtendedIpConfigInd
                  ((ipConfig->ChangedIpConfigMask & PS_IFACE_EXT_IP_CFG_MASK_DOMAIN_NAME_LIST) != 0))
              {
                 changeIndicated = 1;
+             }
+             else if ((ipConfig->ChangedIpConfigMask & PS_IFACE_EXT_IP_CFG_MASK_MTU) != 0)
+             {
+                // MTU-only case
+                MPQMUX_GetMTU(pAdapter, ClientContext);
              }
              break;
           }
@@ -9770,6 +9791,7 @@ ULONG MPQMUX_ProcessWdsGetRuntimeSettingResp
    PUCHAR      pAddrBuf = NULL;
    int         addrLen = 0;
    UCHAR       ipVer = 0;
+   BOOLEAN     bAddrReceived = FALSE;
 
    QCNET_DbgPrint
    (
@@ -9854,6 +9876,7 @@ ULONG MPQMUX_ProcessWdsGetRuntimeSettingResp
                
                case QMIWDS_GET_RUNTIME_SETTINGS_TLV_TYPE_IPV4:
                   {
+                     bAddrReceived = TRUE;
                      ipv4Addr = (PQMIWDS_GET_RUNTIME_SETTINGS_TLV_IPV4_ADDR)tlv;
                      pAdapter->IPSettings.IPV4.Address = ntohl(ipv4Addr->IPV4Address);
                      pAdapter->IPSettings.IPV4.Flags   = 1;
@@ -9869,6 +9892,7 @@ ULONG MPQMUX_ProcessWdsGetRuntimeSettingResp
                   }
                case QMIWDS_GET_RUNTIME_SETTINGS_TLV_TYPE_IPV6:
                   {
+                     bAddrReceived = TRUE;
                      ipv6Addr = (PQMIWDS_GET_RUNTIME_SETTINGS_TLV_IPV6_ADDR)tlv;
                      pAdapter->IPSettings.IPV6.Flags = 1;
 
@@ -9962,10 +9986,107 @@ ULONG MPQMUX_ProcessWdsGetRuntimeSettingResp
             tlv = MPQMUX_GetNextTLV(pAdapter, tlv, &len);
          } // while
       }
-      KeSetEvent(pAddrReceivedEvent, IO_NO_INCREMENT, FALSE);
+      if (bAddrReceived == TRUE)
+      {
+         KeSetEvent(pAddrReceivedEvent, IO_NO_INCREMENT, FALSE);
+      }
    }
    return 0;      
 }  // QMIWDS_GET_RUNTIME_SETTINGS_RESP
+
+NDIS_STATUS MPQMUX_GetMTU
+(
+   PMP_ADAPTER pAdapter,
+   PVOID       ClientContext
+)
+{
+   NDIS_STATUS ndisStatus = NDIS_STATUS_FAILURE;
+   UCHAR       qmux[512];
+   PQCQMUX     qmuxPtr;
+   PQMUX_MSG   qmux_msg;
+   UCHAR       qmi[512];
+   ULONG       qmiLength = sizeof(QCQMI_HDR)+QCQMUX_HDR_SIZE+sizeof(QMIWDS_GET_RUNTIME_SETTINGS_REQ_MSG);
+   UCHAR       cid = 0;
+   PMPIOC_DEV_INFO pIocDev = NULL;
+
+   if (ClientContext == NULL)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+         ("<%s> _GetMTU: no QMI client context abort\n", pAdapter->PortName)
+      );
+      return ndisStatus;
+   }
+   else if (ClientContext == pAdapter)
+   {
+      cid = pAdapter->ClientId[QMUX_TYPE_WDS];
+   }
+   else
+   {
+      pIocDev = (PMPIOC_DEV_INFO)ClientContext;
+      cid = pIocDev->ClientId;
+   }
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> -->_GetMTU: CID %d\n", pAdapter->PortName, cid)
+   );
+
+   if (cid == 0)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+         ("<%s> IPO: _GetMTU: err - no CID ctxt 0x%p\n", pAdapter->PortName, ClientContext)
+      );
+      return ndisStatus;
+   }
+
+   // Retrieve MTU
+   qmuxPtr = (PQCQMUX)qmux;
+   qmuxPtr->CtlFlags = QMUX_CTL_FLAG_SINGLE_MSG | QMUX_CTL_FLAG_TYPE_CMD;
+   qmuxPtr->TransactionId = GetQMUXTransactionId(pAdapter);
+   qmux_msg = (PQMUX_MSG)&(qmuxPtr->Message);
+
+   qmux_msg->GetRuntimeSettingsReq.Type   = QMIWDS_GET_RUNTIME_SETTINGS_REQ;
+   qmux_msg->GetRuntimeSettingsReq.Length = sizeof(QMIWDS_GET_RUNTIME_SETTINGS_REQ_MSG) - 
+                                            QMUX_MSG_OVERHEAD_BYTES;
+   qmux_msg->GetRuntimeSettingsReq.TLVType = 0x10;
+   qmux_msg->GetRuntimeSettingsReq.TLVLength = sizeof(ULONG);
+   // the following mask also applies to IPV6
+   qmux_msg->GetRuntimeSettingsReq.Mask = QMIWDS_GET_RUNTIME_SETTINGS_MASK_MTU;
+
+   MPQMI_QMUXtoQMI
+   (
+      pAdapter,
+      QMUX_TYPE_WDS, // pAdapter->QMIType,
+      cid,
+      (PVOID)&qmux,
+      (QCQMUX_HDR_SIZE+sizeof(QMIWDS_GET_RUNTIME_SETTINGS_REQ_MSG)),
+      (PVOID)qmi
+   );
+
+   ndisStatus = MP_USBSendControl(pAdapter, (PVOID)qmi, qmiLength);
+   if (ndisStatus != NDIS_STATUS_PENDING)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+         ("<%s> <--_GetMTU: CID %d ST 0x%x -- failed\n", pAdapter->PortName, cid, ndisStatus)
+      );
+      return ndisStatus;
+   }
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> <--_GetMTU: CID %d ST 0x%x\n", pAdapter->PortName, cid, ndisStatus)
+   );
+   return ndisStatus;
+
+}  // MPQMUX_GetMTU
 
 #endif // QC_IP_MODE
 
@@ -11350,7 +11471,7 @@ ULONG MPQMUX_ProcessWdsStopNwInterfaceResp
            {
               pOID->OIDStatus = WWAN_STATUS_CONTEXT_NOT_ACTIVATED;
               if ((QCMAIN_IsDualIPSupported(pAdapter) == TRUE) && (pAdapter->WdsIpClientContext != NULL)
-                   &&( pAdapter->IPType != 0x06))
+                   &&( pAdapter->IPType != 0x06) && (pAdapter->ConnectIPv6Handle != 0))
               {
                  pAdapter->IPType = 0x06;
                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 
@@ -11360,7 +11481,7 @@ ULONG MPQMUX_ProcessWdsStopNwInterfaceResp
            else
            {
               if ((QCMAIN_IsDualIPSupported(pAdapter) == TRUE) && (pAdapter->WdsIpClientContext != NULL)
-                   &&( pAdapter->IPType != 0x06))
+                   &&( pAdapter->IPType != 0x06) && (pAdapter->ConnectIPv6Handle != 0))
               {
                  pAdapter->IPType = 0x06;
                  MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_NAS, 

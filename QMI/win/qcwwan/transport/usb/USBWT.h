@@ -93,6 +93,10 @@ BOOLEAN USBMWT_MarkAndCheckReturnedIrp
    PURB              Urb
 );
 
+#ifdef QCUSB_MUX_PROTOCOL
+#error code not present
+#endif // QCUSB_MUX_PROTOCOL
+
 #endif // QCUSB_MULTI_WRITES
 
 #endif // USBWT_H

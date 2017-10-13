@@ -395,7 +395,8 @@ cancel_irp:
             (
                QCUSB_DBG_MASK_CIRP,
                QCUSB_DBG_LEVEL_DETAIL,
-               ("<%s> CIRP: (Cx 0x%p)\n", pDevExt->PortName, pIrp)
+               ("<%s> CIRP: (Cx 0x%p ENC RmlCount[0]=%u)\n", pDevExt->PortName, pIrp,
+                 pDevExt->Sts.lRmlCount[0])
             );
             pIrp->IoStatus.Status = STATUS_CANCELLED;
             pIrp->IoStatus.Information = 0;
@@ -438,7 +439,8 @@ cancel_irp:
    (
       QCUSB_DBG_MASK_CONTROL,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> ENC: PurgeQ: restored %d items\n", pDevExt->PortName, rstItem)
+      ("<%s> ENC: PurgeQ: restored %d items, Rml[0]=%u\n", pDevExt->PortName, rstItem,
+        pDevExt->Sts.lRmlCount[0])
    );
 
    return;

@@ -1427,6 +1427,7 @@ NDIS_STATUS MPIOC_AddDevice
       RtlCopyMemory(&pIocDev->FilterDeviceInfo, (PFILTER_DEVICE_INFO)ControlDeviceObject, sizeof(FILTER_DEVICE_INFO));
    }
    
+   pIocDev->ClientIdV6 = 0;
    pIocDev->ClientId  = 0;
    pIocDev->QMIType   = 0;
    pIocDev->QMUXTransactionId = 0;
@@ -2531,6 +2532,7 @@ PMPIOC_DEV_INFO MPIOC_FindIoDevice
 #endif // QCMP_SUPPORT_CTRL_QMIC
                   {
                      if ((pIocDev->ClientId == pQMI->ClientId) ||
+                         (pIocDev->ClientIdV6 == pQMI->ClientId) ||
                          ((pQMI->ClientId == QMUX_BROADCAST_CID) &&
                          (pIocDev->ClientId != 0)))
                      {

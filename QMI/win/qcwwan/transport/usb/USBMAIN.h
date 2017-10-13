@@ -405,10 +405,10 @@ __inline VOID QC_MP_Paged_Code( VOID )
 #define INT_EMPTY_WT_QUEUE_EVENT_INDEX   5
 #define INT_EMPTY_CTL_QUEUE_EVENT_INDEX  6
 #define INT_EMPTY_SGL_QUEUE_EVENT_INDEX  7
-#define INT_REG_IDLE_NOTIF_EVENT_INDEX   8
-#define INT_IDLE_EVENT                   9
-#define INT_IDLENESS_COMPLETED_EVENT     10
-#define INT_IDLE_CBK_COMPLETED_EVENT     11
+#define INT_IDLENESS_COMPLETED_EVENT     8
+#define INT_IDLE_CBK_COMPLETED_EVENT     9
+#define INT_REG_IDLE_NOTIF_EVENT_INDEX   10
+#define INT_IDLE_EVENT                   11
 #define INT_DUMMY_EVENT_INDEX            12
 #define INT_PIPE_EVENT_COUNT             13
 
@@ -1116,6 +1116,10 @@ typedef struct _DEVICE_EXTENSION
    ULONGLONG FrameDropBytes;
    LONG FlowControlEnabledCount;
    ULONG QMAPDLMinPadding;   
+
+   #ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#endif // QCUSB_MUX_PROTOCOL
 }  DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 // device states

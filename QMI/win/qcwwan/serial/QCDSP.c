@@ -2522,6 +2522,7 @@ NTSTATUS QCDSP_Dispatch
             case IRP_MN_QUERY_REMOVE_DEVICE:  // PASSIVE_LEVEL
                QcAcquireSpinLock(&pDevExt->ControlSpinLock, &levelOrHandle);
 
+#if 0
                if ((pDevExt->FDO == CalledDO) && (pDevExt->bInService == TRUE))
                {
                   QCSER_DbgPrint
@@ -2532,7 +2533,9 @@ NTSTATUS QCDSP_Dispatch
                   );
                   ntStatus = STATUS_UNSUCCESSFUL;
                }
-               else if ((pDevExt->FDO == NULL) || (pDevExt->FDO == CalledDO))
+               else 
+#endif                
+               if ((pDevExt->FDO == NULL) || (pDevExt->FDO == CalledDO))
                {
                   // clearDevState(DEVICE_STATE_PRESENT_AND_STARTED);
                   // setDevState(DEVICE_STATE_SURPRISE_REMOVED);

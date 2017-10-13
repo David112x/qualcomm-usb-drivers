@@ -19,6 +19,11 @@ GENERAL DESCRIPTION
 #include "MPQOS.h"
 #include "MPQOSC.h"
 
+#ifdef EVENT_TRACING
+#include "MPWPP.h"               // Driver specific WPP Macros, Globals, etc
+#include "MPQOSC.tmh"
+#endif  // EVENT_TRACING
+
 NTSTATUS MPQOSC_StartQmiQosClient(PMP_ADAPTER pAdapter)
 {
    NTSTATUS          ntStatus;
@@ -302,7 +307,7 @@ VOID MPQOSC_QmiQosThread(PVOID Context)
    QCNET_DbgPrint
    (
       MP_DBG_MASK_QOS, MP_DBG_LEVEL_ERROR,
-      ("<%s> QOSC: CID %u (0x%x)\n", pAdapter->PortName, pIocDev->ClientId, ndisStatus)
+      ("<%s> QOSC: CID %u (0x%x) for IPV6\n", pAdapter->PortName, pIocDev->ClientId, ndisStatus)
    );
    if (ndisStatus != NDIS_STATUS_SUCCESS)
    {
@@ -315,12 +320,61 @@ VOID MPQOSC_QmiQosThread(PVOID Context)
 
    // Call QMI_WDS_BIND_MUX_DATA_PORT
    MPQMUX_SetQMUXBindMuxDataPort( pAdapter, pIocDev, QMUX_TYPE_QOS, QMI_QOS_BIND_DATA_PORT_REQ);
-   
+
+   // START_DUAL_IP_SUPPORT
+
+   // Set IP v6 preference
+   pIocDev->ClientIdV6 = pIocDev->ClientId;
+   MPQOSC_ComposeQosSetClientIpPrefReq(pAdapter, pIocDev, 6);
+
    // Set up QOS event report
    MPQOSC_SendQosSetEventReportReq(pAdapter, pIocDev);
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
+
+   // Now, get client ID for V4
+   pIocDev->ClientId = 0;
+   ndisStatus = MPQCTL_GetClientId
+                (
+                   pAdapter,
+                   QMUX_TYPE_QOS,
+                   pIocDev  // Context
+                );
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_QOS, MP_DBG_LEVEL_ERROR,
+      ("<%s> QOSC: CID %u (0x%x) for IPV4\n", pAdapter->PortName, pIocDev->ClientId, ndisStatus)
+   ); 
+
+   if (ndisStatus != NDIS_STATUS_SUCCESS)
+   {
+      // rollback to single IP support, at this ppoint, ClientId bound to IPV6
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_QOS, MP_DBG_LEVEL_ERROR,
+         ("<%s> QOSC: failed to get client for IPV4\n", pAdapter->PortName)
+      ); 
+
+      pIocDev->ClientId = pIocDev->ClientIdV6;
+      pIocDev->ClientIdV6 = 0;
+   }
+   else
+   {
+      // Call QMI_WDS_BIND_MUX_DATA_PORT again for V4
+      MPQMUX_SetQMUXBindMuxDataPort( pAdapter, pIocDev, QMUX_TYPE_QOS, QMI_QOS_BIND_DATA_PORT_REQ);
+
+      // Set IP preference for V4
+      MPQOSC_ComposeQosSetClientIpPrefReq(pAdapter, pIocDev, 4);
+
+      // Set up QOS event report
+      MPQOSC_SendQosSetEventReportReq(pAdapter, pIocDev);
+#ifdef QCUSB_MUX_PROTOCOL
+#error code not present
+#endif
+
+   }
+   // END_DUAL_IP_SUPPORT
 
    KeClearEvent(&pAdapter->QmiQosThreadCancelEvent);
    KeClearEvent(&pAdapter->QmiQosThreadClosedEvent);
@@ -565,6 +619,18 @@ VOID MPQOSC_ProcessInboundMessage
                ProcessSetQosEventReportRsp(IocDev, qmux_msg);
                break;
             }
+
+            case QMI_QOS_SET_CLIENT_IP_PREF_RESP:
+            {
+               QCNET_DbgPrint
+               (
+                  MP_DBG_MASK_QOS, MP_DBG_LEVEL_DETAIL,
+                  ("<%s> QOS_SET_CLIENT_IP_PREF_RESP\n", pAdapter->PortName)
+               );
+               MPQOS_ProcessQosSetClientIpPrefResp(pAdapter, qmux_msg, IocDev, qmux->TransactionId);
+               break;
+            }
+
             default:
             {
                QCNET_DbgPrint
@@ -967,7 +1033,7 @@ VOID ProcessQosFlowReport
                (
                   MP_DBG_MASK_QOS,
                   MP_DBG_LEVEL_ERROR,
-                  ("<%s> Error: filter TLV parse failure: %d - 0x%x\n", pAdapter->PortName, filterTlvTotalLength, position)
+                  ("<%s> Error: filter TLV parse failure: %d - 0x%p\n", pAdapter->PortName, filterTlvTotalLength, position)
                );
                position = NULL;
             }
@@ -1929,8 +1995,8 @@ VOID AddQosFilterToPrecedenceList
                   (
                      MP_DBG_MASK_QOS,
                      MP_DBG_LEVEL_DETAIL,
-                     ("<%s> AddQosFilterToPrecedenceList: added idx %d(preced %d) to head\n", pAdapter->PortName,
-                            newFilter->Index, newFilter->PrecedenceEntry)
+                     ("<%s> AddQosFilterToPrecedenceList: added idx %d to head\n", pAdapter->PortName,
+                            newFilter->Index)
                   );
                }
                else
@@ -2051,3 +2117,109 @@ VOID RemoveQosFilterFromPrecedenceList
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif // QMI_OVER_DATA
+
+VOID MPQOSC_ComposeQosSetClientIpPrefReq
+(
+   PMP_ADAPTER     pAdapter,
+   PMPIOC_DEV_INFO pIocDev,
+   UCHAR           IPVersion
+)
+{
+   UCHAR     qmux[128];
+   PQCQMUX   qmuxPtr;
+   PQMUX_MSG qmux_msg;
+   UCHAR     qmi[512];
+   ULONG     qmiLength = sizeof(QCQMI_HDR)+QCQMUX_HDR_SIZE+sizeof(QMI_QOS_SET_CLIENT_IP_PREF_REQ_MSG);
+   UCHAR     clientId;
+
+   if (QCMAIN_IsDualIPSupported(pAdapter) == FALSE)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_ERROR,
+         ("<%s> QOSC_ComposeQosSetClientIpPrefReq - no dual IP support\n", pAdapter->PortName)
+      );
+      return;
+   }
+
+   if (IPVersion == 4)
+   {
+      clientId = pIocDev->ClientId;
+   }
+   else if (IPVersion == 6)
+   {
+      clientId = pIocDev->ClientIdV6;
+   }
+   else
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_ERROR,
+         ("<%s> QOSC_ComposeQosSetClientIpPrefReq - invalid IP ver\n", pAdapter->PortName)
+      );
+      return;
+   }
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_TRACE,
+      ("<%s> -->QOSC_ComposeQosSetClientIpPrefReq CID %u IPV%d\n", pAdapter->PortName, clientId, IPVersion)
+   );
+
+   qmuxPtr = (PQCQMUX)qmux;
+   qmuxPtr->CtlFlags = QMUX_CTL_FLAG_SINGLE_MSG | QMUX_CTL_FLAG_TYPE_CMD;
+   qmuxPtr->TransactionId = (USHORT)InterlockedIncrement(&(pAdapter->QMUXTransactionId));
+   qmux_msg = (PQMUX_MSG)&(qmuxPtr->Message);
+
+   qmux_msg->QosSetClientIpPrefReq.Type = QMI_QOS_SET_CLIENT_IP_PREF_REQ;
+   qmux_msg->QosSetClientIpPrefReq.TLVType = 0x01;
+   qmux_msg->QosSetClientIpPrefReq.TLVLength = 1;
+   qmux_msg->QosSetClientIpPrefReq.IpPreference = IPVersion;
+
+   // calculate total msg length
+   qmux_msg->QosSetClientIpPrefReq.Length = (sizeof(QMI_QOS_SET_CLIENT_IP_PREF_REQ_MSG)
+                                               - QMUX_MSG_OVERHEAD_BYTES); // TLV length
+
+   MPQMI_QMUXtoQMI
+   (
+      pAdapter,
+      QMUX_TYPE_QOS,
+      clientId,
+      (PVOID)&qmux,
+      (QCQMUX_HDR_SIZE+sizeof(QMI_QOS_SET_CLIENT_IP_PREF_REQ_MSG)),
+      (PVOID)qmi
+   );
+
+   // send QMI to device
+   MP_USBSendControl(pAdapter, (PVOID)qmi, qmiLength);
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_TRACE,
+      ("<%s> <--QOSC_ComposeQosSetClientIpPrefReq CID %u\n", pAdapter->PortName, clientId)
+   );
+   return;
+} // MPQOSC_ComposeQosSetClientIpPrefReq
+
+VOID MPQOS_ProcessQosSetClientIpPrefResp
+(
+   PMP_ADAPTER     pAdapter,
+   PQMUX_MSG       Message,
+   PMPIOC_DEV_INFO pIocDev,
+   USHORT          Tid
+)
+{
+   if ((Message->QosSetClientIpPrefRsp.QMUXResult == QMI_RESULT_SUCCESS) ||
+       (Message->QosSetClientIpPrefRsp.QMUXError == QMI_ERR_NO_EFFECT))
+   {
+      pIocDev->IpFamilySet = TRUE;
+   }
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+      ("<%s> QOS_SET_CLIENT_IP_PREF_RESP: result 0x%x Error 0x%x TID 0x%X\n",
+        pAdapter->PortName, Message->QosSetClientIpPrefRsp.QMUXResult,
+        Message->QosSetClientIpPrefRsp.QMUXError, Tid)
+   );
+}  // MPQOS_ProcessQosSetClientIpPrefResp

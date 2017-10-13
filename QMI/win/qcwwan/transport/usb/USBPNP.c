@@ -252,6 +252,9 @@ NTSTATUS USBPNP_GetDeviceCapabilities
       pStackLocation->MajorFunction= IRP_MJ_PNP;
       pStackLocation->MinorFunction= IRP_MN_QUERY_CAPABILITIES;;
       pStackLocation->Parameters.DeviceCapabilities.Capabilities = &(deviceExtension->DeviceCapabilities);
+
+      // PNP IRP must have its status initialized to STATUS_NOT_SUPPORTED
+      pIrp->IoStatus.Status = STATUS_NOT_SUPPORTED;
    }
 
    IoSetCompletionRoutine(pIrp, QCUSB_CallUSBD_Completion, &syncEvent, TRUE, TRUE, TRUE);
@@ -1676,7 +1679,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.3.3");
+             DbgPrint("Driver Version %s\n", "4.0.3.6");
              DbgPrint("   |============================|\n");
              #endif // QCNET_WHQL
           }
@@ -1697,7 +1700,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.3.3");
+             DbgPrint("Driver Version %s\n", "4.0.3.6");
              DbgPrint("   |===============================|\n");
              #endif // QCNET_WHQL
           }

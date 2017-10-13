@@ -1,6 +1,6 @@
 ; Windows Virtual Serial Port Setup File
 ; Manufacturer: Qualcomm Incorporated
-; Copyright (c) 2014 Qualcomm Technologies, Inc.
+; Copyright (c) 2015 Qualcomm Technologies, Inc.
 ; All rights reserved.
 ;
 
@@ -9,7 +9,7 @@ signature  = "$WINDOWS NT$"
 Class      = Ports
 Provider   = %QUALCOMM%
 ClassGuid  = {4D36E978-E325-11CE-BFC1-08002BE10318}
-DriverVer  = 12/04/2014,2.1.1.7
+DriverVer  = 05/25/2015,2.1.1.9
 Catalogfile= qcser.cat
 
 [ControlFlags]
@@ -321,6 +321,7 @@ ExcludeFromSelect = *
 %QcomDevice90B63%  = QportInstall00, USB\VID_05C6&PID_90B6&MI_03
 %QcomDevice90B70%  = QportInstall00, USB\VID_05C6&PID_90B7&MI_00
 %QcomDevice90B80%  = QportInstall00, USB\VID_05C6&PID_90B8&MI_00
+%QcomDevice90B90%  = QportInstall00, USB\VID_05C6&PID_90B9&MI_00
 %QcomDevice91000%  = QportInstall00, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall00, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall00, USB\VID_05C6&PID_9101&MI_00
@@ -353,7 +354,6 @@ ExcludeFromSelect = *
 %QcomDeviceNMEA% = QportInstall00, USB\VID_05C6&PID_6000&MI_02
 %QcomDevice7k%   = QportInstall00, USB\VID_05C6&PID_7000&MI_01
 %QcomDevice7k1%  = QportInstall00, USB\VID_05C6&PID_7001&MI_00
-%QcomDevice7k3%  = QportInstall00, USB\VID_05C6&PID_7001&MI_03
 %QcomDevice70020%  = QportInstall00, USB\VID_05C6&PID_7002&MI_00
 %QcomDevice70023%  = QportInstall00, USB\VID_05C6&PID_7002&MI_03
 %QcomDevice70024%  = QportInstall00, USB\VID_05C6&PID_7002&MI_04
@@ -638,6 +638,7 @@ ExcludeFromSelect = *
 %QcomDevice90B63%  = QportInstall00, USB\VID_05C6&PID_90B6&MI_03
 %QcomDevice90B70%  = QportInstall00, USB\VID_05C6&PID_90B7&MI_00
 %QcomDevice90B80%  = QportInstall00, USB\VID_05C6&PID_90B8&MI_00
+%QcomDevice90B90%  = QportInstall00, USB\VID_05C6&PID_90B9&MI_00
 %QcomDevice91000%  = QportInstall00, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall00, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall00, USB\VID_05C6&PID_9101&MI_00
@@ -955,6 +956,7 @@ ExcludeFromSelect = *
 %QcomDevice90B63%  = QportInstall00, USB\VID_05C6&PID_90B6&MI_03
 %QcomDevice90B70%  = QportInstall00, USB\VID_05C6&PID_90B7&MI_00
 %QcomDevice90B80%  = QportInstall00, USB\VID_05C6&PID_90B8&MI_00
+%QcomDevice90B90%  = QportInstall00, USB\VID_05C6&PID_90B9&MI_00
 %QcomDevice91000%  = QportInstall00, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall00, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall00, USB\VID_05C6&PID_9101&MI_00
@@ -1272,6 +1274,7 @@ ExcludeFromSelect = *
 %QcomDevice90B63%  = QportInstall00, USB\VID_05C6&PID_90B6&MI_03
 %QcomDevice90B70%  = QportInstall00, USB\VID_05C6&PID_90B7&MI_00
 %QcomDevice90B80%  = QportInstall00, USB\VID_05C6&PID_90B8&MI_00
+%QcomDevice90B90%  = QportInstall00, USB\VID_05C6&PID_90B9&MI_00
 %QcomDevice91000%  = QportInstall05, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall05, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall05, USB\VID_05C6&PID_9101&MI_00
@@ -1665,6 +1668,7 @@ QcomDevice90B53 = "Qualcomm HS-USB MDM Diagnostics 90B5"
 QcomDevice90B63 = "Qualcomm HS-USB MDM Diagnostics 90B6"
 QcomDevice90B70 = "Qualcomm HS-USB MDM Diagnostics 90B7"
 QcomDevice90B80 = "Qualcomm HS-USB MDM Diagnostics 90B8"
+QcomDevice90B90 = "Qualcomm HS-USB Diagnostics 90B9"
 QcomDevice91000 = "Qualcomm Symbian USB Diagnostics 9100"
 QcomDevice91001 = "Qualcomm Symbian USB Trace 9100"
 QcomDevice91010 = "Qualcomm Symbian USB Diagnostics 9101"

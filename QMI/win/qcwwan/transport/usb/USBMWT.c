@@ -158,6 +158,10 @@ void USBMWT_WriteThread(PVOID pContext)
       sentIrp[i].IrpReturned = TRUE;
       InsertTailList(&pDevExt->MWTSentIrpRecordPool, &(sentIrp[i].List));
    }
+
+   #ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#endif 
    
    while (TRUE)
    {
@@ -457,6 +461,10 @@ void USBMWT_WriteThread(PVOID pContext)
                   ("<%s> MWT: added 0-len\n", pDevExt->PortName)
                );
             }
+
+            #ifdef QCUSB_MUX_PROTOCOL
+            #error code not present
+#endif
 
             reqSent++;
             pDevExt->bWriteActive = TRUE;
@@ -1060,6 +1068,10 @@ wait_for_completion:
 
             ntStatus = pIrp->IoStatus.Status;
 
+            #ifdef QCUSB_MUX_PROTOCOL
+            #error code not present
+#endif
+
             // check completion status
 
             // log status
@@ -1336,6 +1348,10 @@ wait_for_completion:
 
 exit_WriteThread:
 
+   #ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#endif
+
    if (pDevExt->hTxLogFile != NULL)
    {
       #ifdef ENABLE_LOGGING
@@ -1375,7 +1391,7 @@ exit_WriteThread:
    (
       QCUSB_DBG_MASK_WRITE,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> Wth: OUT\n", pDevExt->PortName)
+      ("<%s> Wth: OUT, RmlCount[0]=%d\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
    );
 
    PsTerminateSystemThread(STATUS_SUCCESS); // end this thread
@@ -1836,3 +1852,7 @@ BOOLEAN USBMWT_MarkAndCheckReturnedIrp
    return bAllReturned;
 
 }  // USBMWT_MarkAndCheckReturnedIrp
+
+#ifdef QCUSB_MUX_PROTOCOL
+#error code not present
+#endif // QCUSB_MUX_PROTOCOL

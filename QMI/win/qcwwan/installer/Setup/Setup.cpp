@@ -39,6 +39,7 @@ without the express written permission of Qualcomm Technologies Incorporated.
 // Include Files
 //---------------------------------------------------------------------------
 #include "StdAfx.h"
+#include <Strsafe.h>
 #include "Setup.h"
 #include "SetupCommandLineInfo.h"
 #include "CoreUtilities.h"
@@ -195,6 +196,102 @@ void CSetupApp::DisplayError( LPCWSTR pError )
    AfxMessageBox( pError );
 }
 
+// ================ Package Removal ===================
+VOID PackageRemoval(LPCTSTR PackageName)
+{
+#if 0
+   WCHAR cmdLineW[MAX_PATH];
+   PROCESS_INFORMATION processInfo;
+   STARTUPINFO startupInfo;
+   BOOL rtnVal;
+   DWORD exitCode;
+
+   StringCchCopy(cmdLineW, MAX_PATH, TEXT("wmic product where name=\""));
+   StringCchCat(cmdLineW, MAX_PATH, PackageName);
+   StringCchCat(cmdLineW, MAX_PATH, TEXT("\" call uninstall"));
+
+   printf("\nDeleting package <%ws> ...\n", PackageName);
+
+   memset(&processInfo, 0, sizeof(processInfo));
+   memset(&startupInfo, 0, sizeof(startupInfo));
+   startupInfo.cb = sizeof(startupInfo);
+
+   rtnVal = CreateProcess
+            (
+               NULL,
+               cmdLineW,
+               NULL,
+               NULL,
+               FALSE,
+               NORMAL_PRIORITY_CLASS,
+               NULL,
+               NULL,
+               &startupInfo,
+               &processInfo
+            );
+
+   if (rtnVal == FALSE)
+   {
+      printf("Error: CreateProcess failure\n");
+   }
+
+   WaitForSingleObject(processInfo.hProcess, INFINITE);
+   GetExitCodeProcess(processInfo.hProcess, &exitCode);
+   CloseHandle(processInfo.hProcess);
+   CloseHandle(processInfo.hThread);
+   return;
+#endif
+   CString msiCmd = L"msiexec.exe /x {D9FB7F91-9687-4B09-894D-072903CADEA4} /passive";
+
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+
+   ::ZeroMemory( (LPVOID)&si, (SIZE_T)sizeof( si ) );
+   ::ZeroMemory( (LPVOID)&pi, (SIZE_T)sizeof( pi ) );
+   si.cb = sizeof( si );
+
+   BOOL bCP = ::CreateProcess( NULL, 
+                               (LPTSTR)(LPCWSTR)msiCmd,
+                               0,
+                               0,
+                               FALSE,
+                               0, 
+                               0,
+                               0,
+                               &si,
+                               &pi );
+
+   if (bCP == FALSE)
+   {
+      // Unable to create MSIExec process
+      return;
+   }
+
+   // Wait until MSIExec process exits
+   ::WaitForSingleObject( pi.hProcess, INFINITE );
+
+   // Get process exit code
+   DWORD procExitCode = NO_ERROR;
+   BOOL bEC = ::GetExitCodeProcess( pi.hProcess, &procExitCode );
+
+   // Close process and thread handles
+   ::CloseHandle( pi.hProcess );
+   ::CloseHandle( pi.hThread );
+
+   if (bEC == FALSE)
+   {
+      // Unable to obtain MSIExec process exit code
+      return;
+   }
+
+   if (procExitCode != NO_ERROR)
+   {
+      // MSIExec exited with an error
+      return;
+   }
+   return;
+}  // PackageRemoval
+
 /*===========================================================================
 METHOD:
    InitInstance
@@ -349,6 +446,7 @@ BOOL CSetupApp::InitInstance()
 	  PFUNCPTR pFuncPtr;
 	  pFuncPtr = (PFUNCPTR) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64DisableWow64FsRedirection");
 
+#if 0
 	  if ( (pFuncPtr != NULL) && (pFuncPtr(&tempVal)) )
 	  {
          //Check whether test signing is on or not 
@@ -492,14 +590,18 @@ BOOL CSetupApp::InitInstance()
 		    }
          }
 	  }
-
+#endif
 	  PFUNCPTR1 pFuncPtr1;
   	  pFuncPtr1 = (PFUNCPTR1) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64RevertWow64FsRedirection");
 	  if (pFuncPtr1 != NULL)
 	  {
-         pFuncPtr1(tempVal);
+         // pFuncPtr1(tempVal);
 	  }
    }
+
+
+   // Remove Old Package
+   PackageRemoval(TEXT("Qualcomm USB Drivers For Windows"));
 
    // Add optional parameters
    opt += cmdInfo.FormatProperties();

@@ -217,6 +217,7 @@
   <ItemGroup>
     <ClCompile Include="..\Shared\CoreUtilities.cpp" />
     <ClCompile Include="..\Shared\DB2TextFile.cpp" />
+    <ClCompile Include="..\Shared\InfDev.cpp" />
     <ClCompile Include="CustomActions.cpp" />
     <ClCompile Include="..\Shared\DeviceManagement.cpp" />
     <ClCompile Include="Stdafx.cpp">
@@ -232,6 +233,7 @@
   <ItemGroup>
     <ClInclude Include="..\Shared\CoreUtilities.h" />
     <ClInclude Include="..\Shared\DB2TextFile.h" />
+    <ClInclude Include="..\Shared\InfDev.h" />
     <ClInclude Include="CustomActions.h" />
     <ClInclude Include="..\Shared\DeviceManagement.h" />
     <ClInclude Include="Resource.h" />

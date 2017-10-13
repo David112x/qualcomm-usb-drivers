@@ -442,7 +442,7 @@ NTSTATUS USBWT_CancelWriteThread(PDEVICE_EXTENSION pDevExt, UCHAR cookie)
    (
       QCUSB_DBG_MASK_WRITE,
       QCUSB_DBG_LEVEL_INFO,
-      ("<%s> Wth: OUT\n", pDevExt->PortName)
+      ("<%s> Wth: OUT Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
    );
 
    return STATUS_SUCCESS;

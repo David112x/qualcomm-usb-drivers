@@ -144,6 +144,7 @@
     <ClCompile Include="..\Shared\CoreUtilities.cpp" />
     <ClCompile Include="..\Shared\DB2TextFile.cpp" />
     <ClCompile Include="..\Shared\DeviceManagement.cpp" />
+    <ClCompile Include="..\Shared\InfDev.cpp" />
     <ClCompile Include="DriverInstaller64.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -153,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="..\Shared\CoreUtilities.h" />
     <ClInclude Include="..\Shared\DeviceManagement.h" />
+    <ClInclude Include="..\Shared\InfDev.h" />
     <ClInclude Include="DriverInstaller64.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Stdafx.h" />

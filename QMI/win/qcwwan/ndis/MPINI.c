@@ -295,6 +295,13 @@ NDIS_STATUS MPINI_MiniportInitialize
          ("<%s> QCDriverTransmitTimer: %d\n", pAdapter->PortName, pAdapter->TransmitTimerValue)
       );
 
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_DETAIL,
+         ("<%s> MPDisableQoS: %d\n", pAdapter->PortName, pAdapter->MPDisableQoS)
+      );
+
       // We can't call alloc buffers until after the parse registry because some of
       // the buffer counts are setup from registry values.
       Status = MPINI_AllocAdapterBuffers(pAdapter);
@@ -1085,6 +1092,7 @@ NDIS_STATUS MPINI_AllocAdapter(PMP_ADAPTER *pAdapter)
 
     // Adapter->ClientId = 0;
     Adapter->NdisMediumType  = QCMP_MEDIA_TYPE;
+    Adapter->IsQMIOutOfService = FALSE;
     Adapter->QMIType  = 0;  // useless
     Adapter->ulCurrentRxRate = MP_INVALID_LINK_SPEED;
     Adapter->ulCurrentTxRate = MP_INVALID_LINK_SPEED;

@@ -258,6 +258,11 @@ GENERAL DESCRIPTION
 #define PARAM_MPBindEPType_MIN       0x00
 #define PARAM_MPBindEPType_MAX       0xFF
 
+#define PARAM_DisableQMAPFC          "QCMPDisableQMAPFC"
+#define PARAM_DisableQMAPFC_DEFAULT  0
+#define PARAM_DisableQMAPFC_MIN      0
+#define PARAM_DisableQMAPFC_MAX      1
+
 NDIS_STATUS MPParam_GetConfigValues
 (
    IN NDIS_HANDLE AdapterHandle,

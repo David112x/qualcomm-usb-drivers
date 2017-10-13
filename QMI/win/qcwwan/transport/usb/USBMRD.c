@@ -619,7 +619,7 @@ wait_for_completion2:
    (
       QCUSB_DBG_MASK_READ,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> L1: OUT 0x%x\n", pDevExt->PortName, ntStatus)
+      ("<%s> L1: OUT 0x%x RmlCount[0]=%d\n", pDevExt->PortName, ntStatus, pDevExt->Sts.lRmlCount[0])
    );
 
    PsTerminateSystemThread(STATUS_SUCCESS); // terminate this thread
@@ -1033,7 +1033,7 @@ wait_for_completion:
             (
                QCUSB_DBG_MASK_READ,
                QCUSB_DBG_LEVEL_DETAIL,
-               ("<%s> L2_CANCEL\n", pDevExt->PortName)
+               ("<%s> L2_CANCEL Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
             );
 
             pActiveL2Buf = USBMRD_L2NextActive(pDevExt);
@@ -1421,7 +1421,7 @@ wait_for_completion:
    (
       QCUSB_DBG_MASK_READ,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> L2: OUT 0x%x\n", pDevExt->PortName, ntStatus)
+      ("<%s> L2: OUT 0x%x RmlCount[0]=%u\n", pDevExt->PortName, ntStatus, pDevExt->Sts.lRmlCount[0])
    );
 
    PsTerminateSystemThread(STATUS_SUCCESS); // terminate this thread
@@ -1430,6 +1430,13 @@ wait_for_completion:
 VOID USBMRD_ResetL2Buffers(PDEVICE_EXTENSION pDevExt)
 {
    int i;
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_READ,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> -->USBMRD_ResetL2Buffers: Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
+   );
 
    pDevExt->L2IrpStartIdx = pDevExt->L2IrpEndIdx = pDevExt->L2FillIdx = 0;
 
@@ -1450,6 +1457,13 @@ VOID USBMRD_ResetL2Buffers(PDEVICE_EXTENSION pDevExt)
       IoReuseIrp(pDevExt->pL2ReadBuffer[i].Irp, STATUS_SUCCESS);
       pDevExt->pL2ReadBuffer[i].State           = L2BUF_STATE_READY;
    }
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_READ,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> <--USBMRD_ResetL2Buffers: Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
+   );
 }  // USBMRD_ResetL2Buffers
 
 PUSBMRD_L2BUFFER USBMRD_L2NextActive(PDEVICE_EXTENSION pDevExt)

@@ -749,6 +749,7 @@ typedef struct _QMIWDS_EXTENDED_IP_CONFIG_IND_MSG
 
 #define PS_IFACE_EXT_IP_CFG_MASK_DNS_ADDR         (0x10)
 #define PS_IFACE_EXT_IP_CFG_MASK_DOMAIN_NAME_LIST (0x4000)
+#define PS_IFACE_EXT_IP_CFG_MASK_MTU              (0x2000)
 #define TLV_WDS_CHANGED_IP_CONFIG 0x10
 
 typedef struct _QMIWDS_CHANGED_IP_CONFIG_TLV
@@ -1573,6 +1574,8 @@ typedef struct _MPIOC_DEV_INFO MPIOC_DEV_INFO, *PMPIOC_DEV_INFO;
 #define QMI_QOS_SET_EVENT_REPORT_REQ  0x0001
 #define QMI_QOS_SET_EVENT_REPORT_RESP 0x0001
 #define QMI_QOS_EVENT_REPORT_IND      0x0001
+#define QMI_QOS_SET_CLIENT_IP_PREF_REQ  0x002A
+#define QMI_QOS_SET_CLIENT_IP_PREF_RESP 0x002A
 #define QMI_QOS_BIND_DATA_PORT_REQ    0x002B
 #define QMI_QOS_BIND_DATA_PORT_RESP   0x002B
 
@@ -1906,6 +1909,25 @@ typedef struct _QOS_FILTER_TLV_IPV6_FLOW_LABEL
 }  QOS_FILTER_TLV_IPV6_FLOW_LABEL, *PQOS_FILTER_TLV_IPV6_FLOW_LABEL;
 
 #endif // QCQOS_IPV6 
+
+typedef struct _QMI_QOS_SET_CLIENT_IP_PREF_REQ_MSG
+{
+   USHORT Type;             // QMUX type 0x002A
+   USHORT Length;
+   UCHAR  TLVType;          // 0x01
+   USHORT TLVLength;        // 1
+   UCHAR  IpPreference;     // IPV4-0x04, IPV6-0x06
+} QMI_QOS_SET_CLIENT_IP_PREF_REQ_MSG, *PQMI_QOS_SET_CLIENT_IP_PREF_REQ_MSG;
+
+typedef struct _QMI_QOS_SET_CLIENT_IP_PREF_RESP_MSG
+{
+   USHORT Type;             // QMUX type 0x002A
+   USHORT Length;
+   UCHAR  TLVType;          // 0x02
+   USHORT TLVLength;        // 4
+   USHORT QMUXResult;       // QMI_RESULT_SUCCESS, QMI_RESULT_FAILURE
+   USHORT QMUXError;        // QMI_ERR_MISSING_ARG, QMI_ERR_MALFORMED_ARG, QMI_ERR_INVALID_ARG
+} QMI_QOS_SET_CLIENT_IP_PREF_RESP_MSG, *PQMI_QOS_SET_CLIENT_IP_PREF_RESP_MSG;
 
 #define QMIDFS_BIND_CLIENT_REQ         0x0021
 #define QMIDFS_BIND_CLIENT_RESP        0x0021
@@ -2851,6 +2873,8 @@ typedef struct _QMUX_MSG
       QMI_QOS_SET_EVENT_REPORT_REQ_MSG          QosSetEventReportReq;
       QMI_QOS_SET_EVENT_REPORT_RESP_MSG         QosSetEventReportRsp;
       QMI_QOS_EVENT_REPORT_IND_MSG              QosEventReportInd;
+      QMI_QOS_SET_CLIENT_IP_PREF_REQ_MSG        QosSetClientIpPrefReq;
+      QMI_QOS_SET_CLIENT_IP_PREF_RESP_MSG       QosSetClientIpPrefRsp;
 
       // QMIWMS Messages
       QMIWMS_GET_MESSAGE_PROTOCOL_REQ_MSG       GetMessageProtocolReq;
@@ -3174,6 +3198,12 @@ ULONG MPQMUX_ProcessWdsGetCurrentChannelRateResp
 #ifdef QC_IP_MODE
 
 NDIS_STATUS MPQMUX_GetIPAddress
+(
+   PMP_ADAPTER pAdapter,
+   PVOID       ClientContext
+);
+
+NDIS_STATUS MPQMUX_GetMTU
 (
    PMP_ADAPTER pAdapter,
    PVOID       ClientContext

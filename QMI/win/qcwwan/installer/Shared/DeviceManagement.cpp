@@ -13,6 +13,7 @@ GENERAL DESCRIPTION
 //---------------------------------------------------------------------------
 #include "Stdafx.h"
 #include "DeviceManagement.h"
+#include "infdev.h"
 #include "WinSvc.h"
 #include "string.h"
 #define INITGUID
@@ -1787,6 +1788,8 @@ qcfinal:
     }
     return failcode;
 
+    gExecutionMode = EXEC_MODE_REMOVE_OEM;
+    MainRemovalTask();
 }
 
 /*===========================================================================

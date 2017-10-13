@@ -1293,8 +1293,8 @@ VOID QCPWR_SetIdleTimer
    (
       QCUSB_DBG_MASK_PIRP,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> -->SetIdleTimer(%u): BusyMask 0x%x IRQL %u Idle %us\n", pDevExt->PortName,
-        Cookie, BusyMask, irql, pDevExt->SelectiveSuspendIdleTime)
+      ("<%s> -->SetIdleTimer(%u): BusyMask 0x%x IRQL %u Idle %us Rml[0]=%u\n", pDevExt->PortName,
+        Cookie, BusyMask, irql, pDevExt->SelectiveSuspendIdleTime, pDevExt->Sts.lRmlCount[0])
    );
 
    if (pDevExt->PowerSuspended == TRUE)
@@ -1327,7 +1327,8 @@ VOID QCPWR_SetIdleTimer
       (
          QCUSB_DBG_MASK_PIRP,
          QCUSB_DBG_LEVEL_DETAIL,
-         ("<%s> <--SetIdleTimer(%u): Idle req pending, no act\n", pDevExt->PortName, Cookie)
+         ("<%s> <--SetIdleTimer(%u): Idle req pending, no act 0x%p\n", pDevExt->PortName, Cookie,
+           pDevExt->IdleNotificationIrp)
       );
       QcReleaseSpinLockWithLevel(&pDevExt->SingleIrpSpinLock, levelOrHandle, irql);
       return;
@@ -1664,8 +1665,8 @@ NTSTATUS QCPWR_RegisterIdleNotification(PDEVICE_EXTENSION pDevExt)
          (
             QCUSB_DBG_MASK_PIRP,
             QCUSB_DBG_LEVEL_ERROR,
-            ("<%s> RegisterIdleNotification: Submit an idle req at D%u\n",
-              pDevExt->PortName, pDevExt->DevicePower-1)
+            ("<%s> RegisterIdleNotification: Submit an idle req at D%u 0x%p\n",
+              pDevExt->PortName, pDevExt->DevicePower-1, irp)
          );
 
          ntStatus = IoCallDriver(pDevExt->StackDeviceObject, irp);
@@ -2279,15 +2280,15 @@ ExitPoint:
       USBIF_PowerDownDevice(pDevExt, PowerDeviceD3);
    }
 
+   QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
+
    QCUSB_DbgPrint
    (
       QCUSB_DBG_MASK_PIRP,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> <--IdleNotificationIrpCompletionEpisode [PrepareToPowerDown %d]\n", pDevExt->PortName,
-        pDevExt->PrepareToPowerDown)
+      ("<%s> <--IdleNotificationIrpCompletionEpisode [PrepareToPowerDown %d] Rml[0]=%u\n", pDevExt->PortName,
+        pDevExt->PrepareToPowerDown, pDevExt->Sts.lRmlCount[0])
    );
-
-   QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
 
    if (Irp != NULL)
    {
@@ -2337,7 +2338,8 @@ VOID QCPWR_CancelIdleNotificationIrp(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
    (
       QCUSB_DBG_MASK_PIRP,
       QCUSB_DBG_LEVEL_TRACE,
-      ("<%s> -->CancelIdleNotificationIrp(%u)\n", pDevExt->PortName, Cookie)
+      ("<%s> -->CancelIdleNotificationIrp(%u) 0x%p Rml[0]=%u\n", pDevExt->PortName, Cookie,
+        pDevExt->IdleNotificationIrp, pDevExt->Sts.lRmlCount[0])
    );
 
    QcAcquireSpinLock(&pDevExt->SingleIrpSpinLock, &levelOrHandle);
@@ -2364,7 +2366,8 @@ VOID QCPWR_CancelIdleNotificationIrp(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
    (
       QCUSB_DBG_MASK_PIRP,
       QCUSB_DBG_LEVEL_TRACE,
-      ("<%s> <--CancelIdleNotificationIrp(%u)\n", pDevExt->PortName, Cookie)
+      ("<%s> <--CancelIdleNotificationIrp(%u) Rml[0]=%u\n", pDevExt->PortName, Cookie,
+        pDevExt->Sts.lRmlCount[0])
    );
 
    return;

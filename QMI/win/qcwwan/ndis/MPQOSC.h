@@ -94,4 +94,19 @@ VOID RemoveQosFilterFromPrecedenceList
 #error code not present
 #endif
 
+VOID MPQOSC_ComposeQosSetClientIpPrefReq
+(
+   PMP_ADAPTER     pAdapter,
+   PMPIOC_DEV_INFO pIocDev,
+   UCHAR           IPVersion
+);
+
+VOID MPQOS_ProcessQosSetClientIpPrefResp
+(
+   PMP_ADAPTER     pAdapter,
+   PQMUX_MSG       Message,
+   PMPIOC_DEV_INFO pIocDev,
+   USHORT          Tid
+);
+
 #endif // MPQOSC_H

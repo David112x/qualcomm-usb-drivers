@@ -953,6 +953,7 @@ typedef struct _MP_ADAPTER
    PDEVICE_OBJECT          NextDeviceObject; 
    PDEVICE_OBJECT          USBDo;
    BOOLEAN                 UsbRemoved;
+   LONG                    RemovalInProgress;
 #endif
 
    NDIS_HANDLE             AdapterHandle;    
@@ -1149,6 +1150,7 @@ typedef struct _MP_ADAPTER
    ULONG                   NumClients;
    UCHAR                   ClientId[QMUX_TYPE_MAX+1];
    LONG                    PendingCtrlRequests[QMUX_TYPE_MAX+1];
+   BOOLEAN                 IsQMIOutOfService;
    UCHAR                   QMIType;
    NDIS_SPIN_LOCK          QMICTLLock;
    LIST_ENTRY              QMICTLTransactionList;
@@ -1429,6 +1431,7 @@ typedef struct _MP_ADAPTER
    ULONG QMAPDLMinPadding;   
    UCHAR BindIFId;
    UCHAR BindEPType;
+   ULONG DisableQMAPFC;
 } MP_ADAPTER, *PMP_ADAPTER;
 
 
@@ -1615,6 +1618,8 @@ NDIS_STATUS MPMAIN_MiniportSetOptions
 BOOLEAN SetTimerResolution ( PMP_ADAPTER pAdapter, BOOLEAN Flag );
 
 BOOLEAN MoveQMIRequests( PMP_ADAPTER pAdapter );
+
+VOID CleanupTxQueues(PMP_ADAPTER pAdapter);
 
 #ifdef NDIS60_MINIPORT
 // For debugging only

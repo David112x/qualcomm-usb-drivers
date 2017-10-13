@@ -959,8 +959,9 @@ VOID QcEmptyCompletionQueue
             (
                QCUSB_DBG_MASK_RIRP,
                debugLevel,
-               ("<%s> RIRP (Cq 0x%x/%ldB) 0x%p\n",
-                 pDevExt->PortName, pIrp->IoStatus.Status, pIrp->IoStatus.Information, pIrp) 
+               ("<%s> RIRP (Cq 0x%x/%ldB) 0x%p RmlCount[0]=%u\n",
+                 pDevExt->PortName, pIrp->IoStatus.Status, pIrp->IoStatus.Information, pIrp,
+                 pDevExt->Sts.lRmlCount[0]) 
             );
          }
          else if (rmLockIdx == QCUSB_IRP_TYPE_WIRP)

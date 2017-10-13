@@ -80,7 +80,7 @@ NTSTATUS USBDSP_DirectDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
    (
       QCUSB_DBG_MASK_CIRP,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> CIRP: 0x%p => t 0x%p\n", pDevExt->PortName, Irp, KeGetCurrentThread())
+      ("<%s> dCIRP: 0x%p => t 0x%p\n", pDevExt->PortName, Irp, KeGetCurrentThread())
    );
 
    if (pDevExt->StackDeviceObject == NULL)
@@ -111,11 +111,11 @@ NTSTATUS USBDSP_DirectDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
       InterlockedIncrement(&(pDevExt->Sts.lRmlCount[0]));
    }
 
-   QCUSB_DbgPrint2
+   QCUSB_DbgPrint
    (
       QCUSB_DBG_MASK_CONTROL,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> DSP-RML-0 <%ld, %ld, %ld, %ld> RW <%ld, %ld>\n",
+      ("<%s> dDSP-RML-0 <%ld, %ld, %ld, %ld> RW <%ld, %ld>\n",
         pDevExt->PortName, pDevExt->Sts.lRmlCount[0], pDevExt->Sts.lRmlCount[1],
         pDevExt->Sts.lRmlCount[2], pDevExt->Sts.lRmlCount[3],
         pDevExt->Sts.lAllocatedReads, pDevExt->Sts.lAllocatedWrites)
@@ -169,7 +169,7 @@ NTSTATUS USBDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
    (
       QCUSB_DBG_MASK_CIRP,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> CIRP: 0x%p => t 0x%p\n", pDevExt->PortName, Irp, KeGetCurrentThread())
+      ("<%s> qCIRP: 0x%p => t 0x%p\n", pDevExt->PortName, Irp, KeGetCurrentThread())
    );
 
    // Acquire remove lock except when getting IRP_MJ_CLOSE
@@ -230,11 +230,11 @@ NTSTATUS USBDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
       }
    }
 
-   QCUSB_DbgPrint2
+   QCUSB_DbgPrint
    (
       QCUSB_DBG_MASK_CONTROL,
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> DSP-RML-0 <%ld, %ld, %ld, %ld> RW <%ld, %ld>\n",
+      ("<%s> qDSP-RML-0 <%ld, %ld, %ld, %ld> RW <%ld, %ld>\n",
         pDevExt->PortName, pDevExt->Sts.lRmlCount[0], pDevExt->Sts.lRmlCount[1], pDevExt->Sts.lRmlCount[2], pDevExt->Sts.lRmlCount[3],
         pDevExt->Sts.lAllocatedReads, pDevExt->Sts.lAllocatedWrites)
    );
@@ -513,8 +513,8 @@ VOID DispatchThread(PVOID pContext)
       (
          QCUSB_DBG_MASK_CONTROL,
          QCUSB_DBG_LEVEL_VERBOSE,
-         ("<%s> D: BEGIN XwdmIrp 0x%p Cxl %d\n", pDevExt->PortName,
-           pDevExt->XwdmNotificationIrp, bCancelled)
+         ("<%s> D: BEGIN XwdmIrp 0x%p Cxl %d Rml[0]=%u\n", pDevExt->PortName,
+           pDevExt->XwdmNotificationIrp, bCancelled, pDevExt->Sts.lRmlCount[0])
       );
  
       if (bCancelled == FALSE)
@@ -619,7 +619,8 @@ VOID DispatchThread(PVOID pContext)
                (
                   QCUSB_DBG_MASK_CIRP,
                   QCUSB_DBG_LEVEL_DETAIL,
-                  ("<%s> CIRP: (Cx 0x%p)\n", pDevExt->PortName, pDispatchIrp)
+                  ("<%s> CIRP: (Cx 0x%p DSP RmlCount[0]=%u)\n", pDevExt->PortName, pDispatchIrp,
+                    pDevExt->Sts.lRmlCount[0])
                );
                pDispatchIrp->IoStatus.Status = STATUS_CANCELLED;
                QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pDispatchIrp, 0);
@@ -679,7 +680,7 @@ dispatch_wait:
       (
          QCUSB_DBG_MASK_CONTROL,
          QCUSB_DBG_LEVEL_VERBOSE,
-         ("<%s> D: WAIT...\n", pDevExt->PortName)
+         ("<%s> D: WAIT...Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
       );
 
       checkRegInterval.QuadPart = -(10 * 1000 * 1000); // 1.0 sec
@@ -1264,7 +1265,8 @@ dispatch_case:
             (
                QCUSB_DBG_MASK_CONTROL,
                QCUSB_DBG_LEVEL_VERBOSE,
-               ("<%s> D: default sig or TO 0x%x\n", pDevExt->PortName, ntStatus)
+               ("<%s> D: default sig or TO 0x%x (RmlCount[0]=%d)\n",
+                 pDevExt->PortName, ntStatus, pDevExt->Sts.lRmlCount[0])
             );
             continue;
          }
@@ -2356,7 +2358,7 @@ USBDSP_Dispatch_Done0:
          (
             QCUSB_DBG_MASK_CIRP,
             QCUSB_DBG_LEVEL_DETAIL,
-            ("<%s> CIRP: (C 0x%x) 0x%p\n", myPortName, ntStatus, Irp)
+            ("<%s> CIRP: (C 0x%x) 0x%p (removal)\n", myPortName, ntStatus, Irp)
          );
       }
       else
@@ -2365,7 +2367,8 @@ USBDSP_Dispatch_Done0:
          (
             QCUSB_DBG_MASK_CIRP,
             QCUSB_DBG_LEVEL_DETAIL,
-            ("<%s> CIRP: (C 0x%x) 0x%p\n", myPortName, ntStatus, Irp)
+            ("<%s> CIRP: (C 0x%x) 0x%p RmlCount[0]=%u\n", myPortName, ntStatus, Irp,
+              pDevExt->Sts.lRmlCount[0])
          );
       }
 
@@ -2401,7 +2404,7 @@ USBDSP_Dispatch_Done:
 
    if (bRemoveRequest == TRUE)
    {
-      QCUSB_DbgPrintG2
+      QCUSB_DbgPrintG
       (
          QCUSB_DBG_MASK_CIRP,
          QCUSB_DBG_LEVEL_DETAIL,
@@ -2410,7 +2413,7 @@ USBDSP_Dispatch_Done:
    }
    else
    {
-      QCUSB_DbgPrint2
+      QCUSB_DbgPrint
       (
          QCUSB_DBG_MASK_CONTROL,
          QCUSB_DBG_LEVEL_DETAIL,
@@ -2518,6 +2521,14 @@ BOOLEAN QCDSP_ToProcessIrp
    PIO_STACK_LOCATION irpStack;
 
    irpStack = IoGetCurrentIrpStackLocation(Irp);
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> _ToProcessIrp: 0x%p[0x%x, 0x%x] RmlCount[0]=%d\n", pDevExt->PortName,
+        Irp, irpStack->MajorFunction, irpStack->MinorFunction, pDevExt->Sts.lRmlCount[0])
+   );
 
    if ((irpStack->MajorFunction == IRP_MJ_PNP) &&
        (irpStack->MinorFunction == IRP_MN_REMOVE_DEVICE))

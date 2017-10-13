@@ -512,7 +512,7 @@ UINT __stdcall Install( MSIHANDLE hMSI )
 #else
       CString cmd;
 	  cmd.Format( L"%stestCertificate\\qcusbtest.cer",(LPCWSTR)driversPath1); 	
-	  InstallTestCertificate( (LPCWSTR)cmd);
+	  //InstallTestCertificate( (LPCWSTR)cmd);
 #endif
       bool bInstall = dm.InstallDrivers( driversPath, false, bIswin7orlater,bUseLegacyDriver);
       if (bInstall == true)
@@ -563,7 +563,7 @@ UINT __stdcall Install( MSIHANDLE hMSI )
 #else
       CString cmd;
 	  cmd.Format( L"%stestCertificate\\qcusbtest.cer",(LPCWSTR)driversPath1); 	
-	  InstallTestCertificate( (LPCWSTR)cmd);
+	  //InstallTestCertificate( (LPCWSTR)cmd);
 #endif
 	  if(false == bIswin7orlater)
       {

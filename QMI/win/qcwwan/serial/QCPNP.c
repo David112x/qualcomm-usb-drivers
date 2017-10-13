@@ -343,6 +343,9 @@ NTSTATUS QCPNP_GetDeviceCapabilities
       pStackLocation->MajorFunction= IRP_MJ_PNP;
       pStackLocation->MinorFunction= IRP_MN_QUERY_CAPABILITIES;;
       pStackLocation->Parameters.DeviceCapabilities.Capabilities = &(deviceExtension->DeviceCapabilities);
+
+      // PNP IRP must have its status initialized to STATUS_NOT_SUPPORTED
+      pIrp->IoStatus.Status = STATUS_NOT_SUPPORTED;
    }
 
    IoSetCompletionRoutine(pIrp, QCUSB_CallUSBD_Completion, &syncEvent, TRUE, TRUE, TRUE);
@@ -2092,7 +2095,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.1.6");
+             DbgPrint("Driver Version %s\n", "2.1.1.9");
              DbgPrint("   |============================|\n");
           }
           else
@@ -2115,7 +2118,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.1.6");
+             DbgPrint("Driver Version %s\n", "2.1.1.9");
              DbgPrint("   |===============================|\n");
           }
           QCSER_DbgPrint
@@ -2159,7 +2162,7 @@ NTSTATUS QCPNP_SelectInterfaces
          DbgPrint("   |   IF: CT%02d-CC%02d-DA%02d          |\n", pDevExt->ControlInterface,
                    pDevExt->usCommClassInterface, pDevExt->DataInterface);
          DbgPrint("   |   HS 0x%x       |\n", pDevExt->HighSpeedUsbOk);
-         DbgPrint("Driver Version 2.1.1.6\n");
+         DbgPrint("Driver Version 2.1.1.9\n");
          DbgPrint("   |===============================|\n\n");
       }
       else

@@ -439,8 +439,8 @@ sub BuildDrivers
    }
 
    # copy test certificate
-   Run(qq(xcopy /R /F /Y /I $DriversDir\\private\\stuff\\qcusbtest.cer $TargetDir\\TestCertificate\\));
-   Run(qq(xcopy /R /F /Y /I $DriversDir\\private\\stuff\\README.rtf $TargetDir\\TestCertificate\\));
+   # Run(qq(xcopy /R /F /Y /I $DriversDir\\private\\stuff\\qcusbtest.cer $TargetDir\\TestCertificate\\));
+   # Run(qq(xcopy /R /F /Y /I $DriversDir\\private\\stuff\\README.rtf $TargetDir\\TestCertificate\\));
 
    # copy tools
    Run(qq(xcopy /R /F /Y /I /S $DriversDir\\tools\\x86\\* $TargetDir\\Tools\\x86\\));
@@ -513,8 +513,8 @@ sub BuildDrivers
    foreach $File (@Files) 
    {
       $SignCommand = "$WDKPath\\signtool.exe sign /v /f ".
-                     "$DriversDir\\private\\qcusbtest.pfx -p ".
-                     "testcert /t http://timestamp.verisign.com/scripts/timstamp.dll ".
+                     "$DriversDir\\private\\qcusbdrv.pfx -p ".
+                     "Qualcomm1 /ac $DriversDir\\private\\verisign.cer /t http://timestamp.verisign.com/scripts/timstamp.dll ".
                      "$File";
       Run( $SignCommand );
 
@@ -523,6 +523,19 @@ sub BuildDrivers
          TRACE "Error Signing $File. Correct Problems and Try Again.\n";
          ExitScript( 1 );
       }
+      
+#      $SignCommand = "$WDKPath\\signtool.exe sign /ac ".
+#                     "$DriversDir\\private\\verisign.cer ".
+#                     "/sha1 19D8363B4BA12EDB5122D96F28B500710338733F /t http://timestamp.verisign.com/scripts/timstamp.dll ".
+#                     "$File";
+#      Run( $SignCommand );
+#
+#      if ($? != 0)
+#      {
+#         TRACE "Error Signing $File. Correct Problems and Try Again.\n";
+#         ExitScript( 1 );
+#      }
+      
    }
    #Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\ReadMe.rtf $TargetDir));
 

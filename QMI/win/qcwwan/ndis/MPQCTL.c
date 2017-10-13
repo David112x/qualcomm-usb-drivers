@@ -669,18 +669,32 @@ NDIS_STATUS MPQCTL_ReleaseClientId
    {
       NTSTATUS nts;
 
-      timeoutValue.QuadPart = -(50 * 1000 * 1000);   // 5.0 sec
+      if (pAdapter->IsQMIOutOfService == FALSE)
+      {
+         timeoutValue.QuadPart = -(50 * 1000 * 1000);   // 5.0 sec
 
-      // wait for signal
-      nts = KeWaitForSingleObject
-            (
-               pClientIdReleasedEvent,
-               Executive,
-               KernelMode,
-               FALSE,
-               &timeoutValue
-            );
-      KeClearEvent(pClientIdReleasedEvent);
+         // wait for signal
+         nts = KeWaitForSingleObject
+               (
+                  pClientIdReleasedEvent,
+                  Executive,
+                  KernelMode,
+                  FALSE,
+                  &timeoutValue
+               );
+         KeClearEvent(pClientIdReleasedEvent);
+      }
+      else
+      {
+         nts = STATUS_TIMEOUT;
+
+         QCNET_DbgPrint
+         (
+            MP_DBG_MASK_CONTROL,
+            MP_DBG_LEVEL_ERROR,
+            ("<%s> ReleaseClientId: QMIOutOfService, fake timeout. TR %u\n", pAdapter->PortName, tid)
+         );
+      }
 
       if (nts == STATUS_TIMEOUT)
       {
@@ -2503,6 +2517,7 @@ VOID MPQCTL_HandleSyncRsp
          ("<%s> SyncRsp: OK\n", pAdapter->PortName)
       );
 
+      pAdapter->IsQMIOutOfService = FALSE;
       InterlockedExchange(&pAdapter->QmiSyncNeeded, 0);
       KeSetEvent(&pAdapter->QMICTLSyncReceivedEvent, IO_NO_INCREMENT, FALSE);
    }
@@ -2524,6 +2539,8 @@ VOID MPQCTL_HandleSyncInd
       MP_DBG_LEVEL_DETAIL,
       ("<%s> SyncInd: restarting with SYNC_REQ\n", pAdapter->PortName)
    );
+
+   pAdapter->IsQMIOutOfService = FALSE;
 
    if ((pDevExt->MuxInterface.MuxEnabled == 0x00) ||
        (pDevExt->MuxInterface.InterfaceNumber == pDevExt->MuxInterface.PhysicalInterfaceNumber))

@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.34
-01/22/2015
+Qualcomm USB Host Drivers Version 1.00.36
+05/27/2015
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -19,6 +19,35 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 ---------------------------------------------------------------
 
 2. WHAT'S NEW
+
+This Release (Qualcomm USB Host Drivers Version 1.00.36) 05/27/2015
+USB Driver updates:
+   a.   Updated the installer to sign the drivers with verisign cross certificate.
+   b.   Removed installation of test certificate and stopped turning on testsigning.
+   Serial driver 2.1.1.9
+      a.   Added PID 90B9.
+   Network driver 4.0.3.6
+      a.   Added PID 90B9.
+      b.   Fixed the remove lock issue.
+      c.   Added a fix to clean up TX queue when the system is put to S3/S4.
+   Filter driver 1.0.2.8
+      a.   Added PID 90B9.
+   QDSS/DPL driver 1.0.0.6
+
+This Release (Qualcomm USB Host Drivers Version 1.00.35) 04/10/2015
+USB Driver updates:
+   Serial driver 2.1.1.8
+      a.   Made changes to initialize PnP IRP with STATUS_NOT_SUPPORTED.
+      b.   Handle IRP_MN_QUERY_REMOVE_DEVICE even when the device object is open.
+   Network driver 4.0.3.5
+      a.   Added burst support for LTE.
+      b.   Made changes to initialize PnP IRP with STATUS_NOT_SUPPORTED.
+      c.   Added dual-IP support in QoS.
+      d.   Added runtime MTU support.
+      e.   Added fix for IP address issue after SSR.
+      f.   Added registry setting to disable QMAP FC.
+   Filter driver 1.0.2.7
+   QDSS/DPL driver 1.0.0.6
 
 This Release (Qualcomm USB Host Drivers Version 1.00.34) 01/22/2015
 USB Driver updates:

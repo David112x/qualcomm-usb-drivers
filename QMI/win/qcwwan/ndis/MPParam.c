@@ -131,6 +131,8 @@ typedef enum _MP_REG_INDEX
 
    MP_BIND_EP_TYPE,
 
+   MP_DISABLE_QMAP_FC,
+   
    MP_REG_INDEX_MAX
 } MP_REG_INDEX;
 
@@ -240,6 +242,8 @@ NDIS_STRING MPRegString[] =
 
    NDIS_STRING_CONST("QCMPBindIFId"),
    NDIS_STRING_CONST("QCMPBindEPType"),
+
+   NDIS_STRING_CONST("QCMPDisableQMAPFC"),
 
    NDIS_STRING_CONST("MPRegMaxPlaceHolder")
 };
@@ -611,6 +615,15 @@ NDIS_STATUS MPParam_GetConfigValues
       
 #endif // QC_DUAL_IP_FC
    
+   MPPARAM_ConfigurationGetValue
+   (
+      configurationHandle,
+      (UCHAR)MP_DISABLE_QMAP_FC,
+      &pAdapter->DisableQMAPFC,
+      PARAM_DisableQMAPFC_DEFAULT, PARAM_DisableQMAPFC_MIN, PARAM_DisableQMAPFC_MAX,
+      MP_DISABLE_QMAP_FC
+   );
+
    /***
    MPPARAM_ConfigurationGetValue
    (

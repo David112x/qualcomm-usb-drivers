@@ -18,6 +18,11 @@ GENERAL DESCRIPTION
 #include "MPQOSC.h"
 #include "MPWork.h"
 
+#ifdef EVENT_TRACING
+#include "MPWPP.h"               // Driver specific WPP Macros, Globals, etc
+#include "MPQOS.tmh"
+#endif  // EVENT_TRACING
+
 NTSTATUS MPQOS_StartQosThread(PMP_ADAPTER pAdapter)
 {
    NTSTATUS          ntStatus;
@@ -1661,7 +1666,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
      MP_DBG_MASK_QOS,
      MP_DBG_LEVEL_TRACE,
      ("<%s> -->PktMatchFilterEx\n", pAdapter->PortName)
-  )
+  );
 
   // Reference: 1) 802.3 Header format; 2) IP Header format
   // IP Fragmentation:
@@ -1681,7 +1686,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
        MP_DBG_LEVEL_ERROR,
        ("<%s> <--PktMatchFilterEx: no match <IpVersion> 0x%x/0x%x\n",
          pAdapter->PortName, ipHdr.Version, filter->IpVersion)
-    )
+    );
     return FALSE;
   }
   else
@@ -1710,7 +1715,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
      MP_DBG_LEVEL_TRACE,
      ("<%s> PktMatchFilterEx: Flags 0x%x Offset 0x%x ID 0x%x\n",
        pAdapter->PortName, ipHdr.Flags, ipHdr.FragmentOffset, ntohs(ipHdr.Identification))
-  )
+  );
   // if MF bit set
   //   0   1   2
   // +---+---+---+
@@ -1766,7 +1771,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilterEx: no match <Ipv4TypeOfService> 0x%x/0x%x\n",
             pAdapter->PortName, ipHdr.TOS, filter->Ipv4TypeOfService)
-       )
+       );
        return FALSE;
     }
     else
@@ -1785,7 +1790,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilterEx: no match <Ipv4NextHdrProtocol> 0x%x/0x%x(TCPUDP)\n",
             pAdapter->PortName, ipHdr.Protocol, filter->Ipv4NextHdrProtocol)
-       )
+       );
         return FALSE;
      }
   }
@@ -1799,7 +1804,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilterEx: no match <Ipv4NextHdrProtocol> 0x%x/0x%x\n",
             pAdapter->PortName, ipHdr.Protocol, filter->Ipv4NextHdrProtocol)
-       )
+       );
        return FALSE;
     }
     else
@@ -1822,7 +1827,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilterEx: no match <Ipv4SrcAddr> 0x%x/0x%x (mask 0x%x)\n",
             pAdapter->PortName, ipHdr.SrcAddr, filter->Ipv4SrcAddr, filter->Ipv4SrcAddrSubnetMask)
-       )
+       );
        return FALSE;
     }
     else
@@ -1845,7 +1850,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilterEx: no match <Ipv4DestAddr> 0x%x/0x%x (mask 0x%x)\n",
             pAdapter->PortName, ipHdr.DestAddr, filter->Ipv4DestAddr, filter->Ipv4DestAddrSubnetMask)
-       )
+       );
        return FALSE;
     }
     else
@@ -1864,7 +1869,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
        MP_DBG_MASK_QOS,
        MP_DBG_LEVEL_TRACE,
        ("<%s> <--PktMatchFilterEx: all match <Ipv4NextHdrProtocol> 0\n", pAdapter->PortName)
-    )
+    );
     if (cacheInfoIfMatch == TRUE)
     {
        MPQOS_CachePacketInfo(pAdapter, &ipHdr, filter);
@@ -1888,7 +1893,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <TcpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.SrcPort, filter->TcpSrcPort, filter->TcpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -1907,7 +1912,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.SrcPort, filter->TcpUdpSrcPort, filter->TcpUdpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -1929,7 +1934,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <TcpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.DestPort, filter->TcpDestPort, filter->TcpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -1948,7 +1953,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.DestPort, filter->TcpUdpDestPort, filter->TcpUdpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -1972,7 +1977,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <UdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.SrcPort, filter->UdpSrcPort, filter->UdpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -1991,7 +1996,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.SrcPort, filter->TcpUdpSrcPort, filter->TcpUdpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2012,7 +2017,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <UdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.DestPort, filter->UdpDestPort, filter->UdpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2031,7 +2036,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, ipHdr.DestPort, filter->TcpUdpDestPort, filter->TcpUdpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2055,7 +2060,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
               MP_DBG_LEVEL_ERROR,
               ("<%s> <--PktMatchFilterEx: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                 pAdapter->PortName, ipHdr.SrcPort, filter->TcpUdpSrcPort, filter->TcpUdpSrcPortRange)
-           )
+           );
            return FALSE;
          }
          else
@@ -2074,7 +2079,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
               MP_DBG_LEVEL_ERROR,
               ("<%s> <--PktMatchFilterEx: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                 pAdapter->PortName, ipHdr.DestPort, filter->TcpUdpDestPort, filter->TcpUdpDestPortRange)
-           )
+           );
            return FALSE;
          }
          else
@@ -2098,7 +2103,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <IcmpFilterMsgType> 0x%x/0x%x\n",
                pAdapter->PortName, ipHdr.icmp.Type, filter->IcmpFilterMsgType)
-          )
+          );
           return FALSE;
         }
         else
@@ -2118,7 +2123,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilterEx: no match <IcmpFilterCodeField> 0x%x/0x%x\n",
                pAdapter->PortName, ipHdr.icmp.Code, filter->IcmpFilterCodeField)
-          )
+          );
           return FALSE;
         }
         else
@@ -2136,7 +2141,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
          MP_DBG_LEVEL_ERROR,
          ("<%s> <--PktMatchFilterEx: no match <unknown prototocol> 0x%x\n",
            pAdapter->PortName, ipHdr.Protocol)
-      )
+      );
       return FALSE;
     }
   } 
@@ -2151,7 +2156,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterEx
      MP_DBG_MASK_QOS,
      MP_DBG_LEVEL_TRACE,
      ("<%s> <--PktMatchFilterEx: match (IPID: 0X%04X)\n", pAdapter->PortName, ipHdr.Identification)
-  )
+  );
 
   return bMatch;
 }  // MPQOS_DoesPktMatchThisFilterEx
@@ -2360,7 +2365,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
      MP_DBG_MASK_QOS,
      MP_DBG_LEVEL_TRACE,
      ("<%s> -->PktMatchFilter\n", pAdapter->PortName)
-  )
+  );
 
   // MPMAIN_PrintBytes
   // (
@@ -2386,7 +2391,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
        MP_DBG_LEVEL_ERROR,
        ("<%s> <--PktMatchFilter: no match <IpVersion> 0x%x/0x%x\n",
          pAdapter->PortName, *pkt, filter->IpVersion)
-    )
+    );
     return FALSE;  // quick return
   }
   else
@@ -2422,7 +2427,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilter: no match <Ipv4TypeOfService> 0x%x/0x%x\n",
             pAdapter->PortName, *pkt, filter->Ipv4TypeOfService)
-       )
+       );
        return FALSE;
     }
     else
@@ -2446,7 +2451,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilter: no match <Ipv4NextHdrProtocol> 0x%x/0x%x\n",
             pAdapter->PortName, *pkt, filter->Ipv4NextHdrProtocol)
-       )
+       );
        return FALSE;
     }
     else
@@ -2474,7 +2479,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilter: no match <Ipv4SrcAddr> 0x%x/0x%x (mask 0x%x)\n",
             pAdapter->PortName, ip4_addr, filter->Ipv4SrcAddr, filter->Ipv4SrcAddrSubnetMask)
-       )
+       );
        return FALSE;
     }
     else
@@ -2500,7 +2505,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
           MP_DBG_LEVEL_ERROR,
           ("<%s> <--PktMatchFilter: no match <Ipv4DestAddr> 0x%x/0x%x (mask 0x%x)\n",
             pAdapter->PortName, ip4_addr, filter->Ipv4DestAddr, filter->Ipv4DestAddrSubnetMask)
-       )
+       );
        return FALSE;
     }
     else
@@ -2520,7 +2525,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
        MP_DBG_MASK_QOS,
        MP_DBG_LEVEL_TRACE,
        ("<%s> <--PktMatchFilter: all match <Ipv4NextHdrProtocol> 0\n", pAdapter->PortName)
-    )
+    );
     return TRUE;
   }
 
@@ -2543,7 +2548,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <TcpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->TcpSrcPort, filter->TcpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2565,7 +2570,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->TcpUdpSrcPort, filter->TcpUdpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2591,7 +2596,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <TcpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->TcpDestPort, filter->TcpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2614,7 +2619,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->TcpUdpDestPort, filter->TcpUdpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2643,7 +2648,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <UdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->UdpSrcPort, filter->UdpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2665,7 +2670,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->TcpUdpSrcPort, filter->TcpUdpSrcPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2691,7 +2696,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <UdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->UdpDestPort, filter->UdpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2714,7 +2719,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                pAdapter->PortName, port, filter->TcpUdpDestPort, filter->TcpUdpDestPortRange)
-          )
+          );
           return FALSE;
         }
         else
@@ -2738,7 +2743,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <IcmpFilterMsgType> 0x%x/0x%x\n",
                pAdapter->PortName, *next_hdr, filter->IcmpFilterMsgType)
-          )
+          );
           return FALSE;
         }
         else
@@ -2759,7 +2764,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
              MP_DBG_LEVEL_ERROR,
              ("<%s> <--PktMatchFilter: no match <IcmpFilterCodeField> 0x%x/0x%x\n",
                pAdapter->PortName, *next_hdr, filter->IcmpFilterCodeField)
-          )
+          );
           return FALSE;
         }
         else
@@ -2778,7 +2783,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
          MP_DBG_LEVEL_ERROR,
          ("<%s> <--PktMatchFilter: no match <unknown prototocol> 0x%x\n",
            pAdapter->PortName, next_protocol)
-      )
+      );
       return FALSE;
     }
   } 
@@ -2788,7 +2793,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilter
      MP_DBG_MASK_QOS,
      MP_DBG_LEVEL_TRACE,
      ("<%s> <--PktMatchFilter: match %d\n", pAdapter->PortName, bMatch)
-  )
+  );
 
   return bMatch;
 }  // MPQOS_DoesPktMatchThisFilter
@@ -3206,7 +3211,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
       MP_DBG_MASK_QOS,
       MP_DBG_LEVEL_TRACE,
       ("<%s> -->PktMatchThisFilterV6: idx 0x%x\n", pAdapter->PortName, QmiFilter->Index)
-   )
+   );
 
    QCQOS_GetIPHeaderV6(pAdapter, pkt, &ipHdr);
 
@@ -3265,7 +3270,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
             MP_DBG_MASK_QOS,
             MP_DBG_LEVEL_DETAIL,
             ("<%s> [QCQOSV6] PktMatchThisFilterV6: SrcAddr no match\n", pAdapter->PortName)
-         )
+         );
          return bMatch;
       }
    }
@@ -3287,7 +3292,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
             MP_DBG_MASK_QOS,
             MP_DBG_LEVEL_DETAIL,
             ("<%s> [QCQOSV6] PktMatchThisFilterV6: DestAddr no match\n", pAdapter->PortName)
-         )
+         );
          return bMatch;
       }
    }
@@ -3305,7 +3310,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
             ("<%s> [QCQOSV6] PktMatchThisFilterV6: Transport no match 0x%x/0x%x\n",
               pAdapter->PortName, QmiFilter->Ipv6NextHdrProtocol,
               ipHdr.Protocol)
-         )
+         );
          return FALSE;
       }
    }
@@ -3324,7 +3329,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
             ("<%s> [QCQOSV6] PktMatchThisFilterV6: TrafficClass no match 0x%x/0x%x/0x%x\n",
               pAdapter->PortName, QmiFilter->Ipv6TrafficClass,
               ipHdr.TrafficClass, QmiFilter->Ipv6TrafficClassMask)
-         )
+         );
          return FALSE;
       }
    }
@@ -3341,7 +3346,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
             MP_DBG_LEVEL_DETAIL,
             ("<%s> [QCQOSV6] PktMatchThisFilterV6: FlowLabel no match 0x%x/0x%x\n",
               pAdapter->PortName, QmiFilter->Ipv6FlowLabel, ipHdr.FlowLabel)
-         )
+         );
          return FALSE;
       }
    }
@@ -3363,7 +3368,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                   MP_DBG_LEVEL_ERROR,
                   ("<%s> <--PktMatchFilter: no match <TcpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                     pAdapter->PortName, ipHdr.SrcPort, QmiFilter->TcpSrcPort, QmiFilter->TcpSrcPortRange)
-               )
+               );
                return FALSE;
             }
             else
@@ -3382,7 +3387,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                  MP_DBG_LEVEL_ERROR,
                  ("<%s> <--PktMatchFilter: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                    pAdapter->PortName, ipHdr.SrcPort, QmiFilter->TcpUdpSrcPort, QmiFilter->TcpUdpSrcPortRange)
-              )
+              );
               return FALSE;
             }
             else
@@ -3403,7 +3408,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                   MP_DBG_LEVEL_ERROR,
                   ("<%s> <--PktMatchFilter: no match <TcpDestPort> 0x%x/0x%x (range 0x%x)\n",
                     pAdapter->PortName, ipHdr.DestPort, QmiFilter->TcpDestPort, QmiFilter->TcpDestPortRange)
-               )
+               );
                return FALSE;
             }
             else
@@ -3422,7 +3427,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                  MP_DBG_LEVEL_ERROR,
                  ("<%s> <--PktMatchFilter: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                    pAdapter->PortName, ipHdr.DestPort, QmiFilter->TcpUdpDestPort, QmiFilter->TcpUdpDestPortRange)
-              )
+              );
               return FALSE;
             }
             else
@@ -3446,7 +3451,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                   MP_DBG_LEVEL_ERROR,
                   ("<%s> <--PktMatchFilter: no match <UdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                     pAdapter->PortName, ipHdr.SrcPort, QmiFilter->UdpSrcPort, QmiFilter->UdpSrcPortRange)
-               )
+               );
                return FALSE;
             }
             else
@@ -3465,7 +3470,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                  MP_DBG_LEVEL_ERROR,
                  ("<%s> <--PktMatchFilter: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                    pAdapter->PortName, ipHdr.SrcPort, QmiFilter->TcpUdpSrcPort, QmiFilter->TcpUdpSrcPortRange)
-              )
+              );
               return FALSE;
             }
             else
@@ -3486,7 +3491,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                   MP_DBG_LEVEL_ERROR,
                   ("<%s> <--PktMatchFilter: no match <UdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                     pAdapter->PortName, ipHdr.DestPort, QmiFilter->UdpDestPort, QmiFilter->UdpDestPortRange)
-               )
+               );
                return FALSE;
             }
             else
@@ -3505,7 +3510,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                  MP_DBG_LEVEL_ERROR,
                  ("<%s> <--PktMatchFilter: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                    pAdapter->PortName, ipHdr.DestPort, QmiFilter->TcpUdpDestPort, QmiFilter->TcpUdpDestPortRange)
-              )
+              );
               return FALSE;
             }
             else
@@ -3528,7 +3533,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                  MP_DBG_LEVEL_ERROR,
                  ("<%s> <--PktMatchFilter: no match <TcpUdpSrcPort> 0x%x/0x%x (range 0x%x)\n",
                    pAdapter->PortName, ipHdr.SrcPort, QmiFilter->TcpUdpSrcPort, QmiFilter->TcpUdpSrcPortRange)
-              )
+              );
               return FALSE;
             }
             else
@@ -3547,7 +3552,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
                  MP_DBG_LEVEL_ERROR,
                  ("<%s> <--PktMatchFilter: no match <TcpUdpDestPort> 0x%x/0x%x (range 0x%x)\n",
                    pAdapter->PortName, ipHdr.DestPort, QmiFilter->TcpUdpDestPort, QmiFilter->TcpUdpDestPortRange)
-              )
+              );
               return FALSE;
             }
             else
@@ -3578,7 +3583,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
          MP_DBG_LEVEL_DETAIL,
          ("<%s> PktMatchThisFilterV6: match and cache info: ID 0x%x\n",
            pAdapter->PortName, ipHdr.Identification)
-      )
+      );
       MPQOS_CachePacketInfo(pAdapter, &ipHdr, QmiFilter);
    }
 
@@ -3587,7 +3592,7 @@ BOOLEAN  MPQOS_DoesPktMatchThisFilterV6
       MP_DBG_MASK_QOS,
       MP_DBG_LEVEL_TRACE,
       ("<%s> <--PktMatchThisFilterV6: match %d\n", pAdapter->PortName, bMatch)
-   )
+   );
 
    return bMatch;
 
@@ -4082,3 +4087,4 @@ Func_Exit:
 }  // MPQOS_TLPTransmitPacket
 
 #endif // QCMP_UL_TLP || QCMP_MBIM_UL_SUPPORT
+

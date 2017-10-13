@@ -328,8 +328,8 @@ VOID ReadInterruptPipe(IN PVOID pContext)
       (
          QCUSB_DBG_MASK_READ,
          QCUSB_DBG_LEVEL_VERBOSE,
-         ("<%s> I: pipe 0x%x Stp 0x%x Iact %d\n", pDevExt->PortName,
-           pDevExt->InterruptPipe, bStopped, pDevExt->bIntActive)
+         ("<%s> I: pipe 0x%x Stp 0x%x Iact %d Rml[0]=%u\n", pDevExt->PortName,
+           pDevExt->InterruptPipe, bStopped, pDevExt->bIntActive, pDevExt->Sts.lRmlCount[0])
       );
       if (pDevExt->bIntActive == TRUE)
       {

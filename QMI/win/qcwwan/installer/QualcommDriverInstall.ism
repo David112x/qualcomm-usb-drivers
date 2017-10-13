@@ -372,7 +372,6 @@
 		<row><td>AllOtherFiles34</td><td>{1E2C7FE2-5737-4DFD-A028-482E2F70DADD}</td><td>SERIAL2</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles35</td><td>{8BDDC268-E0E0-4961-88BC-38A717A8C076}</td><td>AMD648</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles36</td><td>{09E4541D-3EE7-4DD6-B9D6-6EDB1DC93EC1}</td><td>I3868</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles37</td><td>{DDB1FFBC-6927-4FB3-ABA8-585F7BA03AA0}</td><td>TESTCERTIFICATE</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles38</td><td>{BA931F74-0E7B-4913-93F5-052FA2C5F6B7}</td><td>DIFXAPI</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles39</td><td>{1B2E2FC8-EB1D-4D67-AA92-7CCB1D0B0103}</td><td>I3869</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles4</td><td>{91E1A52E-5429-448D-897A-DFAC616CBA57}</td><td>WINDOWS7</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
@@ -1254,7 +1253,6 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>System64Folder</td><td>TARGETDIR</td><td>.:System64</td><td/><td>0</td><td/></row>
 		<row><td>SystemFolder</td><td>TARGETDIR</td><td>.:System32</td><td/><td>0</td><td/></row>
 		<row><td>TARGETDIR</td><td/><td>SourceDir</td><td/><td>0</td><td/></row>
-		<row><td>TESTCERTIFICATE</td><td>QUALCOMM1</td><td>TESTCE~1|TestCertificate</td><td/><td>0</td><td/></row>
 		<row><td>TOOLS</td><td>QUALCOMM1</td><td>Tools</td><td/><td>0</td><td/></row>
 		<row><td>TempFolder</td><td>TARGETDIR</td><td>.:Temp</td><td/><td>0</td><td/></row>
 		<row><td>TemplateFolder</td><td>TARGETDIR</td><td>.:ShellNew</td><td/><td>0</td><td/></row>
@@ -1991,7 +1989,6 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>DefaultFeature</td><td>AllOtherFiles34</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles35</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles36</td></row>
-		<row><td>DefaultFeature</td><td>AllOtherFiles37</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles38</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles39</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles4</td></row>
@@ -2089,7 +2086,6 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>qcusbser.sys3</td><td>AllOtherFiles25</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\i386\qcusbser.sys</td><td>1</td><td/></row>
 		<row><td>qcusbser.sys4</td><td>AllOtherFiles35</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\XP-Vista\serial\amd64\qcusbser.sys</td><td>1</td><td/></row>
 		<row><td>qcusbser.sys5</td><td>AllOtherFiles36</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\XP-Vista\serial\i386\qcusbser.sys</td><td>1</td><td/></row>
-		<row><td>qcusbtest.cer1</td><td>AllOtherFiles37</td><td>QCUSBT~1.CER|qcusbtest.cer</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\TestCertificate\qcusbtest.cer</td><td>1</td><td/></row>
 		<row><td>qcusbwwan.pdb</td><td>AllOtherFiles13</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.pdb</td><td>1</td><td/></row>
 		<row><td>qcusbwwan.pdb1</td><td>AllOtherFiles14</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\i386\qcusbwwan.pdb</td><td>1</td><td/></row>
 		<row><td>qcusbwwan.pdb2</td><td>AllOtherFiles21</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.pdb</td><td>1</td><td/></row>
@@ -2121,7 +2117,6 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>qdbusb.sys4</td><td>AllOtherFiles48</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\XP-Vista\qdss\amd64\qdbusb.sys</td><td>1</td><td/></row>
 		<row><td>qdbusb.sys5</td><td>AllOtherFiles49</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\XP-Vista\qdss\i386\qdbusb.sys</td><td>1</td><td/></row>
 		<row><td>qdcfg.exe</td><td>qdcfg.exe</td><td>qdcfg.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\Tools\x86\qdcfg.exe</td><td>1</td><td/></row>
-		<row><td>readme.rtf</td><td>AllOtherFiles37</td><td>readme.rtf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\TestCertificate\readme.rtf</td><td>1</td><td/></row>
 		<row><td>readme.txt</td><td>AllOtherFiles50</td><td>ReadMe.txt</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\ReadMe.txt</td><td>1</td><td/></row>
 		<row><td>wdfcoinstaller01009.dll</td><td>WdfCoInstaller01009.dll</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
 		<row><td>wdfcoinstaller01009.dll1</td><td>WdfCoInstaller01009.dll1</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\i386\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
@@ -2420,7 +2415,6 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>AllOtherFiles34</td><td/><td/><td>_83DF39D9_EF2D_4670_852E_EC483CC40B7A_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles35</td><td/><td/><td>_84F9C401_9CC9_494F_8A5E_FA5977C088CA_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles36</td><td/><td/><td>_47E09224_8699_4602_B9F4_4CDEA618350E_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles37</td><td/><td/><td>_DE1C773F_5665_4B7C_B3F8_B3E023D9AFE9_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles38</td><td/><td/><td>_F0458B84_6CF1_4D05_9AF6_3D1124C2908D_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles39</td><td/><td/><td>_0F0C846F_EF7E_4144_9951_DF74BE8541C8_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles4</td><td/><td/><td>_128AE8F9_C11B_4AE2_AD66_182095A39B19_FILTER</td><td/><td/><td/><td/></row>
@@ -4815,7 +4809,7 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>ProductID</td><td>none</td><td/></row>
 		<row><td>ProductLanguage</td><td>1033</td><td/></row>
 		<row><td>ProductName</td><td>Qualcomm USB Drivers For Windows</td><td/></row>
-		<row><td>ProductVersion</td><td>1.00.34</td><td/></row>
+		<row><td>ProductVersion</td><td>1.00.36</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>

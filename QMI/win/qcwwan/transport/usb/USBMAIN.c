@@ -475,14 +475,12 @@ VOID USBMAIN_Unload( IN PDRIVER_OBJECT DriverObject )
    USBSHR_FreeReadControlElement(NULL);
    #endif // QCUSB_SHARE_INTERRUPT
 
-   #ifndef QCNET_WHQL
    DbgPrint("   ================================\n");
    DbgPrint("     Driver(%d) Unloaded by System\n", gModemType);
    DbgPrint("       Version: %-10s         \n", gVendorConfig.DriverVersion);
    DbgPrint("       Device:  %-10s         \n", gDeviceName);
    DbgPrint("       Port:    %-50s\n", gVendorConfig.PortName);
    DbgPrint("   ================================\n");
-   #endif // QCNET_WHQL
 }  //Unload
 
 VOID CancelNotificationRoutine( PDEVICE_OBJECT CalledDO, PIRP pIrp )

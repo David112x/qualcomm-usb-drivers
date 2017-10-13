@@ -427,7 +427,7 @@ NTSTATUS USBIF_Open(PDEVICE_OBJECT pDeviceObject)
    (
       QCUSB_DBG_MASK_CONTROL,
       QCUSB_DBG_LEVEL_TRACE,
-      ("<%s> -->USBIF_Open\n", pDevExt->PortName)
+      ("<%s> -->USBIF_Open Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
    );
 
    if (pDevExt->bInService == TRUE)
@@ -536,7 +536,7 @@ NTSTATUS USBIF_Open(PDEVICE_OBJECT pDeviceObject)
    (
       QCUSB_DBG_MASK_CONTROL,
       QCUSB_DBG_LEVEL_TRACE,
-      ("<%s> <--USBIF_Open\n", pDevExt->PortName)
+      ("<%s> <--USBIF_Open Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
    );
    return STATUS_SUCCESS;
 } // USBIF_Open
@@ -547,6 +547,13 @@ NTSTATUS USBIF_Close(PDEVICE_OBJECT pDO)
    NTSTATUS ntStatus = STATUS_SUCCESS;
 
    pDevExt = pDO->DeviceExtension;
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_TRACE,
+      ("<%s> -->USBIF_Close Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
+   );
 
    if (pDevExt->Sts.lRmlCount[0] == 0)
    {
@@ -607,6 +614,12 @@ NTSTATUS USBIF_Close(PDEVICE_OBJECT pDO)
       0
    );
 
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_TRACE,
+      ("<%s> <--USBIF_Close Rml[0]=%u\n", pDevExt->PortName, pDevExt->Sts.lRmlCount[0])
+   );
    return STATUS_SUCCESS;
 }  // USBIF_Close
 
@@ -1388,6 +1401,8 @@ NTSTATUS USBIF_DispatchFilter
                   }
                   if (irpStack->Parameters.Power.State.SystemState >= PowerSystemSleeping3)
                   {
+                     CleanupTxQueues(pAdapter);
+                     
                      if (pAdapter->IsMipderegSent != TRUE)
                      {
                         if (pAdapter->Deregister == 1)
@@ -1455,6 +1470,8 @@ NTSTATUS USBIF_DispatchFilter
                   }
                   if (irpStack->Parameters.Power.State.SystemState >= PowerSystemSleeping3)
                   {
+                     CleanupTxQueues(pAdapter);
+                     
                      if (pAdapter->IsMipderegSent != TRUE)
                      {
                          if (pAdapter->Deregister == 1)
@@ -1999,6 +2016,7 @@ VOID USBIF_NotifyLinkDown(PDEVICE_OBJECT UsbFDO)
    
    pDevExt = (PDEVICE_EXTENSION)UsbFDO->DeviceExtension;
    pAdapter = pDevExt->MiniportContext;
+   pAdapter->IsQMIOutOfService = TRUE;
 
    MPMAIN_DisconnectNotification(pAdapter);
 } // USBIF_NotifyLinkDown

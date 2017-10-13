@@ -68,6 +68,7 @@ typedef struct _MPIOC_DEV_INFO
    LIST_ENTRY     List;
    UCHAR          Type;
    UCHAR          ClientId;
+   UCHAR          ClientIdV6;
    UCHAR          QMIType;
    PVOID          FsContext;
    LONG           QMUXTransactionId;
