@@ -3595,7 +3595,7 @@ INT MPUSB_AggregationAvailable(PMP_ADAPTER pAdapter, BOOLEAN UseSpinLock, ULONG 
         {
            result = TLP_AGG_SEND;
         }
-        else if (tlpItem->RemainingCapacity < (SizeOfPacket + 8 + sizeof(QMAP_STRUCT)))
+        else if (tlpItem->RemainingCapacity <= (SizeOfPacket + 8 + sizeof(QMAP_STRUCT)))
         {
            result = TLP_AGG_SEND;
         }
@@ -3610,7 +3610,7 @@ INT MPUSB_AggregationAvailable(PMP_ADAPTER pAdapter, BOOLEAN UseSpinLock, ULONG 
         {
            result = TLP_AGG_SEND;
         }
-        else if (tlpItem->RemainingCapacity < (SizeOfPacket + 
+        else if (tlpItem->RemainingCapacity <= (SizeOfPacket + 
             sizeof(NDP_16BIT_HEADER) + 
             sizeof(DATAGRAM_STRUCT)*(tlpItem->AggregationCount+4) + 8))
         {
@@ -3627,7 +3627,7 @@ INT MPUSB_AggregationAvailable(PMP_ADAPTER pAdapter, BOOLEAN UseSpinLock, ULONG 
         {
            result = TLP_AGG_SEND;
         }
-        else if (tlpItem->RemainingCapacity < SizeOfPacket + 8)
+        else if (tlpItem->RemainingCapacity <= SizeOfPacket + 8)
         {
            result = TLP_AGG_SEND;
         }

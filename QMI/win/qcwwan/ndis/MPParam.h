@@ -268,6 +268,11 @@ GENERAL DESCRIPTION
 #define PARAM_MaxPendingQMIReqs_MIN  3
 #define PARAM_MaxPendingQMIReqs_MAX  0xFFFF
 
+#define PARAM_EnableSigStrDisconTimer "QCMPEnableSigStrDisconnectTimer"
+#define PARAM_EnableSigStrDisconTimer_DEFAULT 0
+#define PARAM_EnableSigStrDisconTimer_MIN     0
+#define PARAM_EnableSigStrDisconTimer_MAX     1
+
 NDIS_STATUS MPParam_GetConfigValues
 (
    IN NDIS_HANDLE AdapterHandle,

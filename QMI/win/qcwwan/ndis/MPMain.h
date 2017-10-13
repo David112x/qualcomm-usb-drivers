@@ -1442,6 +1442,7 @@ typedef struct _MP_ADAPTER
    BOOLEAN  IsNASSysInfoPresent;
    USHORT IndexGWPri;
    ULONG UIMICCID;
+   ULONG EnableSSDisconnectTimer;
 } MP_ADAPTER, *PMP_ADAPTER;
 
 

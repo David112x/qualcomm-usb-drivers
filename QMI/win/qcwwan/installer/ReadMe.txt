@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.40
-05/10/2016
+Qualcomm USB Host Drivers Version 1.00.44
+10/31/2016
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,7 +20,49 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.40) 05/10/2016
+This Release (Qualcomm USB Host Drivers Version 1.00.44) 10/31/2016
+USB Driver updates:
+   Serial driver 2.1.2.3
+   Network driver 4.0.4.4
+      a.  Added deregistration of serving_system indication if sys_info is supported.
+      b.  Added registration of sys_info indication if sys_info is supported.
+   Filter driver 1.0.4.4
+      a.  Added correct return code from dispatch routine.
+   QDSS/DPL driver 1.0.0.9
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.43) 09/23/2016
+USB Driver updates:
+   Serial driver 2.1.2.3
+   Network driver 4.0.4.3
+      a.  Added registry setting to enable Signal Strength disconnect timer.
+   Filter driver 1.0.4.2
+   QDSS/DPL driver 1.0.0.9
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.42) 08/17/2016
+USB Driver updates:
+   Serial driver 2.1.2.3
+   Network driver 4.0.4.1
+      a.  Added the PACKET_SERVICE Detach spoof for LTE with respect to NAS_GET_SYS_INFO.
+   Filter driver 1.0.4.2
+      a.  Fixed the DebugPrint BSOD issue.
+   QDSS/DPL driver 1.0.0.9
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.41) 07/26/2016
+USB Driver updates:
+   Serial driver 2.1.2.3
+      a.  Added support for PID 90C5, 90C6, 90C7, 90C8 and 90C9.
+   Network driver 4.0.4.1
+      a.  Added support for PID 90C5, 90C6, 90C7, 90C8 and 90C9.
+      b.  Added the fix not to drop the packets when the remaining aggregation 
+          size reaches the exact size of the packet.
+   Filter driver 1.0.3.2
+      a.  Added support for PID 90C5, 90C6, 90C7, 90C8 and 90C9.
+      b.  Added the fix to sync the remove lock destruction.
+      c.  Fixed IRP_MN_START_DEVICE handling, the handler waits for the event always.
+   QDSS/DPL driver 1.0.0.9
+      a.  Added support for 90C8 and 90C9.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.40) 05/10/2016
 USB Driver updates:
    Serial driver 2.1.2.2
       a.  Added support for PID 90BF and 90C0, 90C1, 90C2, 90C3.

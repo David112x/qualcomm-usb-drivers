@@ -127,12 +127,6 @@ ProcessDispatchIrp
                {
                   KIRQL levelOrHandle;
                   PCONTROL_DEVICE_EXTENSION deviceExtension = pFilterDeviceInfo->pControlDeviceObject->DeviceExtension;
-                  QcAcquireSpinLock(&deviceExtension->RmLockSpinLock, &levelOrHandle);
-                  // allocate remove lock
-                  deviceExtension->pRmLock = ExAllocatePool(NonPagedPool, sizeof(IO_REMOVE_LOCK));
-                  QcReleaseSpinLock(&deviceExtension->RmLockSpinLock, levelOrHandle);
-                  IoInitializeRemoveLock(deviceExtension->pRmLock, 0, 0, 0);
-                  ntStatus = IoAcquireRemoveLock(deviceExtension->pRmLock, NULL);
                }
             }
             break;
@@ -148,23 +142,7 @@ ProcessDispatchIrp
                }
                pFilterDeviceInfo = (PFILTER_DEVICE_INFO)ioBuffer;
                deviceExtension = pFilterDeviceInfo->pControlDeviceObject->DeviceExtension;
-               QcAcquireSpinLock(&deviceExtension->RmLockSpinLock, &levelOrHandle);
-               if (deviceExtension->pRmLock != NULL)
-               {
-                  QcReleaseSpinLock(&deviceExtension->RmLockSpinLock, levelOrHandle);
-                  IoReleaseRemoveLockAndWait(deviceExtension->pRmLock, NULL);
-               }
-               else
-               {
-                  QcReleaseSpinLock(&deviceExtension->RmLockSpinLock, levelOrHandle);
-               }
                ntStatus = QCFilterDeleteControlObject ( DeviceObject, pFilterDeviceInfo );
-
-               // Free with spin lock
-               QcAcquireSpinLock(&deviceExtension->RmLockSpinLock, &levelOrHandle);
-               ExFreePool((PVOID)deviceExtension->pRmLock);
-               deviceExtension->pRmLock = NULL;
-               QcReleaseSpinLock(&deviceExtension->RmLockSpinLock, levelOrHandle);
 
                Irp->IoStatus.Status = ntStatus;
                if (ntStatus == STATUS_SUCCESS)
@@ -195,6 +173,7 @@ ProcessDispatchIrp
    }
    else
    {
+      QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("ProcessDispatchIrp : Release RemoveLock\n"));                          
       IoReleaseRemoveLock(&pDevExt->RemoveLock, Irp);
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
    }
@@ -327,6 +306,7 @@ ControlFilterThread(PVOID pContext)
                   ("<%s> FilterThread CIRP: (Cx 0x%p)\n", pDevExt->PortName, pDispatchIrp)
                );
                pDispatchIrp->IoStatus.Status = STATUS_CANCELLED;
+               QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("ControlFilterThread : Release RemoveLock\n"));                          
                IoReleaseRemoveLock(&pDevExt->RemoveLock, pDispatchIrp);
                IoCompleteRequest(pDispatchIrp, IO_NO_INCREMENT);
                pDispatchIrp = pDevExt->pCurrentDispatch = NULL;

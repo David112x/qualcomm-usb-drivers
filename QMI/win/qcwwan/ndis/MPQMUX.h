@@ -2269,6 +2269,8 @@ typedef struct _QMIWMS_MESSAGE_MODE
 #define QMINAS_SET_EVENT_REPORT_REQ             0x0002
 #define QMINAS_SET_EVENT_REPORT_RESP            0x0002
 #define QMINAS_EVENT_REPORT_IND                 0x0002
+#define QMINAS_INDICATION_REGISTER_REQ          0x0003
+#define QMINAS_INDICATION_REGISTER_RESP         0x0003
 #define QMINAS_GET_SIGNAL_STRENGTH_REQ          0x0020
 #define QMINAS_GET_SIGNAL_STRENGTH_RESP         0x0020
 #define QMINAS_PERFORM_NETWORK_SCAN_REQ         0x0021
@@ -2942,6 +2944,32 @@ typedef struct _QMINAS_SET_EVENT_REPORT_RESP_MSG
                             // QMI_ERR_FAULT
 } QMINAS_SET_EVENT_REPORT_RESP_MSG, *PQMINAS_SET_EVENT_REPORT_RESP_MSG;
 
+typedef struct _QMINAS_INDICATION_REGISTER_REQ_MSG
+{
+   USHORT Type;             
+   USHORT Length;
+   UCHAR  TLVType;
+   USHORT TLVLength;
+   UCHAR  INDEnabledSS;   
+   UCHAR  TLV2Type;
+   USHORT TLV2Length;
+   UCHAR  INDEnabledSI;
+} QMINAS_INDICATION_REGISTER_REQ_MSG, *PQMINAS_INDICATION_REGISTER_REQ_MSG;
+
+typedef struct _QMINAS_INDICATION_REGISTER_RESP_MSG
+{
+   USHORT Type;             // QMUX type 0x0003
+   USHORT Length;
+   UCHAR  TLVType;          // 0x02 - result code
+   USHORT TLVLength;        // 4
+   USHORT QMUXResult;      // QMI_RESULT_SUCCESS
+                            // QMI_RESULT_FAILURE
+   USHORT QMUXError;       // QMI_ERR_INVALID_ARG
+                            // QMI_ERR_NO_MEMORY
+                            // QMI_ERR_INTERNAL
+                            // QMI_ERR_FAULT
+} QMINAS_INDICATION_REGISTER_RESP_MSG, *PQMINAS_INDICATION_REGISTER_RESP_MSG;
+
 typedef struct _QMINAS_SIGNAL_STRENGTH_TLV
 {
    UCHAR  TLVType;          
@@ -3480,6 +3508,8 @@ typedef struct _QMUX_MSG
       QMINAS_SET_EVENT_REPORT_REQ_MSG           SetEventReportReq;
       QMINAS_SET_EVENT_REPORT_RESP_MSG          SetEventReportResp;
       QMINAS_EVENT_REPORT_IND_MSG               NasEventReportInd;
+      QMINAS_INDICATION_REGISTER_REQ_MSG        NASIndicationRegisterReq;
+      QMINAS_INDICATION_REGISTER_RESP_MSG       NASIndicationRegisterResp;     
       QMINAS_GET_RF_BAND_INFO_REQ_MSG           GetRFBandInfoReq;
       QMINAS_GET_RF_BAND_INFO_RESP_MSG          GetRFBandInfoResp;
       QMINAS_INITIATE_ATTACH_REQ_MSG            InitiateAttachReq;
@@ -4325,6 +4355,20 @@ ULONG MPQMUX_ProcessNasSetEventReportResp
    PQMUX_MSG    qmux_msg,
    PMP_OID_WRITE pOID
 );
+
+USHORT MPQMUX_SendNasIndicationRegisterReq
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+);  
+
+ULONG MPQMUX_ProcessNasIndicationRegisterResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+);  
 
 ULONG MPQMUX_ProcessNasGetSignalStrengthResp
 (

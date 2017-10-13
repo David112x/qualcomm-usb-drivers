@@ -3340,6 +3340,12 @@ VOID MPQMI_ProcessInboundQNASResponse
             break;
          }  
 
+         case QMINAS_INDICATION_REGISTER_RESP:
+         {
+            retVal = MPQMUX_ProcessNasIndicationRegisterResp( pAdapter, qmux_msg, pMatchOID);
+            break;
+         }
+
          default:
          {
             QCNET_DbgPrint
@@ -15663,6 +15669,31 @@ VOID ParseAvailableDataClass( PMP_ADAPTER pAdapter, UCHAR *DataCapList, ULONG *A
 
 #endif
 
+ULONG ParseSysInfoRadioIfList(PMP_ADAPTER pAdapter, CHAR *RadioIfList, ULONG Len)
+{
+   int i;
+   ULONG DeviceClass = pAdapter->DeviceClass;
+   if (Len > 0)
+   {
+      for (i = 0; i < Len; i++)
+      {
+         switch (RadioIfList[i])
+         {
+            case DEVICE_CLASS_CDMA:
+               DeviceClass = DEVICE_CLASS_CDMA;
+            break;
+            case DEVICE_CLASS_GSM:
+               DeviceClass = DEVICE_CLASS_GSM;                    
+            break;
+         }      
+      }
+   }
+   
+   /* Set the device class */
+   pAdapter->DeviceClass = DeviceClass;
+   return DeviceClass;
+}
+
 
 BOOLEAN ParseNasGetSysInfo
 (
@@ -15705,6 +15736,7 @@ BOOLEAN ParseNasGetSysInfo
    *pnRoamingInd      = 0xFF;
    pszProviderID[0]   = 0;
    pszProviderName[0] = 0;
+   pAdapter->IsLTE = FALSE;
 
    pServiceStatusInfo = (PSERVICE_STATUS_INFO)(((PCHAR)&qmux_msg->GetSysInfoResp) + QCQMUX_MSG_HDR_SIZE);
    remainingLen = qmux_msg->GetSysInfoResp.Length;
@@ -15795,6 +15827,7 @@ BOOLEAN ParseNasGetSysInfo
         {
               *RegState = QMI_NAS_REGISTERED;
               *DataCapList = WWAN_DATA_CLASS_LTE;
+              pAdapter->IsLTE = TRUE;
               RadioIfList[RadioIfIndex++] = DEVICE_CLASS_GSM;
            }
            break;
@@ -16285,6 +16318,7 @@ BOOLEAN ParseNasGetSysInfo
       *MCC = pAdapter->MCC;
       *MNC = pAdapter->MNC;                     
    }
+   ParseSysInfoRadioIfList(pAdapter, RadioIfList, RadioIfIndex);
 #endif
               
    return TRUE;
@@ -21773,10 +21807,60 @@ USHORT MPQMUX_ComposeNasInitiateAttachReq
    return qmux_len;
 }
 
+USHORT MPQMUX_SendNasIndicationRegisterReq
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg   
+)
+{
+   USHORT qmux_len = 0;
+   qmux_msg->NASIndicationRegisterReq.Length      = sizeof(QMINAS_INDICATION_REGISTER_REQ_MSG)-4;
+   qmux_msg->NASIndicationRegisterReq.TLVType     = 0x13;
+   qmux_msg->NASIndicationRegisterReq.TLVLength   = 0x01;
+   qmux_msg->NASIndicationRegisterReq.INDEnabledSS = 0x00;
+   
+   qmux_msg->NASIndicationRegisterReq.TLV2Type     = 0x18;
+   qmux_msg->NASIndicationRegisterReq.TLV2Length   = 0x01;
+   qmux_msg->NASIndicationRegisterReq.INDEnabledSI = 0x01;
+   
+   qmux_len = qmux_msg->NASIndicationRegisterReq.Length;
 
+   return qmux_len;
+   
+}  
 
 #endif
    
+ULONG MPQMUX_ProcessNasIndicationRegisterResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG     qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> QMINAS_INDICATION_REGISTER\n", pAdapter->PortName)
+   );
+
+   if (qmux_msg->NASIndicationRegisterResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI,
+         MP_DBG_LEVEL_ERROR,
+         ("<%s> QMUX: MPQMUX_ProcessNasIndicationRegisterResp result 0x%x err 0x%x\n", pAdapter->PortName,
+           qmux_msg->NASIndicationRegisterResp.QMUXResult,
+           qmux_msg->NASIndicationRegisterResp.QMUXError)
+      );
+      return 0xFF;
+   }
+   return 0;
+}
+
 ULONG MPQMUX_ProcessNasSetTechnologyPrefResp
                 (
    PMP_ADAPTER   pAdapter,
@@ -22463,72 +22547,74 @@ ULONG MPQMUX_ProcessNasGetSignalStrengthResp
             ("<%s> signal RSSI : %d\n", pAdapter->PortName, SignalState.SignalState.Rssi)
          );
 
-         if ((SignalState.SignalState.Rssi == 0) || (SignalState.SignalState.Rssi == WWAN_RSSI_UNKNOWN))
+         if (pAdapter->EnableSSDisconnectTimer == 1)
          {
-
-            if (pAdapter->nSignalStateDisconnectTimer == 0)
+            if ((SignalState.SignalState.Rssi == 0) || (SignalState.SignalState.Rssi == WWAN_RSSI_UNKNOWN))
             {
-               nts = IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
-               QcStatsIncrement(pAdapter, MP_CNT_TIMER, 222);
-               if (!NT_SUCCESS(nts))
+
+               if (pAdapter->nSignalStateDisconnectTimer == 0)
+               {
+                  nts = IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
+                  QcStatsIncrement(pAdapter, MP_CNT_TIMER, 222);
+                  if (!NT_SUCCESS(nts))
+                  {
+                     QCNET_DbgPrint
+                     ( 
+                        MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+                        ("<%s> SignalStateDisconnectTimerCount setsignal: rm lock err\n", pAdapter->PortName)
+                     );
+                  }
+                  else
+                  {
+                     pAdapter->nSignalStateDisconnectTimer = 10000;
+                     NdisSetTimer( &pAdapter->SignalStateDisconnectTimer, pAdapter->nSignalStateDisconnectTimer );
+                  }
+               }
+            }
+            else
+            {
+               BOOLEAN TimerCancel;
+               pAdapter->nSignalStateDisconnectTimer = 0;
+               NdisCancelTimer( &pAdapter->SignalStateDisconnectTimer, &TimerCancel );
+               if (TimerCancel == FALSE)  // timer DPC is running
                {
                   QCNET_DbgPrint
-                  ( 
-                     MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
-                     ("<%s> SignalStateDisconnectTimerCount setsignal: rm lock err\n", pAdapter->PortName)
-                   );
+                  (
+                     MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                     ("<%s> SignalStateDisconnectTimer: WAIT\n", pAdapter->PortName)
+                  );
                }
                else
                {
-                  pAdapter->nSignalStateDisconnectTimer = 10000;
-                  NdisSetTimer( &pAdapter->SignalStateDisconnectTimer, pAdapter->nSignalStateDisconnectTimer );
+                  // timer cancelled, release remove lock
+                  QcMpIoReleaseRemoveLock(pAdapter, pAdapter->pMPRmLock, NULL, MP_CNT_TIMER, 222);
                }
+               if (pAdapter->nSignalStateDisconnectTimerCalled == 1)
+               {
+                  pAdapter->nSignalStateDisconnectTimerCalled = 0;
+                  if (pAdapter->ulMediaConnectStatus == NdisMediaStateConnected)
+                  {
+                     NDIS_LINK_STATE LinkState;
+                     NdisZeroMemory( &LinkState, sizeof(NDIS_LINK_STATE) );
+                     LinkState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+                     LinkState.Header.Revision  = NDIS_LINK_STATE_REVISION_1;
+                     LinkState.Header.Size  = sizeof(NDIS_LINK_STATE);
+                     LinkState.MediaConnectState = MediaConnectStateConnected;
+                     LinkState.MediaDuplexState = MediaDuplexStateUnknown;
+                     LinkState.PauseFunctions = NdisPauseFunctionsUnknown;
+                     LinkState.XmitLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
+                     LinkState.RcvLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
+                     MyNdisMIndicateStatus
+                     (
+                        pAdapter->AdapterHandle,
+                        NDIS_STATUS_LINK_STATE,
+                        (PVOID)&LinkState,
+                        sizeof(NDIS_LINK_STATE)
+                     );
+                  }
+               }              
             }
-        }
-        else
-        {
-           BOOLEAN TimerCancel;
-           pAdapter->nSignalStateDisconnectTimer = 0;
-           NdisCancelTimer( &pAdapter->SignalStateDisconnectTimer, &TimerCancel );
-           if (TimerCancel == FALSE)  // timer DPC is running
-           {
-               QCNET_DbgPrint
-              (
-                 MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
-                 ("<%s> SignalStateDisconnectTimer: WAIT\n", pAdapter->PortName)
-              );
-           }
-           else
-           {
-              // timer cancelled, release remove lock
-              QcMpIoReleaseRemoveLock(pAdapter, pAdapter->pMPRmLock, NULL, MP_CNT_TIMER, 222);
-           }
-           if (pAdapter->nSignalStateDisconnectTimerCalled == 1)
-           {
-              pAdapter->nSignalStateDisconnectTimerCalled = 0;
-              if (pAdapter->ulMediaConnectStatus == NdisMediaStateConnected)
-              {
-                 NDIS_LINK_STATE LinkState;
-                 NdisZeroMemory( &LinkState, sizeof(NDIS_LINK_STATE) );
-                 LinkState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
-                 LinkState.Header.Revision  = NDIS_LINK_STATE_REVISION_1;
-                 LinkState.Header.Size  = sizeof(NDIS_LINK_STATE);
-                 LinkState.MediaConnectState = MediaConnectStateConnected;
-                 LinkState.MediaDuplexState = MediaDuplexStateUnknown;
-                 LinkState.PauseFunctions = NdisPauseFunctionsUnknown;
-                 LinkState.XmitLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
-                 LinkState.RcvLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
-                 MyNdisMIndicateStatus
-                 (
-                    pAdapter->AdapterHandle,
-                    NDIS_STATUS_LINK_STATE,
-                    (PVOID)&LinkState,
-                    sizeof(NDIS_LINK_STATE)
-                 );
-              }
-           }              
          }
-     
          NdisReleaseSpinLock(&pAdapter->QMICTLLock);   
          
          if (pAdapter->RssiThreshold != 0)

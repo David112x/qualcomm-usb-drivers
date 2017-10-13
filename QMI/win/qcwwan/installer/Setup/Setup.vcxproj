@@ -113,7 +113,7 @@
       <AdditionalManifestFiles>Manifest.txt;%(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PostBuildEvent>
-      <Command>signtool.exe sign /v /f .\..\Shared\Qualcomm.pfx -p #GobiPCSW# /t http://timestamp.verisign.com/scripts/timstamp.dll $(OutDir)$(ProjectName).exe</Command>
+      <Command>signtool.exe sign /v /f .\..\..\private\qcusbdrv.pfx -p Qualcomm1 /t http://timestamp.verisign.com/scripts/timstamp.dll $(OutDir)$(ProjectName).exe</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

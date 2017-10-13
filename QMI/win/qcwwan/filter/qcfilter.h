@@ -355,10 +355,7 @@ typedef struct _CONTROL_DEVICE_EXTENSION
    INT DebugLevel;
    ULONG DebugMask;
 
-   PIO_REMOVE_LOCK pRmLock;
-   
-   // Filter thread IO Lock
-   KSPIN_LOCK RmLockSpinLock;
+   IO_REMOVE_LOCK RmLock;
 
 } CONTROL_DEVICE_EXTENSION, *PCONTROL_DEVICE_EXTENSION;
 

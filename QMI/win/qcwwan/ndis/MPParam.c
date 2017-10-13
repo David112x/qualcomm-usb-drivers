@@ -135,6 +135,8 @@ typedef enum _MP_REG_INDEX
 
    MP_MAX_PENDING_QMI_REQ,
    
+   MP_ENABLE_SS_DISCONNECT_TIMER,
+
    MP_REG_INDEX_MAX
 } MP_REG_INDEX;
 
@@ -249,7 +251,9 @@ NDIS_STRING MPRegString[] =
 
    NDIS_STRING_CONST("QCMPMaxPendingQMIReqs"),
 
-   NDIS_STRING_CONST("MPRegMaxPlaceHolder")
+   NDIS_STRING_CONST("QCMPMaxPendingQMIReqs"),
+
+   NDIS_STRING_CONST("QCMPEnableSigStrDisconnectTimer")
 };
 
 
@@ -635,6 +639,15 @@ NDIS_STATUS MPParam_GetConfigValues
       &pAdapter->MaxPendingQMIReqs,
       PARAM_MaxPendingQMIReqs_DEFAULT, PARAM_MaxPendingQMIReqs_MIN, PARAM_MaxPendingQMIReqs_MAX,
       MP_MAX_PENDING_QMI_REQ
+   );
+
+   MPPARAM_ConfigurationGetValue
+   (
+      configurationHandle,
+      (UCHAR)MP_ENABLE_SS_DISCONNECT_TIMER,
+      &pAdapter->EnableSSDisconnectTimer,
+      PARAM_EnableSigStrDisconTimer_DEFAULT, PARAM_EnableSigStrDisconTimer_MIN, PARAM_EnableSigStrDisconTimer_MAX,
+      MP_ENABLE_SS_DISCONNECT_TIMER
    );
 
    /***

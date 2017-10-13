@@ -715,6 +715,12 @@ ULONG MPQMI_OIDtoQMI
             //Send DUN Call indication request
             MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_WDS, 
                                       QMIWDS_DUN_CALL_INFO_REQ, MPQWDS_SendWdsDunCallInfoReq, TRUE );
+
+            if (pAdapter->IsNASSysInfoPresent == TRUE)
+            {
+                MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_NAS, 
+                                          QMINAS_INDICATION_REGISTER_REQ, MPQMUX_SendNasIndicationRegisterReq, TRUE );
+            }
          }
          break;
       }  // Device CAP OID's
