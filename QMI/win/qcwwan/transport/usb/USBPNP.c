@@ -1679,7 +1679,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.3.8");
+             DbgPrint("Driver Version %s\n", "4.0.4.0");
              DbgPrint("   |============================|\n");
              #endif // QCNET_WHQL
           }
@@ -1700,7 +1700,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.3.8");
+             DbgPrint("Driver Version %s\n", "4.0.4.0");
              DbgPrint("   |===============================|\n");
              #endif // QCNET_WHQL
           }

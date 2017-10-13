@@ -12820,6 +12820,31 @@ USHORT MPQMUX_ComposeWmsGetStoreMaxSizeReqSend
    return qmux_len;
 }  
 
+
+USHORT MPQMUX_ComposeWmsSetRouteReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+)
+{
+
+   ULONG qmux_len = 0;
+   qmux_msg->WmsSetRouteReq.Length = sizeof(QMIWMS_SET_ROUTE_REQ_MSG) - 4;
+   qmux_msg->WmsSetRouteReq.TLVType = 0x01;
+   qmux_msg->WmsSetRouteReq.TLVLength = 0x06;
+   qmux_msg->WmsSetRouteReq.n_routes = 0x01;
+   qmux_msg->WmsSetRouteReq.message_type = 0x00;
+   qmux_msg->WmsSetRouteReq.message_class = 0x00;
+   qmux_msg->WmsSetRouteReq.route_storage = -1;
+   qmux_msg->WmsSetRouteReq.receipt_action = 1;
+   qmux_msg->WmsSetRouteReq.TLV2Type = 0x10;
+   qmux_msg->WmsSetRouteReq.TLV2Length = 0x01;
+   qmux_msg->WmsSetRouteReq.transfer_ind = 0x01;
+   qmux_len = qmux_msg->WmsSetRouteReq.Length;
+   return qmux_len;
+}  
+
 #endif
 
 ULONG MPQMUX_ProcessWmsRawReadResp
@@ -14364,6 +14389,11 @@ ULONG MPQMUX_ProcessWmsSetEventReportResp
       );
       retVal = 0xFF;
    }
+#ifdef NDIS620_MINIPORT
+   MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_WMS, 
+                          QMIWMS_SET_ROUTE_REQ, MPQMUX_ComposeWmsSetRouteReqSend, TRUE );
+#endif /*NDIS620_MINIPORT*/
+   
    if (pOID != NULL)
    {
      pOID->OIDStatus = NDIS_STATUS_SUCCESS;
@@ -14380,6 +14410,33 @@ ULONG MPQMUX_ProcessWmsSetEventReportResp
    return retVal;
 }  
 
+ULONG MPQMUX_ProcessWmsSetRouteResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+)
+{
+   UCHAR retVal = 0;
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> MPQMUX_ProcessWmsSetRouteResp\n", pAdapter->PortName)
+   );
+
+   if (qmux_msg->WmsSetRouteResp.QMUXResult != QMI_RESULT_SUCCESS)
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+         ("<%s> QMUX: WmsSetRouteResp result 0x%x err 0x%x\n", pAdapter->PortName,
+         qmux_msg->WmsSetRouteResp.QMUXResult,
+         qmux_msg->WmsSetRouteResp.QMUXError)
+      );
+      retVal = 0xFF;
+   }
+   return retVal;
+}  
 
 ULONG MPQMUX_ProcessWmsEventReportInd
 (
@@ -15807,6 +15864,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MCC = (USHORT)value;
                  pAdapter->MCC = *MCC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
 
               strncpy(temp, pSystemInfo->MNC, 3);
               temp[3] = '\0';
@@ -15821,6 +15879,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MNC = (USHORT)value;
                  pAdapter->MNC = *MNC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
               strcat(pszProviderID, temp);
               }
               break;
@@ -15941,6 +16000,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MCC = (USHORT)value;
                  pAdapter->MCC = *MCC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
 
               strncpy(temp, pSystemInfo->MNC, 3);
               temp[3] = '\0';
@@ -15955,6 +16015,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MNC = (USHORT)value;
                  pAdapter->MNC = *MNC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
               strcat(pszProviderID, temp);
            }
            break;
@@ -16024,6 +16085,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MCC = (USHORT)value;
                  pAdapter->MCC = *MCC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
 
               strncpy(temp, pSystemInfo->MNC, 3);
               temp[3] = '\0';
@@ -16038,6 +16100,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MNC = (USHORT)value;
                  pAdapter->MNC = *MNC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
               strcat(pszProviderID, temp);
            }
            break;
@@ -16107,6 +16170,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MCC = (USHORT)value;
                  pAdapter->MCC = *MCC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
                  
               strncpy(temp, pSystemInfo->MNC, 3);
               temp[3] = '\0';
@@ -16121,6 +16185,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MNC = (USHORT)value;
                  pAdapter->MNC = *MNC;
                     }
+              RtlFreeUnicodeString(&unicodeStr);
               strcat(pszProviderID, temp);
                     }
            break;
@@ -16190,6 +16255,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MCC = (USHORT)value;
                  pAdapter->MCC = *MCC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
 
               strncpy(temp, pSystemInfo->MNC, 3);
               temp[3] = '\0';
@@ -16204,6 +16270,7 @@ BOOLEAN ParseNasGetSysInfo
                  *MNC = (USHORT)value;
                  pAdapter->MNC = *MNC;
               }
+              RtlFreeUnicodeString(&unicodeStr);
               strcat(pszProviderID, temp);
            }
            break;
@@ -18290,10 +18357,10 @@ ULONG MPQMUX_ProcessNasServingSystemInd
             WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
          }
          // TODO: need to see if nwRejectCode should be set or not.
-         if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
-             (NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateDeregistered &&
-             NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateSearching))
-         {
+         //if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
+         //    (NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateDeregistered &&
+         //    NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateSearching))
+         //{
             if (pAdapter->DeviceRegisterState != previousRegisterState)
             {          
                if (pAdapter->DeviceClass == DEVICE_CLASS_GSM && bRegistered == TRUE)
@@ -18321,11 +18388,11 @@ ULONG MPQMUX_ProcessNasServingSystemInd
                   sizeof(NDIS_WWAN_REGISTRATION_STATE)
                );
             }
-         }
-         else
-         {
-            pAdapter->DeregisterIndication = 1;
-         }         
+         //}
+         //else
+         //{
+         //   pAdapter->DeregisterIndication = 1;
+         //}         
          if ((WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateDetached &&
              WwanServingState.PacketService.AvailableDataClass == WWAN_DATA_CLASS_NONE &&
              WwanServingState.PacketService.CurrentDataClass == WWAN_DATA_CLASS_NONE) ||
@@ -18333,8 +18400,8 @@ ULONG MPQMUX_ProcessNasServingSystemInd
              WwanServingState.PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE &&
              WwanServingState.PacketService.CurrentDataClass != WWAN_DATA_CLASS_NONE))
          {
-            if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
-                WwanServingState.PacketService.PacketServiceState != WwanPacketServiceStateDetached)
+            //if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
+            //    WwanServingState.PacketService.PacketServiceState != WwanPacketServiceStateDetached)
             {
                MyNdisMIndicateStatus
                (
@@ -20616,10 +20683,10 @@ ULONG MPQMUX_ProcessNasSysInfoInd
             WwanServingState.PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
            }
          // TODO: need to see if nwRejectCode should be set or not.
-         if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
-             (NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateDeregistered &&
-             NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateSearching))
-         {
+         //if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
+         //    (NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateDeregistered &&
+         //    NdisRegisterState.RegistrationState.RegisterState != WwanRegisterStateSearching))
+         //{
             if (pAdapter->DeviceRegisterState != previousRegisterState)
             {          
                if (pAdapter->DeviceClass == DEVICE_CLASS_GSM && bRegistered == TRUE)
@@ -20647,11 +20714,11 @@ ULONG MPQMUX_ProcessNasSysInfoInd
                   sizeof(NDIS_WWAN_REGISTRATION_STATE)
                );
            }
-           }
-           else
-           {
-            pAdapter->DeregisterIndication = 1;
-         }         
+         //}
+         //else
+         //{
+         //   pAdapter->DeregisterIndication = 1;
+         //}         
          if ((WwanServingState.PacketService.PacketServiceState == WwanPacketServiceStateDetached &&
              WwanServingState.PacketService.AvailableDataClass == WWAN_DATA_CLASS_NONE &&
              WwanServingState.PacketService.CurrentDataClass == WWAN_DATA_CLASS_NONE) ||
@@ -20659,8 +20726,8 @@ ULONG MPQMUX_ProcessNasSysInfoInd
              WwanServingState.PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE &&
              WwanServingState.PacketService.CurrentDataClass != WWAN_DATA_CLASS_NONE))
               {
-            if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
-                WwanServingState.PacketService.PacketServiceState != WwanPacketServiceStateDetached)
+            //if (pAdapter->DeviceContextState != DeviceWWanContextAttached ||
+            //    WwanServingState.PacketService.PacketServiceState != WwanPacketServiceStateDetached)
                  {
                MyNdisMIndicateStatus
                (
@@ -22266,6 +22333,7 @@ ULONG MPQMUX_ProcessNasGetSignalStrengthResp
 )
    {
    UCHAR retVal = 0;
+   NTSTATUS nts;
       QCNET_DbgPrint
       (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
@@ -22386,6 +22454,83 @@ ULONG MPQMUX_ProcessNasGetSignalStrengthResp
             (PVOID)&SignalState,
             sizeof(NDIS_WWAN_SIGNAL_STATE)
       );
+
+         NdisAcquireSpinLock(&pAdapter->QMICTLLock);
+
+         QCNET_DbgPrint
+         ( 
+            MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+            ("<%s> signal RSSI : %d\n", pAdapter->PortName, SignalState.SignalState.Rssi)
+         );
+
+         if ((SignalState.SignalState.Rssi == 0) || (SignalState.SignalState.Rssi == WWAN_RSSI_UNKNOWN))
+         {
+
+            if (pAdapter->nSignalStateDisconnectTimer == 0)
+            {
+               nts = IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
+               QcStatsIncrement(pAdapter, MP_CNT_TIMER, 222);
+               if (!NT_SUCCESS(nts))
+               {
+                  QCNET_DbgPrint
+                  ( 
+                     MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_ERROR,
+                     ("<%s> SignalStateDisconnectTimerCount setsignal: rm lock err\n", pAdapter->PortName)
+                   );
+               }
+               else
+               {
+                  pAdapter->nSignalStateDisconnectTimer = 10000;
+                  NdisSetTimer( &pAdapter->SignalStateDisconnectTimer, pAdapter->nSignalStateDisconnectTimer );
+               }
+            }
+        }
+        else
+        {
+           BOOLEAN TimerCancel;
+           pAdapter->nSignalStateDisconnectTimer = 0;
+           NdisCancelTimer( &pAdapter->SignalStateDisconnectTimer, &TimerCancel );
+           if (TimerCancel == FALSE)  // timer DPC is running
+           {
+               QCNET_DbgPrint
+              (
+                 MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+                 ("<%s> SignalStateDisconnectTimer: WAIT\n", pAdapter->PortName)
+              );
+           }
+           else
+           {
+              // timer cancelled, release remove lock
+              QcMpIoReleaseRemoveLock(pAdapter, pAdapter->pMPRmLock, NULL, MP_CNT_TIMER, 222);
+           }
+           if (pAdapter->nSignalStateDisconnectTimerCalled == 1)
+           {
+              pAdapter->nSignalStateDisconnectTimerCalled = 0;
+              if (pAdapter->ulMediaConnectStatus == NdisMediaStateConnected)
+              {
+                 NDIS_LINK_STATE LinkState;
+                 NdisZeroMemory( &LinkState, sizeof(NDIS_LINK_STATE) );
+                 LinkState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+                 LinkState.Header.Revision  = NDIS_LINK_STATE_REVISION_1;
+                 LinkState.Header.Size  = sizeof(NDIS_LINK_STATE);
+                 LinkState.MediaConnectState = MediaConnectStateConnected;
+                 LinkState.MediaDuplexState = MediaDuplexStateUnknown;
+                 LinkState.PauseFunctions = NdisPauseFunctionsUnknown;
+                 LinkState.XmitLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
+                 LinkState.RcvLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
+                 MyNdisMIndicateStatus
+                 (
+                    pAdapter->AdapterHandle,
+                    NDIS_STATUS_LINK_STATE,
+                    (PVOID)&LinkState,
+                    sizeof(NDIS_LINK_STATE)
+                 );
+              }
+           }              
+         }
+     
+         NdisReleaseSpinLock(&pAdapter->QMICTLLock);   
+         
          if (pAdapter->RssiThreshold != 0)
          {
             if ( ((SignalState.SignalState.Rssi - pAdapter->RssiThreshold) > 0) ||
@@ -25682,25 +25827,31 @@ BOOLEAN ParseUIMReadTransparant( PMP_ADAPTER pAdapter, PQMUX_MSG   qmux_msg)
                // save to pAdapter
                if (pAdapter->ICCID == NULL)
                {
+                  int i = 0;
+                  UCHAR Iccid[255];
+                  
                   // allocate memory and save
                   pAdapter->ICCID = ExAllocatePool
                                              (
                                              NonPagedPool,
-                                             (pUimContent->content_len+2)
+                                             (pUimContent->content_len*2+2)
                                              );
                   if (pAdapter->ICCID != NULL)
                   {
                      RtlZeroMemory
                      (
                         pAdapter->ICCID,
-                        (pUimContent->content_len+2)
+                        (pUimContent->content_len*2+2)
                      );
-                     RtlCopyMemory
-                     (
-                        pAdapter->ICCID,
-                        &pUimContent->content,
-                        pUimContent->content_len
-                     );
+   
+                     RtlCopyMemory(Iccid,&pUimContent->content, pUimContent->content_len);
+                     while (i < pUimContent->content_len)
+                     {
+                        pAdapter->ICCID[i*2] = (Iccid[i] & 0x0F) + 48;
+                        pAdapter->ICCID[i*2+1] = ((Iccid[i] & 0xF0) >> 0x04) + 48;
+                        i++;
+                     }
+                     pAdapter->ICCID[(i*2)] = '\0';
                   }
                   else
                   {

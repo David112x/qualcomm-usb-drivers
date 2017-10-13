@@ -1089,6 +1089,13 @@ NDIS_STATUS MPINI_AllocAdapter(PMP_ADAPTER *pAdapter)
       (PVOID)Adapter
    );
 
+   NdisInitializeTimer
+      (
+      &Adapter->SignalStateDisconnectTimer,
+      (PNDIS_TIMER_FUNCTION)SignalStateDisconnectTimerDpc,
+      (PVOID)Adapter
+      );
+
    // Other initialization //Start the register mode with Automatic always
    Adapter->RegisterMode = DeviceWWanRegisteredAutomatic;
 

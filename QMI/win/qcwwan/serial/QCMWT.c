@@ -1875,10 +1875,10 @@ NTSTATUS QCMWT_InitializeMultiWriteElements(PDEVICE_EXTENSION pDevExt)
    pDevExt->WriteAggBuffer.OkToSend = FALSE;
 
 
-   InitializeListHead(&pDevExt->MWriteIdleQueue);
-   InitializeListHead(&pDevExt->MWritePendingQueue);
-   InitializeListHead(&pDevExt->MWriteCompletionQueue);
-   InitializeListHead(&pDevExt->MWriteCancellingQueue);
+   // InitializeListHead(&pDevExt->MWriteIdleQueue);
+   // InitializeListHead(&pDevExt->MWritePendingQueue);
+   // InitializeListHead(&pDevExt->MWriteCompletionQueue);
+   // InitializeListHead(&pDevExt->MWriteCancellingQueue);
 
    pDevExt->NumberOfMultiWrites = QCUSB_MULTI_WRITE_BUFFERS; //must < QCUSB_MAX_MRW_BUF_COUNT
 

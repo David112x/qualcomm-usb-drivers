@@ -449,6 +449,8 @@ NTSTATUS QDBRD_AllocateRequestsRx(PDEVICE_CONTEXT pDevContext)
          break;
       }
 
+      pDevContext->RxRequest[i].IsPending = 0;
+
       // TEST CODE
       {
             QDB_DbgPrint
@@ -598,9 +600,21 @@ VOID QDBRD_SendIOBlock(PDEVICE_CONTEXT pDevContext, INT Index)
    (
       QDB_DBG_MASK_READ,
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> -->QDBRD_SendIOBlock: [%d/%d] EP 0x%x target 0x%p\n",
-       pDevContext->PortName, Index, pDevContext->NumOfRxReqs, pipeIN, pDevContext->MyIoTarget)
+      ("<%s> -->QDBRD_SendIOBlock: [%d/%d] EP 0x%x target 0x%p F%u\n",
+       pDevContext->PortName, Index, pDevContext->NumOfRxReqs, pipeIN,
+       pDevContext->MyIoTarget, pDevContext->Stats.IoFailureCount)
    );
+
+   if (pDevContext->RxRequest[Index].IsPending != 0)
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_READ,
+         QDB_DBG_LEVEL_TRACE,
+         ("<%s> <--QDBRD_SendIOBlock[%d]: still pending\n", pDevContext->PortName, Index)
+      );
+      return;
+   }
 
    ntStatus = WdfIoTargetFormatRequestForRead
               (
@@ -656,6 +670,7 @@ VOID QDBRD_SendIOBlock(PDEVICE_CONTEXT pDevContext, INT Index)
       &(pDevContext->RxRequest[Index])
    );
 
+   pDevContext->RxRequest[Index].IsPending = 1;
    InterlockedIncrement(&(pDevContext->Stats.DrainingRx));
    bResult = WdfRequestSend
              (
@@ -687,7 +702,7 @@ VOID QDBRD_SendIOBlock(PDEVICE_CONTEXT pDevContext, INT Index)
 
 NTSTATUS QDBRD_PipeDrainStop(PDEVICE_CONTEXT pDevContext)
 {
-   ULONG i;
+   // ULONG i;
    KIRQL oldLevel;
 
    if (pDevContext->FunctionType != QDB_FUNCTION_TYPE_DPL)
@@ -761,9 +776,14 @@ VOID QDBRD_PipeDrainCompletion
       {
          sendAgain = FALSE;
       }
+      else if (++pDevContext->Stats.IoFailureCount > pDevContext->IoFailureThreshold)
+      {
+         sendAgain = FALSE;
+      }
    }
    else
    {
+      pDevContext->Stats.IoFailureCount = 0;
       readLength = (ULONG)usbInfo->Parameters.PipeRead.Length;
       pDevContext->Stats.BytesDrained += readLength;
       QDB_DbgPrint
@@ -789,6 +809,7 @@ VOID QDBRD_PipeDrainCompletion
       sendAgain = FALSE;
    }
 
+   pDevContext->RxRequest[ioReq->Index].IsPending = 0;
    if (sendAgain == TRUE)
    {
       // re-send request

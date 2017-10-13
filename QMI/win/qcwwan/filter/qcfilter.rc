@@ -35,8 +35,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,3,0
- PRODUCTVERSION 1,0,3,0
+ FILEVERSION 1,0,3,1
+ PRODUCTVERSION 1,0,3,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x9L
@@ -53,12 +53,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "QUALCOMM Incorporated"
             VALUE "FileDescription", "Filter Driver for the Qualcomm USB Driver Stack"
-            VALUE "FileVersion", "1.0.3.0"
+            VALUE "FileVersion", "1.0.3.1"
             VALUE "InternalName", "qcfilter.sys"
             VALUE "LegalCopyright", "(c) QUALCOMM, Inc.  All rights reserved."
             VALUE "OriginalFilename", "qcfilter.sys"
             VALUE "ProductName", "QUALCOMM Incorporated USB Filter Device Driver"
-            VALUE "ProductVersion", "1.0.3.0"
+            VALUE "ProductVersion", "1.0.3.1"
         END
     END
     BLOCK "VarFileInfo"

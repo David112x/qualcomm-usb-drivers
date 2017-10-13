@@ -22,6 +22,7 @@ VOID QDBDSP_IoCompletion
 {
    NTSTATUS         ntStatus;
    PDEVICE_CONTEXT  pDevContext;
+   UNREFERENCED_PARAMETER(Target);
 
    pDevContext = (PDEVICE_CONTEXT)Context;
    ntStatus  = CompletionParams->IoStatus.Status;
@@ -149,7 +150,7 @@ VOID QDBDSP_IoDeviceControl
 
          if (NT_SUCCESS(ntStatus))
          {
-            ntStatus = QDBDSP_GetParentId(pDevContext, outBuffer, OutputBufferLength);
+            ntStatus = QDBDSP_GetParentId(pDevContext, outBuffer, (ULONG)OutputBufferLength);
             if (NT_SUCCESS(ntStatus))
             {
                WdfRequestSetInformation(Request, sizeof(ULONGLONG));
@@ -269,6 +270,7 @@ NTSTATUS QDBDSP_IrpIoCompletion
 )
 {
    PDEVICE_CONTEXT pDevContext = (PDEVICE_CONTEXT)Context;
+   UNREFERENCED_PARAMETER(DeviceObject);
 
    QDB_DbgPrint
    (

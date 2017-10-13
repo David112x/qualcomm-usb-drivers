@@ -1536,17 +1536,51 @@ Success:
          }
          case IRP_MJ_CLEANUP:
          {
+            KIRQL levelOrHandle;
+            QcAcquireSpinLock(&pCtlExt->RmLockSpinLock, &levelOrHandle);
+            if (pCtlExt->pRmLock != NULL)
+            {
+               QcReleaseSpinLock(&pCtlExt->RmLockSpinLock, levelOrHandle);
+               status = IoAcquireRemoveLock(pCtlExt->pRmLock, NULL);
+               if (NT_SUCCESS( status ))
+               {
             if (pIocFilterDev->DispatchTable[IRP_MJ_CLEANUP] != NULL)
             {
-               return (pIocFilterDev->DispatchTable[IRP_MJ_CLEANUP])(DeviceObject, Irp);
+                     status = (pIocFilterDev->DispatchTable[IRP_MJ_CLEANUP])(DeviceObject, Irp);
+                     IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
+                     return status;
+                  }
+                  IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
+               }
+            }
+            else
+            {
+               QcReleaseSpinLock(&pCtlExt->RmLockSpinLock, levelOrHandle);
             }
             break;
          }
          case  IRP_MJ_DEVICE_CONTROL:
          {
+            KIRQL levelOrHandle;
+            QcAcquireSpinLock(&pCtlExt->RmLockSpinLock, &levelOrHandle);
+            if (pCtlExt->pRmLock != NULL)
+            {
+               QcReleaseSpinLock(&pCtlExt->RmLockSpinLock, levelOrHandle);
+               status = IoAcquireRemoveLock(pCtlExt->pRmLock, NULL);
+               if (NT_SUCCESS( status ))
+               {
             if (pIocFilterDev->DispatchTable[IRP_MJ_DEVICE_CONTROL] != NULL)
             {
-               return (pIocFilterDev->DispatchTable[IRP_MJ_DEVICE_CONTROL])(DeviceObject, Irp);
+                     status = (pIocFilterDev->DispatchTable[IRP_MJ_DEVICE_CONTROL])(DeviceObject, Irp);
+                     IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
+                     return status;
+                  }
+                  IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
+               }
+            }
+            else
+            {
+               QcReleaseSpinLock(&pCtlExt->RmLockSpinLock, levelOrHandle);
             }
             break;
          }
@@ -1577,9 +1611,26 @@ Success:
          }
          case  IRP_MJ_WRITE:
          {
+            KIRQL levelOrHandle;
+            QcAcquireSpinLock(&pCtlExt->RmLockSpinLock, &levelOrHandle);
+            if (pCtlExt->pRmLock != NULL)
+            {
+               QcReleaseSpinLock(&pCtlExt->RmLockSpinLock, levelOrHandle);
+               status = IoAcquireRemoveLock(pCtlExt->pRmLock, NULL);
+               if (NT_SUCCESS( status ))
+               {
             if (pIocFilterDev->DispatchTable[IRP_MJ_WRITE] != NULL)
             {
-               return (pIocFilterDev->DispatchTable[IRP_MJ_WRITE])(DeviceObject, Irp);
+                     status = (pIocFilterDev->DispatchTable[IRP_MJ_WRITE])(DeviceObject, Irp);
+                     IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
+                     return status;
+                  }
+                  IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
+               }
+            }
+            else
+            {
+               QcReleaseSpinLock(&pCtlExt->RmLockSpinLock, levelOrHandle);
             }
             break;
          }
@@ -1894,7 +1945,7 @@ QCFLT_DeleteControlDevice
             RemoveEntryList(peekEntry);
             QcReleaseSpinLock(&Control_DeviceLock, levelOrHandle);
             pDevExt = pControlDeviceObject->DeviceExtension;
-
+            RtlZeroMemory(&pIocDev->DispatchTable, sizeof(pIocDev->DispatchTable)); 
             if ((pIocDev->pControlDeviceObject != NULL) && (pDevExt->DeviceOpenCount == 0))
             {
                IoDeleteSymbolicLink(&(pIocDev->DeviceLinkName));
@@ -1907,7 +1958,6 @@ QCFLT_DeleteControlDevice
             }
             else
             {
-               RtlZeroMemory(&pIocDev->DispatchTable, sizeof(pIocDev->DispatchTable));
                QcAcquireSpinLock(&Control_DeviceLock, &levelOrHandle);
                InsertTailList(&Control_DeviceList, &pIocDev->List);               
                break;

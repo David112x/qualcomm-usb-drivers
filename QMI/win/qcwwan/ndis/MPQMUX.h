@@ -1950,6 +1950,8 @@ typedef struct _QMI_QOS_SET_CLIENT_IP_PREF_RESP_MSG
 #define QMIWMS_GET_MESSAGE_PROTOCOL_RESP      0x0030
 #define QMIWMS_LIST_MESSAGES_REQ              0x0031
 #define QMIWMS_LIST_MESSAGES_RESP             0x0031
+#define QMIWMS_SET_ROUTE_REQ                  0x0032
+#define QMIWMS_SET_ROUTE_RESP                 0x0032
 #define QMIWMS_GET_SMSC_ADDRESS_REQ           0x0034
 #define QMIWMS_GET_SMSC_ADDRESS_RESP          0x0034
 #define QMIWMS_SET_SMSC_ADDRESS_REQ           0x0035
@@ -2218,6 +2220,32 @@ typedef struct _QMIWMS_EVENT_REPORT_IND_MSG
    USHORT Type;
    USHORT Length;
 } QMIWMS_EVENT_REPORT_IND_MSG, *PQMIWMS_EVENT_REPORT_IND_MSG;
+
+typedef struct _QMIWMS_SET_ROUTE_REQ_MSG
+{
+   USHORT Type;
+   USHORT Length;
+   UCHAR  TLVType;
+   USHORT TLVLength;
+   USHORT n_routes;
+   UCHAR  message_type;
+   UCHAR  message_class;
+   CHAR   route_storage;
+   UCHAR  receipt_action;
+   UCHAR  TLV2Type;
+   USHORT TLV2Length;
+   UCHAR  transfer_ind;
+} QMIWMS_SET_ROUTE_REQ_MSG, *PQMIWMS_SET_ROUTE_REQ_MSG;
+
+typedef struct _QMIWMS_SET_ROUTE_RESP_MSG
+{
+   USHORT Type;
+   USHORT Length;
+   UCHAR  TLVType;
+   USHORT TLVLength;
+   USHORT QMUXResult;
+   USHORT QMUXError;
+} QMIWMS_SET_ROUTE_RESP_MSG, *PQMIWMS_SET_ROUTE_RESP_MSG;
 
 typedef struct _QMIWMS_MT_MESSAGE
 {
@@ -3419,6 +3447,8 @@ typedef struct _QMUX_MSG
       QMIWMS_RAW_SEND_RESP_MSG                  RawSendMessagesResp;
       QMIWMS_MODIFY_TAG_REQ_MSG                 WmsModifyTagReq;
       QMIWMS_MODIFY_TAG_RESP_MSG                WmsModifyTagResp;
+      QMIWMS_SET_ROUTE_REQ_MSG                  WmsSetRouteReq;
+      QMIWMS_SET_ROUTE_RESP_MSG                 WmsSetRouteResp;
 
       // QMINAS Messages
       QMINAS_GET_HOME_NETWORK_REQ_MSG           GetHomeNetworkReq;
@@ -3964,6 +3994,20 @@ USHORT MPQMUX_ComposeWmsListMessagesReqSend
 );
 
 ULONG MPQMUX_ProcessWmsListMessagesResp
+(
+   PMP_ADAPTER   pAdapter,
+   PQMUX_MSG    qmux_msg,
+   PMP_OID_WRITE pOID
+);
+
+USHORT MPQMUX_ComposeWmsSetRouteReqSend
+(
+   PMP_ADAPTER   pAdapter,
+   PMP_OID_WRITE pOID,
+   PQMUX_MSG    qmux_msg
+);
+
+ULONG MPQMUX_ProcessWmsSetRouteResp
 (
    PMP_ADAPTER   pAdapter,
    PQMUX_MSG    qmux_msg,

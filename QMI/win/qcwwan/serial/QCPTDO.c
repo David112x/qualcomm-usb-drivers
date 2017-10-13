@@ -996,6 +996,13 @@ PDEVICE_OBJECT QCPTDO_CreateNewPTDO
    InitializeListHead(&pDevExt->DevicePowerRequestQueue);
    InitializeListHead(&pDevExt->IdleIrpCompletionStack);
 
+   #ifdef QCUSB_MULTI_WRITES
+   InitializeListHead(&pDevExt->MWriteIdleQueue);
+   InitializeListHead(&pDevExt->MWritePendingQueue);
+   InitializeListHead(&pDevExt->MWriteCompletionQueue);
+   InitializeListHead(&pDevExt->MWriteCancellingQueue);
+   #endif
+
    #ifdef QCUSB_FC
    InitializeListHead(&pDevExt->MWTSentIrpQueue);
    InitializeListHead(&pDevExt->MWTSentIrpRecordPool);

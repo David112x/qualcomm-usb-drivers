@@ -123,6 +123,7 @@ typedef struct _QDB_IO_REQUEST
    WDFMEMORY  IoMemory;
    PVOID      IoBuffer;
    int        Index;
+   int        IsPending;
 } QDB_IO_REQUEST, *PQDB_IO_REQUEST;
 
 #pragma pack(push, 1)
@@ -141,6 +142,7 @@ typedef struct _QDB_STATS
    LONG  NumRxExhausted; // no RX buffers
    ULONG BytesDrained;   // bytes since drain started
    ULONG PacketsDrained; // reserved -- debug only
+   ULONG IoFailureCount; // debug only
 } QDB_STATS, *PQDB_STATS; 
 
 #pragma pack(pop)
@@ -177,6 +179,7 @@ typedef struct _DEVICE_CONTEXT
    KSPIN_LOCK                    RxLock;
    ULONG                         NumOfRxReqs;
    ULONG                         FunctionType;
+   ULONG                         IoFailureThreshold;
    QDB_IO_REQUEST                RxRequest[IO_REQ_NUM_RX];
    BOOLEAN                       PipeDrain;
    QDB_STATS                     Stats;

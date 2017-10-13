@@ -80,6 +80,7 @@ VOID QDBMAIN_GetRegistrySettings(WDFDEVICE Device)
    NTSTATUS        ntStatus;
    WDFKEY          hKey = NULL;
    DECLARE_CONST_UNICODE_STRING(valueFunctionName, L"QCDeviceFunction");
+   DECLARE_CONST_UNICODE_STRING(valueIoFailureThreshold, L"QCDeviceIoFailureThreshold");
 
    pDevContext = QdbDeviceGetContext(Device);
 
@@ -91,6 +92,7 @@ VOID QDBMAIN_GetRegistrySettings(WDFDEVICE Device)
    );
 
    pDevContext->FunctionType = QDB_FUNCTION_TYPE_QDSS; // default
+   pDevContext->IoFailureThreshold = 24;  // default
 
    ntStatus = WdfDeviceOpenRegistryKey
               (
@@ -120,6 +122,25 @@ VOID QDBMAIN_GetRegistrySettings(WDFDEVICE Device)
           pDevContext->FunctionType = 0;
           return;
        }
+
+       ntStatus = WdfRegistryQueryULong
+                  (
+                     hKey,
+                     &valueIoFailureThreshold,
+                     &(pDevContext->IoFailureThreshold)
+                  );
+       if (!NT_SUCCESS(ntStatus))
+       {
+          QDB_DbgPrint
+          (
+             QDB_DBG_MASK_READ,
+             QDB_DBG_LEVEL_ERROR,
+             ("<%s> QDBMAIN_GetRegistrySettings: use default for funcType\n", pDevContext->PortName)
+          );
+          pDevContext->IoFailureThreshold = 24;  // default
+          return;
+       }
+
        WdfRegistryClose(hKey);
    }
    QDB_DbgPrint

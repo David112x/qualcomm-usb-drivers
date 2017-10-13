@@ -1,6 +1,10 @@
 <config>
   <image_tree>
     <name>QUD.WIN.1.1</name>
-    <revision>10039</revision>
+    <build_id>QUD.WIN.1.1-10040-GENERAL-5</build_id>
+    <branch_point_revision/>
+    <revision>10040</revision>
+    <spin>5</spin>
+    <client>GENERAL</client>
   </image_tree>
 </config>

@@ -4710,6 +4710,49 @@ VOID SignalStateTimerDpc
   
 }  
 
+VOID SignalStateDisconnectTimerDpc
+(
+   PVOID SystemSpecific1,
+   PVOID FunctionContext,
+   PVOID SystemSpecific2,
+   PVOID SystemSpecific3
+)
+{
+   PMP_ADAPTER pAdapter = (PMP_ADAPTER)FunctionContext;
+   NDIS_LINK_STATE LinkState;
+   NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+      ("<%s> ---> SignalStateDisconnectTimerDpc\n", pAdapter->PortName)
+   );
+
+   NdisAcquireSpinLock(&pAdapter->QMICTLLock);
+
+   NdisZeroMemory( &LinkState, sizeof(NDIS_LINK_STATE) );
+   LinkState.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+   LinkState.Header.Revision  = NDIS_LINK_STATE_REVISION_1;
+   LinkState.Header.Size  = sizeof(NDIS_LINK_STATE);
+   LinkState.MediaConnectState = MediaConnectStateDisconnected;
+   LinkState.MediaDuplexState = MediaDuplexStateUnknown;
+   LinkState.PauseFunctions = NdisPauseFunctionsUnknown;
+   LinkState.XmitLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
+   LinkState.RcvLinkSpeed = NDIS_LINK_SPEED_UNKNOWN;
+   MyNdisMIndicateStatus
+   (
+      pAdapter->AdapterHandle,
+      NDIS_STATUS_LINK_STATE,
+      (PVOID)&LinkState,
+      sizeof(NDIS_LINK_STATE)
+   );
+
+   pAdapter->nSignalStateDisconnectTimerCalled = 1;
+   NdisReleaseSpinLock(&pAdapter->QMICTLLock);
+   QcMpIoReleaseRemoveLock(pAdapter, pAdapter->pMPRmLock, NULL, MP_CNT_TIMER, 222)
+  
+}  
+
 VOID MsisdnTimerDpc
 (
    PVOID SystemSpecific1,

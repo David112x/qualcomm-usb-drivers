@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.39
-11/17/2015
+Qualcomm USB Host Drivers Version 1.00.40
+05/10/2016
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,7 +20,28 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.39) 11/17/2015
+This Release (Qualcomm USB Host Drivers Version 1.00.40) 05/10/2016
+USB Driver updates:
+   Serial driver 2.1.2.2
+      a.  Added support for PID 90BF and 90C0, 90C1, 90C2, 90C3.
+      b.  Added a timeout so that ReadThread can be canceled if start device fails.
+      c.  Consolidated the initialization of write queues with other 
+          queue initializations to avoid access failure if USB fails during enumeration.
+   Network driver 4.0.4.0
+      a.  Added feature to signal LINK_STATE indication when signal strength drops to 0.
+      b.  Added a guard for event creation with DEVICE_REMOVAL_EVENTS_MAX.
+      c.  Fix the memory leek issue with RtlAnsiStringToUnicodeString. 
+      d.  Added support for PID 90C1, 90C2, 90C3.
+      e.  Added the fix for decoding the ICCID correctly.
+   Filter driver 1.0.3.1
+      a.  Added support for PID 90BF and 90C0, 90C1, 90C2, 90C3.
+      b.  Added remove lock acquiring for IRP_MJ_WRITE, IRP_MJ_CLEANUP and IRP_MJ_DEVICE_CONTROL.
+      c.  Clear Dispatch table for initializing.
+   QDSS/DPL driver 1.0.0.9
+      a.  Added support for PID 90BF and 90C0, 90C1, 90C2, 90C3.
+      b.  Fixed DPL stability issue during device removal.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.39) 11/17/2015
 USB Driver updates:
    Serial driver 2.1.2.1
    Network driver 4.0.3.9
@@ -29,7 +50,7 @@ USB Driver updates:
    Filter driver 1.0.3.0
    QDSS/DPL driver 1.0.0.7
 
-This Release (Qualcomm USB Host Drivers Version 1.00.38) 10/08/2015
+Prior Release (Qualcomm USB Host Drivers Version 1.00.38) 10/08/2015
 USB Driver updates:
    a.   Added the rogue driver cleanup in Installer.
    b.   Added support for configuring QMI request threshold.

@@ -395,6 +395,7 @@ NTSTATUS QDBPNP_EvtDevicePrepareHW
    pDevContext->Stats.NumRxExhausted = 0;
    pDevContext->Stats.BytesDrained = 0;
    pDevContext->Stats.PacketsDrained = 0;
+   pDevContext->Stats.IoFailureCount = 0;
 
    // Device descriptor
    ntStatus = QDBPNP_EnumerateDevice(Device);

@@ -992,6 +992,9 @@ typedef struct _MP_ADAPTER
    NDIS_TIMER              RegisterPacketTimer;
    PVOID                   RegisterPacketTimerContext;
 
+   NDIS_TIMER              SignalStateDisconnectTimer;
+   LONG                    nSignalStateDisconnectTimer;
+   LONG                    nSignalStateDisconnectTimerCalled;
 #endif
 
 #ifdef QCMP_TEST_MODE
@@ -1689,6 +1692,14 @@ VOID MsisdnTimerDpc
    PVOID SystemSpecific3
 );
 VOID RegisterPacketTimerDpc
+(
+   PVOID SystemSpecific1,
+   PVOID FunctionContext,
+   PVOID SystemSpecific2,
+   PVOID SystemSpecific3
+);
+
+VOID SignalStateDisconnectTimerDpc
 (
    PVOID SystemSpecific1,
    PVOID FunctionContext,

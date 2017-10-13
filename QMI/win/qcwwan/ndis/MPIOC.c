@@ -1006,7 +1006,7 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
              
              case IOCTL_QCDEV_DEVICE_REMOVE_EVENTA:
              {
-                if ((buffer == NULL) || (inlen == 0) || (outlen == 0) || (outlen < sizeof(ULONGLONG)))
+                if ((buffer == NULL) || (inlen == 0) || (outlen == 0) || (outlen < sizeof(ULONGLONG)) || (pAdapter->NamedEventsIndex >= DEVICE_REMOVAL_EVENTS_MAX))
                 {
                    QCNET_DbgPrint
                    (
@@ -1051,7 +1051,7 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
              
              case IOCTL_QCDEV_DEVICE_REMOVE_EVENTW:
              {
-                if ((buffer == NULL) || (inlen == 0) || (outlen == 0) || (outlen < sizeof(ULONGLONG)))
+                if ((buffer == NULL) || (inlen == 0) || (outlen == 0) || (outlen < sizeof(ULONGLONG)) || (pAdapter->NamedEventsIndex >= DEVICE_REMOVAL_EVENTS_MAX))
                 {
                    QCNET_DbgPrint
                    (
@@ -1470,8 +1470,6 @@ NDIS_STATUS MPIOC_AddDevice
       *IocDevice = NULL;
    }
 
-   NdisAcquireSpinLock(MP_CtlLock);
-
    pIocDev = ExAllocatePool(NonPagedPool, sizeof(MPIOC_DEV_INFO));
    if (pIocDev == NULL)
    {
@@ -1480,9 +1478,10 @@ NDIS_STATUS MPIOC_AddDevice
          MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_ERROR,
          ("MPIOC: AddDev failure.\n")
       );
-      NdisReleaseSpinLock(MP_CtlLock);
       return NDIS_STATUS_FAILURE;
    }
+
+   NdisAcquireSpinLock(MP_CtlLock);
    RtlZeroMemory(pIocDev, sizeof(MPIOC_DEV_INFO));
 
    pIocDev->Acquired         = FALSE;
@@ -1923,7 +1922,7 @@ NDIS_STATUS MPIOC_DeleteFilterDevice
                // Register the device here
                MP_USBSendCustomCommand( pAdapter, IOCTL_QCDEV_CLOSE_CTL_FILE, 
                                         pFilterDeviceInfo, sizeof(FILTER_DEVICE_INFO), &ReturnBufferLength);
-               
+               MPMAIN_Wait(-(5 * 1000 * 1000)); // +500ms delay here.
                RtlFreeUnicodeString(&(pIocDev->SymbolicName));
                RtlFreeUnicodeString(&(pIocDev->DeviceName));
             }

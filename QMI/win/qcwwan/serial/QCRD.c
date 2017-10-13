@@ -4135,6 +4135,8 @@ NTSTATUS QCRD_StartReadThread(PDEVICE_EXTENSION pDevExt)
    KIRQL levelOrHandle;
    #endif
    KIRQL irql = KeGetCurrentIrql();
+   LARGE_INTEGER timeOut;
+   timeOut.QuadPart = -(20 * 1000 * 1000); // 2 seconds
 
    QcAcquireSpinLock(&pDevExt->ReadSpinLock, &levelOrHandle);
 
@@ -4227,7 +4229,7 @@ NTSTATUS QCRD_StartReadThread(PDEVICE_EXTENSION pDevExt)
                     Executive, 
                     KernelMode, 
                     FALSE, 
-                    NULL
+                    &timeOut
                  );
 
       if (pDevExt->bRdThreadInCreation == FALSE)

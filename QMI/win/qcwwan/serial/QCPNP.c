@@ -2107,7 +2107,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.2.1");
+             DbgPrint("Driver Version %s\n", "2.1.2.2");
              DbgPrint("   |============================|\n");
           }
           else
@@ -2130,7 +2130,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.2.1");
+             DbgPrint("Driver Version %s\n", "2.1.2.2");
              DbgPrint("   |===============================|\n");
           }
           QCSER_DbgPrint
@@ -2174,7 +2174,7 @@ NTSTATUS QCPNP_SelectInterfaces
          DbgPrint("   |   IF: CT%02d-CC%02d-DA%02d          |\n", pDevExt->ControlInterface,
                    pDevExt->usCommClassInterface, pDevExt->DataInterface);
          DbgPrint("   |   HS 0x%x       |\n", pDevExt->HighSpeedUsbOk);
-         DbgPrint("Driver Version 2.1.2.1\n");
+         DbgPrint("Driver Version 2.1.2.2\n");
          DbgPrint("   |===============================|\n\n");
       }
       else
