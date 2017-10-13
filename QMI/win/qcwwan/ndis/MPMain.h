@@ -1423,11 +1423,12 @@ typedef struct _MP_ADAPTER
    KEVENT  IPV4MtuReceivedEvent;
    KEVENT  IPV6MtuReceivedEvent;
    PFILE_OBJECT MtuClient;
-   PFILE_OBJECT NotifyClient;
    USHORT MCC;
    USHORT MNC;
    BOOLEAN IsLTE;
    ULONG QMAPDLMinPadding;   
+   UCHAR BindIFId;
+   UCHAR BindEPType;
 } MP_ADAPTER, *PMP_ADAPTER;
 
 

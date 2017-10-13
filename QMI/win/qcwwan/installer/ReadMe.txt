@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.30
-10/15/2014
+Qualcomm USB Host Drivers Version 1.00.34
+01/22/2015
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -19,7 +19,55 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 ---------------------------------------------------------------
 
 2. WHAT'S NEW
-This Release (Qualcomm USB Host Drivers Version 1.00.30) 10/15/2014
+
+This Release (Qualcomm USB Host Drivers Version 1.00.34) 01/22/2015
+USB Driver updates:
+   Serial driver 2.1.1.7
+   Network driver 4.0.3.4
+      a.   Added unconditional wait for IRP completion from filter driver.
+   Filter driver 1.0.2.7
+   QDSS/DPL driver 1.0.0.6
+      a.   Added fix that was causing device removal/driver update to get stuck forever.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.33) 01/14/2015
+USB Driver updates:
+   Serial driver 2.1.1.7
+   Network driver 4.0.3.3
+      a.   Removed opening PDS client in the driver.
+   Filter driver 1.0.2.7
+      a.   Fixed the BSOD issue caused when processing IRP_MJ_READ.
+   QDSS/DPL driver 1.0.0.5
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.32) 12/05/2014
+USB Driver updates:
+   Serial driver 2.1.1.7
+      a.   Added PIDs 90B7 and 90B8 support.
+   Network driver 4.0.3.2
+      a.   Added PIDs 90B7 and 90B8 support.
+      b.   Added registry settings for QCMPBindIFId, QCMPBindEPType and QCMPMuxId. 
+      c.   Made sure all IRP allocations are allocated with count of device object stack locations.
+      d.   Added IOCTL_QCDEV_QMI_READY IOCTL to notify when the QMI is ready.
+      e.   Added extended IP-config support for IPV4 client.
+      f.   Removed timeout in release-client-id-response for performance.
+      g.   Reset PendingCTL requests count on QMI initialization.
+      h.   Fixed the Aggregation Count issue for MBIM aggregation.
+   Filter driver 1.0.2.6
+      a.   Added PIDs 90B7 and 90B8 support.
+   QDSS/DPL driver 1.0.0.5
+      a.   Added PIDs 90B7 and 90B8 support.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.31) 10/17/2014
+USB Driver updates:
+   Serial driver 2.1.1.6
+   Network driver 4.0.3.1
+      a.   Re-worked notifications for MTU service so that notifications are 
+           cancelled properly with IRP_MJ_CLEANUP. 
+      b.   MTU service is enforced on QMI CTRL device for removal notification
+           registration.
+   Filter driver 1.0.2.5
+   QDSS/DPL driver 1.0.0.4
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.30) 10/15/2014
 USB Driver updates:
    Serial driver 2.1.1.6
       a.   Added 90B0, 90B2, 90B3, 90B4, 90B5 and 90B6 PIDs support.

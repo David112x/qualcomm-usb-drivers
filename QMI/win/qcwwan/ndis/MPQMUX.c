@@ -1072,6 +1072,12 @@ VOID MPQMI_ProcessInboundQWDSResponse
          }  
          #endif // QC_IP_MODE
 
+         case QMIWDS_INDICATION_REGISTER_RESP:
+         {
+            MPQMUX_ProcessIndicationRegisterResp(pAdapter, qmux_msg, pAdapter);   // 3rd argument is unused
+            break;
+         }
+
          case QMIWDS_START_NETWORK_INTERFACE_RESP:
          {
             MPQMUX_ProcessWdsStartNwInterfaceResp( pAdapter, qmux_msg, pMatchOID, pContext );
@@ -9865,12 +9871,14 @@ ULONG MPQMUX_ProcessWdsGetRuntimeSettingResp
                   {
                      ipv6Addr = (PQMIWDS_GET_RUNTIME_SETTINGS_TLV_IPV6_ADDR)tlv;
                      pAdapter->IPSettings.IPV6.Flags = 1;
+
                      RtlCopyMemory
                      (
-                        pAdapter->IPSettings.IPV6.Address.Byte,
+                        (PVOID)(pAdapter->IPSettings.IPV6.Address.Byte),
                         ipv6Addr->IPV6Address,
                         16
                      );
+
                      if (QCMAIN_IsDualIPSupported(pAdapter) == TRUE)
                      {
                         pAdapter->IPSettings.IPV6.PrefixLengthIPAddr = ipv6Addr->PrefixLength;
@@ -11666,6 +11674,12 @@ ULONG MPQMUX_ProcessWmsGetMessageProtocolResp
              {
                 pNdisDeviceCaps->DeviceCaps.WwanSmsCaps = WWAN_SMS_CAPS_NONE;
                 pNdisDeviceCaps->uStatus = pOID->OIDStatus;
+                if (qmux_msg->GetMessageProtocolResp.QMUXError == QMI_ERR_OP_DEVICE_UNSUPPORTED)
+                {
+                    pNdisDeviceCaps->DeviceCaps.WwanSmsCaps = WWAN_SMS_CAPS_PDU_SEND |
+                                                              WWAN_SMS_CAPS_PDU_RECEIVE;
+                    pAdapter->MessageProtocol = 0xFF;
+                }
              }
              
              MPQMUX_ComposeQMUXReq( pAdapter, pOID, QMUX_TYPE_DMS, 
@@ -11722,6 +11736,18 @@ USHORT MPQMUX_ComposeWmsRawReadReqSend
       qmux_msg->RawReadMessagesReq.MemoryIndex = pAdapter->SmsListIndex;   
    }
 
+   if (pAdapter->MessageProtocol == 0xFF)
+   {
+      PQMIWMS_MESSAGE_MODE pMessageMode = (PQMIWMS_MESSAGE_MODE)((PCHAR)&(qmux_msg->RawReadMessagesReq) + qmux_msg->RawReadMessagesReq.Length + 4);
+      pMessageMode->TLVType = 0x10;
+      pMessageMode->TLVLength = 0x01;
+      pMessageMode->MessageMode = 0x01;
+      if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+      {
+         pMessageMode->MessageMode = 0x00;
+      }
+      qmux_msg->RawReadMessagesReq.Length += sizeof(QMIWMS_MESSAGE_MODE);
+   }
    qmux_len =  qmux_msg->RawReadMessagesReq.Length;
    return qmux_len;
 }  
@@ -11754,6 +11780,19 @@ USHORT MPQMUX_SendWmsModifyTagReq
    }
 
    qmux_msg->WmsModifyTagReq.TagType = 0x00;
+   
+   if (pAdapter->MessageProtocol == 0xFF)
+   {
+      PQMIWMS_MESSAGE_MODE pMessageMode = (PQMIWMS_MESSAGE_MODE)((PCHAR)&(qmux_msg->WmsModifyTagReq) + qmux_msg->WmsModifyTagReq.Length + 4);
+      pMessageMode->TLVType = 0x10;
+      pMessageMode->TLVLength = 0x01;
+      pMessageMode->MessageMode = 0x01;
+      if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+      {
+         pMessageMode->MessageMode = 0x00;
+      }
+      qmux_msg->WmsModifyTagReq.Length += sizeof(QMIWMS_MESSAGE_MODE);
+   }
    
    qmux_len = qmux_msg->WmsModifyTagReq.Length;
    return qmux_len;
@@ -11877,6 +11916,20 @@ USHORT MPQMUX_ComposeWmsDeleteReqSend
    {
       qmux_msg->WmsDeleteReq.StorageType = pAdapter->SMSCapacityType;
    }
+   
+   if (pAdapter->MessageProtocol == 0xFF)
+   {
+      PQMIWMS_MESSAGE_MODE pMessageMode = (PQMIWMS_MESSAGE_MODE)((PCHAR)&(qmux_msg->WmsDeleteReq) + qmux_msg->WmsDeleteReq.Length + 4);
+      pMessageMode->TLVType = 0x12;
+      pMessageMode->TLVLength = 0x01;
+      pMessageMode->MessageMode = 0x01;
+      if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+      {
+         pMessageMode->MessageMode = 0x00;
+      }
+      qmux_msg->WmsDeleteReq.Length += sizeof(QMIWMS_MESSAGE_MODE);
+   }
+   
    qmux_len = qmux_msg->WmsDeleteReq.Length;
    return qmux_len;
 }  
@@ -11926,6 +11979,19 @@ USHORT MPQMUX_ComposeWmsListMessagesReqSend
       }
    }
 
+   if (pAdapter->MessageProtocol == 0xFF)
+   {
+      PQMIWMS_MESSAGE_MODE pMessageMode = (PQMIWMS_MESSAGE_MODE)((PCHAR)&(qmux_msg->ListMessagesReq) + qmux_msg->ListMessagesReq.Length + 4);
+      pMessageMode->TLVType = 0x11;
+      pMessageMode->TLVLength = 0x01;
+      pMessageMode->MessageMode = 0x01;
+      if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+      {
+         pMessageMode->MessageMode = 0x00;
+      }
+      qmux_msg->ListMessagesReq.Length += sizeof(QMIWMS_MESSAGE_MODE);
+   }
+
    qmux_len = qmux_msg->ListMessagesReq.Length;   
    return qmux_len;
 }  
@@ -11961,6 +12027,19 @@ USHORT MPQMUX_ComposeWmsGetStoreMaxSizeReqSend
    qmux_msg->GetStoreMaxSizeReq.TLVType = 0x01;
    qmux_msg->GetStoreMaxSizeReq.TLVLength = 0x01;
    qmux_msg->GetStoreMaxSizeReq.StorageType = pAdapter->SMSCapacityType;
+
+   if (pAdapter->MessageProtocol == 0xFF)
+   {
+      PQMIWMS_MESSAGE_MODE pMessageMode = (PQMIWMS_MESSAGE_MODE)((PCHAR)&(qmux_msg->GetStoreMaxSizeReq) + qmux_msg->GetStoreMaxSizeReq.Length + 4);
+      pMessageMode->TLVType = 0x10;
+      pMessageMode->TLVLength = 0x01;
+      pMessageMode->MessageMode = 0x01;
+      if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
+      {
+         pMessageMode->MessageMode = 0x00;
+      }
+      qmux_msg->GetStoreMaxSizeReq.Length += sizeof(QMIWMS_MESSAGE_MODE);
+   }
 
    qmux_len = qmux_msg->GetStoreMaxSizeReq.Length;
    return qmux_len;
@@ -13534,19 +13613,34 @@ ULONG MPQMUX_ProcessWmsEventReportInd
    PMP_OID_WRITE pOID
 )
 {
+   PUCHAR pDataPtr = NULL;
    UCHAR retVal = 0;
+   ULONG remainingLen = 0;
 
-#ifdef NDIS620_MINIPORT   
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
+      ("<%s> WmsEventReportInd\n", pAdapter->PortName)
+   );
 
-   if (qmux_msg->WmsEventReportInd.StorageType == 0x00)
+   remainingLen = qmux_msg->WmsEventReportInd.Length;
+   pDataPtr = (CHAR *)&qmux_msg->WmsEventReportInd + sizeof(QMIWMS_EVENT_REPORT_IND_MSG);
+   while(remainingLen > 0 )
    {
-      pAdapter->SmsStatusIndex = qmux_msg->WmsEventReportInd.StorageIndex + 1;
+      switch(((POPERATING_MODE)pDataPtr)->TLVType)
+      {
+         case 0x10:
+         {
+#ifdef NDIS620_MINIPORT   
+            PQMIWMS_MT_MESSAGE pMTMessage = (PQMIWMS_MT_MESSAGE)pDataPtr;
+            if (pMTMessage->StorageType == 0x00)
+   {
+               pAdapter->SmsStatusIndex = pMTMessage->StorageIndex + 1;
    }
    else
    {
-      pAdapter->SmsStatusIndex = pAdapter->SmsUIMMaxMessages + qmux_msg->WmsEventReportInd.StorageIndex + 1;
+               pAdapter->SmsStatusIndex = pAdapter->SmsUIMMaxMessages + pMTMessage->StorageIndex + 1;
    }
-
    QCNET_DbgPrint
    (
       MP_DBG_MASK_OID_QMI, MP_DBG_LEVEL_DETAIL,
@@ -13560,6 +13654,18 @@ ULONG MPQMUX_ProcessWmsEventReportInd
                           QMIWMS_LIST_MESSAGES_REQ, MPQMUX_ComposeWmsListMessagesReqSend, TRUE );
    
 #endif   
+            remainingLen -= (3 + ((POPERATING_MODE)pDataPtr)->TLVLength);
+            pDataPtr += (3 + ((POPERATING_MODE)pDataPtr)->TLVLength);
+            break;
+         }
+         default:
+         {
+            remainingLen -= (3 + ((POPERATING_MODE)pDataPtr)->TLVLength);
+            pDataPtr += (3 + ((POPERATING_MODE)pDataPtr)->TLVLength);
+            break;
+         }
+      }
+   }   
    return retVal;
 }  
 
@@ -20828,9 +20934,23 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
         epTlv = (PQMIWDS_ENDPOINT_TLV)bufPtr;
         epTlv->TLVType = 0x17;
         epTlv->TLVLength = 8;
+        if (pAdapter->BindEPType == 0x00)
+        {
         epTlv->ep_type = 0x02;
+        }
+        else
+        {
+           epTlv->ep_type = pAdapter->BindEPType;
+        }
         DisconnectedAllAdapters(pAdapter, &returnAdapter);
+        if (pAdapter->BindIFId == 0x00)
+        {
         epTlv->iface_id = (((PDEVICE_EXTENSION)(returnAdapter->USBDo->DeviceExtension))->DataInterface);
+        }
+        else
+        {
+           epTlv->iface_id = pAdapter->BindIFId;
+        }
         bufPtr = (PUCHAR)&(epTlv->ep_type);
         bufPtr += epTlv->TLVLength;
     }    
@@ -21167,9 +21287,23 @@ NDIS_STATUS MPQMUX_SetQMUXBindMuxDataPort
       qmux_msg->BindMuxDataPortReq.TLVType = 0x12;
    }
    qmux_msg->BindMuxDataPortReq.TLVLength = sizeof(ULONG) + sizeof(ULONG);
+   if (pAdapter->BindEPType == 0x00)
+   {
    qmux_msg->BindMuxDataPortReq.ep_type = 0x02;
+   }
+   else
+   {
+      qmux_msg->BindMuxDataPortReq.ep_type = pAdapter->BindEPType;
+   }
    DisconnectedAllAdapters(pAdapter, &returnAdapter);
+   if (pAdapter->BindIFId == 0x00)
+   {
    qmux_msg->BindMuxDataPortReq.iface_id = (((PDEVICE_EXTENSION)(returnAdapter->USBDo->DeviceExtension))->DataInterface);
+   }
+   else
+   {
+      qmux_msg->BindMuxDataPortReq.iface_id = pAdapter->BindIFId;
+   }
     
    qmux_msg->BindMuxDataPortReq.TLV2Type = 0x11;
    if (QmiType == QMUX_TYPE_DFS)

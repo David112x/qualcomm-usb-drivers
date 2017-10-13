@@ -947,6 +947,12 @@ QCFilterDispatchIo( PDEVICE_OBJECT DeviceObject, PIRP Irp )
                   InsertTailList( &deviceExtension->DispatchQueue, &Irp->Tail.Overlay.ListEntry);
                   QcReleaseSpinLockWithLevel(&deviceExtension->FilterSpinLock, levelOrHandle, irql);
 
+                  QCFLT_DbgPrint
+                  (   
+                     DBG_LEVEL_TRACE,
+                     ("MPFILTER: IRP_MJ_DEVICE_CONTROL sub command queued up the control queue\n")
+                  );
+
                   KeSetEvent
                   (
                      deviceExtension->FilterThread.pFilterEvents[QCFLT_FILTER_CREATE_CONTROL],
@@ -983,6 +989,12 @@ QCFilterDispatchIo( PDEVICE_OBJECT DeviceObject, PIRP Irp )
                   status = STATUS_PENDING;
                   InsertTailList( &deviceExtension->DispatchQueue, &Irp->Tail.Overlay.ListEntry);
                   QcReleaseSpinLockWithLevel(&deviceExtension->FilterSpinLock, levelOrHandle, irql);
+
+                  QCFLT_DbgPrint
+                  (   
+                     DBG_LEVEL_TRACE,
+                     ("MPFILTER: IRP_MJ_DEVICE_CONTROL sub command queued up the control queue\n")
+                  );
 
                   KeSetEvent
                   (
@@ -1409,7 +1421,7 @@ Success:
    ASSERT(deviceExtension->Type == DEVICE_TYPE_QCCDO);
 
    pCtlExt = (PCONTROL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    
+  
    if (!pCtlExt->Deleted) 
    { 
       PFILTER_DEVICE_LIST pIocFilterDev = NULL;
@@ -1481,29 +1493,13 @@ Success:
                status = IoAcquireRemoveLock(pCtlExt->pRmLock, NULL);
                if (NT_SUCCESS( status ))
                {
-                  QCFLT_DbgPrint
-                  (   
-                     DBG_LEVEL_TRACE,
-                     ("Remove Lock Acquire success!!! Adapter 0x%p\n", pCtlExt->pAdapterContext)
-                  );
-
   	          if (pIocFilterDev->DispatchTable[IRP_MJ_READ] != NULL)
                   {
                      status = (pIocFilterDev->DispatchTable[IRP_MJ_READ])(DeviceObject, Irp);
                      IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
-                     QCFLT_DbgPrint
-                     (   
-                        DBG_LEVEL_TRACE,
-                        ("Remove Lock Release success!!! Adapter 0x%p\n", pCtlExt->pAdapterContext)
-                     );
                      return status;
                   }
                   IoReleaseRemoveLock(pCtlExt->pRmLock, NULL);
-                  QCFLT_DbgPrint
-                  (   
-                     DBG_LEVEL_TRACE,
-                     ("Remove Lock Release success!!! Adapter 0x%p\n", pCtlExt->pAdapterContext)
-                  );
                }
             }
             else

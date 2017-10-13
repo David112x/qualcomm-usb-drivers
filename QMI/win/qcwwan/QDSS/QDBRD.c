@@ -299,6 +299,9 @@ VOID QDBRD_ReadUSB
          QDB_DBG_LEVEL_ERROR,
          ("<%s> QDBRD_ReadUSB: WdfRequestSend failed (0x%x)\n", pDevContext->PortName, ntStatus)
       );
+
+      // In this case, completion routine will not be called, so need to rewind
+      InterlockedDecrement(&(pDevContext->Stats.OutstandingRx));
    }
 
    QDB_DbgPrint
@@ -658,6 +661,9 @@ VOID QDBRD_SendIOBlock(PDEVICE_CONTEXT pDevContext, INT Index)
          QDB_DBG_LEVEL_ERROR,
          ("<%s> QDBRD_SendIOBlock: WdfRequestSend failed [%d] (0x%x)\n", pDevContext->PortName, Index, ntStatus)
       );
+
+      // In this case, completion routine will not be called, so need to rewind
+      InterlockedDecrement(&(pDevContext->Stats.DrainingRx));
    }
 
    QDB_DbgPrint
@@ -787,7 +793,8 @@ VOID QDBRD_PipeDrainCompletion
    (
       QDB_DBG_MASK_READ,
       QDB_DBG_LEVEL_TRACE,
-      ("<%s> <--QDBRD_PipeDrainCompletion: pending %d\n", pDevContext->PortName, pDevContext->Stats.DrainingRx)
+      ("<%s> <--QDBRD_PipeDrainCompletion: [%d] pending %d\n", pDevContext->PortName, ioReq->Index,
+         pDevContext->Stats.DrainingRx)
    );
 
 } // QDBRD_PipeDrainCompletion

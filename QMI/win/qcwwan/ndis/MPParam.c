@@ -127,6 +127,10 @@ typedef enum _MP_REG_INDEX
 
    MP_DL_QMAP_MIN_PADDING,
 
+   MP_BIND_IF_ID,
+
+   MP_BIND_EP_TYPE,
+
    MP_REG_INDEX_MAX
 } MP_REG_INDEX;
 
@@ -233,6 +237,9 @@ NDIS_STRING MPRegString[] =
 #if defined(QCMP_QMAP_V1_SUPPORT)
    NDIS_STRING_CONST("QCMPQMAPDLMinPadding"),
 #endif
+
+   NDIS_STRING_CONST("QCMPBindIFId"),
+   NDIS_STRING_CONST("QCMPBindEPType"),
 
    NDIS_STRING_CONST("MPRegMaxPlaceHolder")
 };
@@ -569,6 +576,24 @@ NDIS_STATUS MPParam_GetConfigValues
          &pAdapter->QMAPDLMinPadding,
          PARAM_QMAPDLMinPadding_DEFAULT, PARAM_QMAPDLMinPadding_MIN, PARAM_QMAPDLMinPadding_MAX,
          MP_DL_QMAP_MIN_PADDING
+      );
+
+      MPPARAM_ConfigurationGetValue
+      (
+         configurationHandle,
+         (UCHAR)MP_BIND_IF_ID,
+         (PULONG)&pAdapter->BindIFId,
+         PARAM_MPBindIFId_DEFAULT, PARAM_MPBindIFId_MIN, PARAM_MPBindIFId_MAX,
+         MP_BIND_IF_ID
+      );
+
+      MPPARAM_ConfigurationGetValue
+      (
+         configurationHandle,
+         (UCHAR)MP_BIND_EP_TYPE,
+         (PULONG)&pAdapter->BindEPType,
+         PARAM_MPBindEPType_DEFAULT, PARAM_MPBindEPType_MIN, PARAM_MPBindEPType_MAX,
+         MP_BIND_EP_TYPE
       );
       
 #endif //

@@ -1,5 +1,5 @@
 ; Windows Setup File for QDSS
-; Copyright (c) 2014 Qualcomm Technologies, Inc.
+; Copyright (c) 2015 Qualcomm Technologies, Inc.
 ; All rights reserved.
 ;
 
@@ -8,7 +8,7 @@ Signature="$WINDOWS NT$"
 Class=USB
 ClassGuid={36FC9E60-C465-11CF-8056-444553540000}
 Provider=%QCOM%
-DriverVer = 08/22/2014, 1.0.0.3
+DriverVer = 01/27/2015, 1.0.0.6
 Catalogfile= qdbusb.cat
 
 [Manufacturer]
@@ -60,6 +60,8 @@ Catalogfile= qdbusb.cat
 %QDSS90AF04%=QdssPort01, USB\VID_05C6&PID_90AF&MI_04
 %QDSS90B005%=QdssPort01, USB\VID_05C6&PID_90B0&MI_05
 %QDSS90B201%=QdssPort, USB\VID_05C6&PID_90B2&MI_01
+%QDSS90B703%=QdssPort01, USB\VID_05C6&PID_90B7&MI_03
+%QDSS90B803%=QdssPort01, USB\VID_05C6&PID_90B8&MI_03
 %QDSS920B02%=QdssPort, USB\VID_05C6&PID_920B&MI_02
 
 [QCOM.NTamd64]
@@ -108,6 +110,8 @@ Catalogfile= qdbusb.cat
 %QDSS90AF04%=QdssPort01, USB\VID_05C6&PID_90AF&MI_04
 %QDSS90B005%=QdssPort01, USB\VID_05C6&PID_90B0&MI_05
 %QDSS90B201%=QdssPort, USB\VID_05C6&PID_90B2&MI_01
+%QDSS90B703%=QdssPort01, USB\VID_05C6&PID_90B7&MI_03
+%QDSS90B803%=QdssPort01, USB\VID_05C6&PID_90B8&MI_03
 %QDSS920B02%=QdssPort, USB\VID_05C6&PID_920B&MI_02
 
 [QdssPort.NT]
@@ -232,4 +236,6 @@ QDSS90AE05 = "Qualcomm DPL Data 90AE"
 QDSS90AF04 = "Qualcomm DPL Data 90AF"
 QDSS90B005 = "Qualcomm DPL Data 90B0"
 QDSS90B201 = "QDSS Data 90B2"
+QDSS90B703 = "Qualcomm DPL Data 90B7"
+QDSS90B803 = "Qualcomm DPL Data 90B8"
 QDSS920B02 = "QDSS Data 920B"

@@ -277,15 +277,30 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
              break;
           }
 #endif
-          if (pAdapter->NotifyClient == irpStack->FileObject)
+
+          if (pIocDev->Type == MP_DEV_TYPE_CONTROL)  // MTU service is provided by CONTROL device
+          {
+             if (pAdapter->MtuClient == irpStack->FileObject)
              {
-          MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_WAIT_NOTIFY);
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+                   ("<%s> MPIOC: IRP_MJ_CLEANUP: cancel V4/6 notify for MTU on IOC_CTL\n", pAdapter->PortName)
+                );
+                MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV4_MTU_NOTIFY);
+                MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV6_MTU_NOTIFY);
+                MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_WAIT_NOTIFY);
              }
-          if (pAdapter->MtuClient == irpStack->FileObject)
-             {
-          MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV4_MTU_NOTIFY);
-          MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV6_MTU_NOTIFY);
-             }
+          }
+          else
+          {
+             QCNET_DbgPrint
+             (
+                MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+                ("<%s> MPIOC: IRP_MJ_CLEANUP: cancel rm notify for IOC 0x%p fileObj 0x%p\n", pAdapter->PortName, pIocDev, irpStack->FileObject)
+             );
+             MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_WAIT_NOTIFY);
+          }
           MPIOC_EmptyIrpCompletionQueue(pIocDev);
 
           #ifdef QCMP_SUPPORT_CTRL_QMIC
@@ -392,15 +407,29 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
              MPIOC_CleanupQueues(pIocDev, 1);
           }
 
-          if (pAdapter->NotifyClient == irpStack->FileObject)
+          if (pIocDev->Type == MP_DEV_TYPE_CONTROL)  // MTU service is provided by CONTROL device
+          {
+             if (pAdapter->MtuClient == irpStack->FileObject)
              {
-          MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_WAIT_NOTIFY);
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+                   ("<%s> MPIOC: IRP_MJ_CLOSE: cancel V4/6 notify for MTU on IOC_CTL\n", pAdapter->PortName)
+                );
+                MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV4_MTU_NOTIFY);
+                MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV6_MTU_NOTIFY);
+                MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_WAIT_NOTIFY);
              }
-          if (pAdapter->MtuClient == irpStack->FileObject)
-             {
-          MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV4_MTU_NOTIFY);
-          MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_IPV6_MTU_NOTIFY);
-             }
+          }
+          else
+          {
+             QCNET_DbgPrint
+             (
+                MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+                ("<%s> MPIOC: IRP_MJ_CLOSE: cancel rm notify for IOC 0x%p fileObj 0x%p\n", pAdapter->PortName, pIocDev, irpStack->FileObject)
+             );
+             MPIOC_CancelNotificationIrp(pIocDev, IOCTL_QCDEV_WAIT_NOTIFY);
+          }
           MPIOC_EmptyIrpCompletionQueue(pIocDev);
 
           if (pIocDev->DeviceOpenCount > 0)
@@ -882,23 +911,67 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
              }  // IOCTL_QCDEV_SET_DBG_UMSK
 
              case IOCTL_QCDEV_WAIT_NOTIFY:
+             {
+                // to handle RM notification for all clients (inlcuding MTU client)
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+                   ("<%s> MPIOC: IOCTL_QCDEV_WAIT_NOTIFY, fileObj 0x%p Ioc 0x%p\n", pAdapter->PortName, irpStack->FileObject, pIocDev)
+                );
+
+                if (pIocDev->Type == MP_DEV_TYPE_CONTROL)
+                {
+                   // So, this requires MTU notification to be registered before the removal notification
+                   if (pAdapter->MtuClient == irpStack->FileObject)
+                   {
+                      status = MPIOC_CacheNotificationIrp(pIocDev, Irp, irpStack->Parameters.DeviceIoControl.IoControlCode);
+                   }
+                   else
+                   {
+                      // restriction: we now disallow a non-MTU client to register notification on CONTROL device
+                      status = STATUS_UNSUCCESSFUL;
+                   }
+                }
+                else
+                {
+                   // Allow removal notification to be registered on non-CONTROL device
+                   status = MPIOC_CacheNotificationIrp(pIocDev, Irp, irpStack->Parameters.DeviceIoControl.IoControlCode);
+                }
+
+                if (status == STATUS_PENDING)
+                {
+                   goto MPIOC_Dispatch_Done; // don't touch the "pending" IRP!
+                }
+                Irp->IoStatus.Status = status;
+
+                break;
+             }
              case IOCTL_QCDEV_IPV4_MTU_NOTIFY:
              case IOCTL_QCDEV_IPV6_MTU_NOTIFY:
              {
+                // to handle MTU notifications only
                 QCNET_DbgPrint
                 (
                    MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL, 
-                   ("<%s> MPIOC: IOCTL_QCDEV_WAIT_NOTIFY\n", pAdapter->PortName)
+                   ("<%s> MPIOC: IOCTL_QCDEV_WAIT_NOTIFY, fileObj 0x%p Ioc 0x%p\n", pAdapter->PortName, irpStack->FileObject, pIocDev)
                 );
-                if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_QCDEV_WAIT_NOTIFY)
+
+                if (pIocDev->Type == MP_DEV_TYPE_CONTROL)  // MTU service is provided by CONTROL device
                 {
-                   pAdapter->NotifyClient = irpStack->FileObject;
-                }
-                if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_QCDEV_IPV4_MTU_NOTIFY)
-                {
+                   // Enforce MTU notification be registered on CONTROL device only
+                   QCNET_DbgPrint
+                   (
+                      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+                      ("<%s> MPIOC: QCDEV_WAIT_NOTIFY: cache RM/V4/6 notify fileObj for MTU on IOC_CTL\n", pAdapter->PortName)
+                   );
                    pAdapter->MtuClient = irpStack->FileObject;
+                   status = MPIOC_CacheNotificationIrp(pIocDev, Irp, irpStack->Parameters.DeviceIoControl.IoControlCode);
                 }
-                status = MPIOC_CacheNotificationIrp(pIocDev, Irp, irpStack->Parameters.DeviceIoControl.IoControlCode);
+                else
+                {
+                   // Disallow any QMI client to register MTU notification
+                   status = STATUS_UNSUCCESSFUL;
+                }
 
                 if (status == STATUS_PENDING)
                 {
@@ -1209,6 +1282,27 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 }
                 break;
              }
+
+             case IOCTL_QCDEV_QMI_READY:
+             {
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL, 
+                   ("<%s> MPIOC: IOCTL_QCDEV_QMI_READY (Init/Working) -- %d/%d\n", pAdapter->PortName, pAdapter->QmiInitialized, pAdapter->IsQmiWorking)
+                );
+
+                Irp->IoStatus.Information = 0;
+                if (pAdapter->IsQmiWorking == FALSE)
+                {
+                   status = STATUS_UNSUCCESSFUL;
+                }
+                else
+                {
+                   status = STATUS_SUCCESS;
+                }
+                break;
+             }
+
              default:
              {
                 QCNET_DbgPrint

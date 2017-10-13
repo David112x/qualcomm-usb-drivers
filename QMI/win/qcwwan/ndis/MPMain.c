@@ -2921,6 +2921,9 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
                                          QMIWDS_SET_CLIENT_IP_FAMILY_PREF_REQ, (CUSTOMQMUX)MPQMUX_SetIPv4ClientIPFamilyPref, TRUE );
                }
                
+               // Register event for extended-IP-config
+               MPQWDS_SendIndicationRegisterReq(pAdapter, NULL, TRUE);
+
                MPIP_StartWdsIpClient(pAdapter);
 
                // See if there is any connection indication
@@ -4440,12 +4443,6 @@ NDIS_STATUS MPMAIN_OpenQMIClients(PMP_ADAPTER pAdapter)
    {
       goto ExitPoint;
    }
-   ndisStatus = MPQCTL_GetClientId(pAdapter, QMUX_TYPE_PDS, pAdapter);
-   if (ndisStatus != NDIS_STATUS_SUCCESS)
-   {
-      goto ExitPoint;
-   }
-
 ExitPoint:
 
    if (ndisStatus != NDIS_STATUS_SUCCESS)
@@ -4624,6 +4621,8 @@ VOID MPMAIN_DisconnectNotification(PMP_ADAPTER pAdapter)
    //pAdapter->ClientId = 0;
    RtlZeroMemory((PVOID)pAdapter->ClientId, (QMUX_TYPE_MAX+1));
 
+   // reset the PendingCtrlRequests
+   NdisZeroMemory(&(pAdapter->PendingCtrlRequests), sizeof(pAdapter->PendingCtrlRequests));
 } // MPMAIN_DisconnectNotification
 
 #ifdef NDIS620_MINIPORT

@@ -203,6 +203,11 @@ GENERAL DESCRIPTION
                                              METHOD_BUFFERED, \
                                              FILE_ANY_ACCESS)
 
+#define IOCTL_QCDEV_QMI_READY CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                       QCDEV_IOCTL_INDEX+52, \
+                                       METHOD_BUFFERED, \
+                                       FILE_ANY_ACCESS)
+
 #define IOCTL_QCDEV_GET_MUX_INTERFACE CTL_CODE(FILE_DEVICE_UNKNOWN, \
                                               QCDEV_IOCTL_INDEX+33, \
                                               METHOD_BUFFERED, \

@@ -2195,11 +2195,22 @@ typedef struct _QMIWMS_EVENT_REPORT_IND_MSG
 {
    USHORT Type;
    USHORT Length;
+} QMIWMS_EVENT_REPORT_IND_MSG, *PQMIWMS_EVENT_REPORT_IND_MSG;
+
+typedef struct _QMIWMS_MT_MESSAGE
+{
    UCHAR  TLVType;
    USHORT TLVLength;
    UCHAR  StorageType;
    ULONG  StorageIndex;
-} QMIWMS_EVENT_REPORT_IND_MSG, *PQMIWMS_EVENT_REPORT_IND_MSG;
+} QMIWMS_MT_MESSAGE, *PQMIWMS_MT_MESSAGE;
+
+typedef struct _QMIWMS_MESSAGE_MODE
+{
+   UCHAR  TLVType;
+   USHORT TLVLength;
+   UCHAR  MessageMode;
+} QMIWMS_MESSAGE_MODE, *PQMIWMS_MESSAGE_MODE;
 
 // ======================= End of WMS ==============================
 

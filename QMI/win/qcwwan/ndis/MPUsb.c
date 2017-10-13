@@ -1433,7 +1433,7 @@ NDIS_STATUS MP_USBSendCustomCommand
       ("<%s> ---> MP_USBSendCustomCommand\n", pAdapter->PortName)
    );
 
-   pIrp = IoAllocateIrp((CCHAR)(1+1), FALSE );
+   pIrp = IoAllocateIrp((CCHAR)(pDevExt->StackDeviceObject->StackSize+2), FALSE );
    if( pIrp == NULL )
    {
        QCNET_DbgPrint
@@ -1490,11 +1490,9 @@ NDIS_STATUS MP_USBSendCustomCommand
 
    Status = IoCallDriver(pDevExt->StackDeviceObject, pIrp);
 
-   if ( Status == STATUS_PENDING)
-   {
-      KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
-      Status = pIrp->IoStatus.Status;
-   }
+   KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+
+   Status = pIrp->IoStatus.Status;
    if (Status == STATUS_SUCCESS)
    {
       QCNET_DbgPrint
@@ -3612,10 +3610,9 @@ INT MPUSB_AggregationAvailable(PMP_ADAPTER pAdapter, BOOLEAN UseSpinLock, ULONG 
         {
            result = TLP_AGG_SEND;
         }
-        else if ((tlpItem->RemainingCapacity < (SizeOfPacket + 
+        else if (tlpItem->RemainingCapacity < (SizeOfPacket + 
             sizeof(NDP_16BIT_HEADER) + 
-            sizeof(DATAGRAM_STRUCT)*(tlpItem->AggregationCount+4) + 8))  &&
-            ( tlpItem->AggregationCount >= (MP_NUM_MBIM_UL_DATAGRAM_ITEMS_DEFAULT - 2)))
+            sizeof(DATAGRAM_STRUCT)*(tlpItem->AggregationCount+4) + 8))
         {
            result = TLP_AGG_SEND;
         }

@@ -1774,6 +1774,7 @@ VOID MPQCTL_HandleReleaseClientIdRsp
    PUCHAR                 pClientId = NULL;
    PKEVENT                pClientIdReleasedEvent;
    BOOLEAN                bMatch = FALSE;
+  
 
    qmictl_msg = (PQMICTL_MSG)&qmi->SDU; // qmictl->Payload;
 
@@ -1801,7 +1802,10 @@ VOID MPQCTL_HandleReleaseClientIdRsp
            qmictl_msg->ReleaseClientIdRsp.QMIResult,
            qmictl_msg->ReleaseClientIdRsp.QMIError)
       );
-      return;
+
+      // Reset CID and type so that bMatch is FALSE
+      qmictl_msg->ReleaseClientIdRsp.ClientId = 0;
+      qmictl_msg->ReleaseClientIdRsp.QMIType = 0;
    }
 
    if (item->Context == (PVOID)pAdapter)
@@ -1844,9 +1848,6 @@ VOID MPQCTL_HandleReleaseClientIdRsp
            qmictl_msg->ReleaseClientIdRsp.ClientId,
            qmictl_msg->ReleaseClientIdRsp.QMIType)
       );
-
-      // notify the client
-      KeSetEvent(pClientIdReleasedEvent, IO_NO_INCREMENT, FALSE);
    }
    else
    {
@@ -1861,6 +1862,10 @@ VOID MPQCTL_HandleReleaseClientIdRsp
            qmictl_msg->ReleaseClientIdRsp.QMIType)
       );
    }
+
+   // notify the client
+   KeSetEvent(pClientIdReleasedEvent, IO_NO_INCREMENT, FALSE);
+
 }  // MPQCTL_HandleReleaseClientIdRsp
 
 VOID MPQCTL_HandleRevokeClientIdInd

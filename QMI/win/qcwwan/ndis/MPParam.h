@@ -248,6 +248,15 @@ GENERAL DESCRIPTION
 #define PARAM_EnableMBIM_MIN           0
 #define PARAM_EnableMBIM_MAX           1
 
+#define PARAM_MPBindIFId           "QCMPBindIFId"
+#define PARAM_MPBindIFId_DEFAULT   0x00
+#define PARAM_MPBindIFId_MIN       0x00
+#define PARAM_MPBindIFId_MAX       0xFF
+
+#define PARAM_MPBindEPType           "QCMPBindEPType"
+#define PARAM_MPBindEPType_DEFAULT   0x00
+#define PARAM_MPBindEPType_MIN       0x00
+#define PARAM_MPBindEPType_MAX       0xFF
 
 NDIS_STATUS MPParam_GetConfigValues
 (
