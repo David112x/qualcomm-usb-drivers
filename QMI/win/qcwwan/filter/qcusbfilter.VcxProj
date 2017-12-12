@@ -170,6 +170,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);QCUSB_SHARE_INTERRUPT;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)Wdmsec.lib</AdditionalDependencies>
@@ -182,6 +183,7 @@
       <WppEnabled>true</WppEnabled>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)Wdmsec.lib</AdditionalDependencies>
@@ -193,6 +195,7 @@
       <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);QCUSB_SHARE_INTERRUPT;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)Wdmsec.lib</AdditionalDependencies>
@@ -204,6 +207,7 @@
       <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);QCUSB_SHARE_INTERRUPT;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)Wdmsec.lib</AdditionalDependencies>
@@ -217,6 +221,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -227,6 +232,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -237,6 +243,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -247,6 +254,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <WppScanConfigurationData>qcfilterwpp.h</WppScanConfigurationData>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

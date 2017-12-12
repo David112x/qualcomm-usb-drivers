@@ -1982,7 +1982,7 @@ NDIS_STATUS MPINI_SetNdisAttributes
 #ifdef NDIS620_MINIPORT
    if (QCMP_NDIS620_Ok == TRUE)
    {
-      GeneralAttributes.IfType = 244;
+      GeneralAttributes.IfType = 243;
       GeneralAttributes.MediaType = QCMP_MEDIA_TYPE;
       GeneralAttributes.PhysicalMediumType = QCMP_PHYSICAL_MEDIUM_TYPEWWAN;
       

@@ -12,14 +12,14 @@ DriverVer = 09/27/2017, 1.0.1.4
 Catalogfile= qdbusb.cat
 
 ; Setup-class section
-[ClassInstall32]
-AddReg = Class_AddReg
+;[ClassInstall32]
+;AddReg = Class_AddReg
 
-[Class_AddReg]
-HKR,,,,%QcClassName%
-HKR,,NoInstallClass,,1
-HKR,,IconPath,0x00010000,"%systemroot%\system32\setupapi.dll,-20"
-HKR,,LowerLogoVersion,,5.2
+;[Class_AddReg]
+;HKR,,,,%QcClassName%
+;HKR,,NoInstallClass,,1
+;HKR,,IconPath,0x00010000,"%%systemroot%%\system32\setupapi.dll,-20"
+;HKR,,LowerLogoVersion,,5.2
 
 [Manufacturer]
 %QCOM% = QCOM, NTx86, NTamd64
@@ -203,19 +203,20 @@ qdbusb.sys
 
 [SourceDisksFiles.x86]
 qdbusb.sys = 1,\qdss\i386
+wdfcoinstaller01009.dll=1,\qdss\i386
 
 [SourceDisksFiles.amd64]
 qdbusb.sys = 1,\qdss\amd64
+wdfcoinstaller01009.dll=1,\qdss\amd64
 
 [DestinationDirs]
 DefaultDestDir = 12
+CoInstaller_CopyFiles = 11
 
 [DevFunctionTypeDPL]
 HKR,,QCDeviceFunction,0x00010001,1
 
 ; WDF Coinstaller
-[DestinationDirs]
-CoInstaller_CopyFiles = 11
 
 [QdssPort.NT.CoInstallers]
 AddReg=CoInstaller_AddReg
@@ -227,12 +228,6 @@ CopyFiles=CoInstaller_CopyFiles
 
 [CoInstaller_CopyFiles]
 wdfcoinstaller01009.dll
-
-[SourceDisksFiles.x86]
-wdfcoinstaller01009.dll=1,\qdss\i386
-
-[SourceDisksFiles.amd64]
-wdfcoinstaller01009.dll=1,\qdss\amd64
 
 [CoInstaller_AddReg]
 HKR,,CoInstallers32,0x00010000, "wdfcoinstaller01009.dll,WdfCoInstaller"
@@ -307,9 +302,9 @@ QDSS90C304 = "Qualcomm DPL Data 90C3"
 QDSS90C802 = "QDSS Data 90C8"
 QDSS90C902 = "QDSS Data 90C9"
 QDSS90D702 = "QDSS Data 90D7"
-QDSS90D703 = "QDSS Data MDM 90D7"
+QDSS90D703 = "QDSS MDM Data 90D7"
 QDSS90D802 = "QDSS Data 90D8"
-QDSS90D803 = "QDSS Data MDM 90D8"
+QDSS90D803 = "QDSS MDM Data 90D8"
 QDSS90DA01 = "QDSS Data 90DA"
 QDSS90DB03 = "Qualcomm DPL Data 90DB"
 QDSS90DB04 = "QDSS Data 90DB"

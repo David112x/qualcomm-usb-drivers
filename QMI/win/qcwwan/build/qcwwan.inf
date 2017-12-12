@@ -12,14 +12,14 @@ Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider    = %QCOM%
-DriverVer   = 09/27/2017,4.0.4.9
+DriverVer   = 09/27/2017,4.0.5.0
 Catalogfile = qcwwan.cat
 
 [ControlFlags]
 ExcludeFromSelect = *
 
 [Manufacturer]
-%QCOM% = QCOM, NTx86.6.1, NTia64.6.1, NTamd64.6.1
+%QCOM% = QCOM, NTx86.6.1, NTamd64.6.1
 
 [SourceDisksNames.x86]
 1000 = %QcomSrcDisk%,"",,\ndis\6.2\i386
@@ -27,8 +27,12 @@ ExcludeFromSelect = *
 [SourceDisksNames.amd64]
 1000 = %QcomSrcDisk%,"",,\ndis\6.2\amd64
 
+[SourceDisksNames]
+1 = %DiskId1%,,,""
+
 [SourceDisksFiles]
   qcusbwwan.sys = 1000
+qcusbwwan.sys  = 1,,
 
 [QCOM.NTx86.6.1]
 %qcwwan.DeviceDesc%         = qcwwan.ndi, USB\VID_05C6&PID_7000&MI_00
@@ -845,7 +849,7 @@ Characteristics = 0x4 ; NCF_PHYSICAL
 BusType         = 15  ; PNPBus
 
 ; Windows 7 specific
-*IfType = 244 ; IF_TYPE_WWANPP2
+*IfType = 243 ; IF_TYPE_WWANPP
 *MediaType = 9 ; NdisMediumWirelessWan
 *PhysicalMediaType = 8 ; NdisPhysicalMediumWirelessWan
 EnableDhcp = 0
@@ -933,12 +937,6 @@ HKR, , TypesSupported,   0x00010001, 7
 
 [TextModeFlags.Reg]
 HKR, , TextModeFlags,    0x00010001, 0x0001
-
-[SourceDisksNames]
-1 = %DiskId1%,,,""
-
-[SourceDisksFiles]
-qcusbwwan.sys  = 1,,
 
 ;-----------------------------------------------------------------------------
 ; DestinationDirs

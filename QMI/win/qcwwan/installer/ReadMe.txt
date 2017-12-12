@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.49
-09/27/2017
+Qualcomm USB Host Drivers Version 1.00.50
+10/16/2017
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,11 +20,19 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.49) 09/27/2017
+This Release (Qualcomm USB Host Drivers Version 1.00.50) 10/16/2017
+USB Driver updates:
+   Serial driver 2.1.2.9
+   Network driver 4.0.5.0
+      a. Added packet detach for OID_WWAN_PACKET_SERVICE (Query OID).
+   Filter driver 1.0.4.9
+      a. Made changes to balance calls on RmLoc.
+   QDSS/DPL driver 1.0.1.4
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.49) 09/27/2017
 Build Environment Migration:
    a. Build environment/procedure migrated to Visual Studio 2015 and WDK10
    b. Build to meet Windows 10 requirements
-
 USB Driver updates:
    Serial driver 2.1.2.9
       a. Added support for composition 90DA, 90DB, 90DC
@@ -39,7 +47,7 @@ USB Driver updates:
       b. Corrected definition for composition 90C0
       c. Enforced customization of device name in user space
 
-This Release (Qualcomm USB Host Drivers Version 1.00.47) 08/03/2017
+Prior Release (Qualcomm USB Host Drivers Version 1.00.47) 08/03/2017
 USB Driver updates:
    Serial driver 2.1.2.7
       a. Added support for ADB serial number

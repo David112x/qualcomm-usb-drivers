@@ -35,18 +35,19 @@ my $MSBuild  = "MSBuild.exe";
 
 my $DriversDirName     = "qcwwan";
 
-my $ClientRoot = cwd();
-$ClientRoot =~ s/\/$DriversDirName\/build//g; 
-$ClientRoot =~ s/\//\\/g; 
+my $WHQLDir     = "Internal";
 
-my $DriversDir = "$ClientRoot\\$DriversDirName";
-my $ToolsDir   = "$DriversDir\\tools";
-my $BuildDir   = "$DriversDir\\build\\";
-my $TargetDir  =  $BuildDir . "target";
-my $QMISrcDir  = "$ClientRoot\\..\\..\\QMI\\win\\$DriversDirName";
+my $CurrentPath;
 
-my $DevEnvOutput = $BuildDir . "devEnvOutput.txt";
+my $WHQL = "";
 
+# Parse out arguments
+my $RC = ParseArguments();
+if ($RC == 0)
+{
+   close( LOG );
+   exit( 1 );
+}
 
 #----------------------------------------------------------------------------
 # Get the current time and date to be used in the output log filename
@@ -63,14 +64,30 @@ my $outputlog = "DriversBuild_$date.log";
 open( LOG , ">$outputlog") || die ("Couldn't open $outputlog : $!");
 LOG->autoflush(1);         # no buffering of output
 
+TRACE "\n Arg1 : $CurrentPath Arg2 :  $WHQL\n";
+
+my $ClientRoot = cwd();
+$ClientRoot =~ s/\/$DriversDirName\/build//g; 
+$ClientRoot =~ s/\//\\/g; 
+
+my $DriversDir = "$ClientRoot\\$DriversDirName";
+my $ToolsDir   = "$DriversDir\\tools";
+my $BuildDir   = "$DriversDir\\build\\";
+my $TargetDir  =  $BuildDir . "target";
+my $QMISrcDir  = "$ClientRoot\\..\\..\\QMI\\win\\$DriversDirName";
+
+my $DevEnvOutput = $BuildDir . "devEnvOutput.txt";
 
 #----------------------------------------------------------------------------
 # Fire up Driver build 
 #----------------------------------------------------------------------------
 TimeLog "Beginning Customer Builds...\n";
 
-BuildCustomerTools();
-Run(qq(perl buildDriversLocal.pl));
+if (index(lc($WHQL), lc("whql")) == -1) 
+{
+    BuildCustomerTools();
+}
+Run(qq(perl buildDriversLocal.pl $WHQL $WHQLDir));
 BuildCustomerDrivers();
 
 close(LOG);
@@ -269,9 +286,11 @@ sub BuildCustomerDrivers
    Run(qq(del qcnetstrip.*));
    Run(qq(if exist Stripsrc.log del Stripsrc.log));
 
+   $WHQLDir = "External";
+
    # run build script
    chdir(qq($HY11Dir\\QMI\\win\\$DriversDirName\\build)); 
-   Run(qq(perl buildDriversLocal.pl));
+   Run(qq(perl buildDriversLocal.pl $WHQL $WHQLDir));
    if ($? != 0)
    {
       TRACE "Error building drivers. Correct Problems and Try Again.\n";
@@ -317,3 +336,30 @@ sub BuildCustomerDrivers
    chdir($CurrentDir);
    TimeLog("Done Building Customer\n");
 }
+
+#----------------------------------------------------------------------------
+# Process the arguments 
+#----------------------------------------------------------------------------
+sub ParseArguments
+{
+   # Assume failure
+   my $RC = 0;
+   my $Txt = "";
+   my $Help = "Syntax: Perl buildCustomer.pl <CurrentPath> 
+        <CurrentPath> is a mandatory parameter to get the current path for bulding drivers
+        Ex: Perl buildDrivers.pl c:\\drivers";
+
+   if (defined( $ARGV[0] ))
+   {
+      $CurrentPath = $ARGV[0];
+   }
+
+   if (defined( $ARGV[1] ))
+   {
+      $WHQL = $ARGV[1];
+   }
+   
+   $RC = 1;
+   return $RC;
+}
+

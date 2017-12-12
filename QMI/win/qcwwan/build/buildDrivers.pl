@@ -126,6 +126,9 @@ my $InstallDir = "$BuildDir\\..\\installer";
 
 my @BuildTypeList;
 
+my $WHQLDir     = "Internal";
+
+my $WHQL = "";
 #----------------------------------------------------------------------------
 # Get the current time and date to be used in the output log filename
 #----------------------------------------------------------------------------
@@ -149,11 +152,19 @@ if ($RC == 0)
    exit( 1 );
 }
 
+TRACE "\nWHQL $WHQL and WHQLDir $WHQLDir ...\n";
+
 #----------------------------------------------------------------------------
 # Fire up Driver build 
 #----------------------------------------------------------------------------
 TimeLog "Beginning Drivers Builds...\n";
+if ($WHQL =~ m/whql/i)
+{
+}
+else
+{
 BuildDrivers();
+}
 BuildInstallShield();
 TimeLog "Drivers Build was successful\n";
 close(LOG);
@@ -255,7 +266,17 @@ sub ParseArguments
       {
          $Checked = $ARGV[0];
       }
+      if ($ARGV[0] =~ m/whql/i)
+      {
+         $WHQL = $ARGV[0];
+      }
+
    }
+   if (defined( $ARGV[1] ))
+   {
+      $WHQLDir = $ARGV[1];
+   }
+
    if ($Checked =~ m/checked/i)
    {
       @BuildTypeList = ("fre","chk");
@@ -626,7 +647,14 @@ sub CreateInstallDirs
 sub BuildInstallShield 
 {
    BuildVSProject1( "$InstallDir\\DriversInstaller.10.sln", "Release");
-   Run(qq(xcopy /R /F /Y /I /S $TargetDir\\* $InstallDir\\drivers\\Qualcomm\\target\\));
+   if ($WHQL =~ m/whql/i)
+   {
+      Run(qq(xcopy /R /F /Y /I /S $TargetDir\\$WHQLDir\\* $InstallDir\\drivers\\Qualcomm\\target\\));
+   }
+   else
+   {
+      Run(qq(xcopy /R /F /Y /I /S $TargetDir\\* $InstallDir\\drivers\\Qualcomm\\target\\));
+   }
    Run(qq($InstallShieldCmd -p $InstallDir\\QualcommDriverInstall.ism));
    Run(qq(xcopy /R /F /Y /I /S \"$InstallDir\\QualcommDriverInstall\\Default Configuration\\Release\\DiskImages\\DISK1\\*\" $InstallDir\\setup\\));
    BuildVSProject1( "$InstallDir\\setup\\setup.10.sln", "Release");

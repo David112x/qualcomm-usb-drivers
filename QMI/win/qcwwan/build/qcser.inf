@@ -16,7 +16,7 @@ Catalogfile= qcser.cat
 ExcludeFromSelect = *
 
 [Manufacturer]
-%QUALCOMM% = QcomSerialPort, NTia64, NTamd64, NTarm
+%QUALCOMM% = QcomSerialPort, NTamd64, NTarm
 
 [SourceDisksNames.x86]
 1000 = %QcomSrcDisk%,"",,\serial\i386
@@ -1907,6 +1907,6 @@ QcomDevice920C0 = "Qualcomm Gobi 3000 HS-USB QDLoader 920C"
 QcomDevice920D1 = "Qualcomm Gobi 3000 HS-USB Diagnostics 920D"
 QcomDevice920D3 = "Qualcomm Gobi 3000 HS-USB NMEA 920D"
 QcomDevice9311  = "Qualcomm Dragonfly Control 9311"
-QcomDevice9505% = "Qualcomm EUD Port 9505"
+QcomDevice9505  = "Qualcomm EUD Port 9505"
 QcomDevice12340103 = "Qualcomm QDSS Test Interface 1234-0103"
 

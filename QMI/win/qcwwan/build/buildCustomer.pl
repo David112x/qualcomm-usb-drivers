@@ -37,11 +37,24 @@ my $MSBuild  = "MSBuild.exe";
 
 my $DriversDirName     = "qcwwan";
 
+my $WHQLDir     = "Internal";
+
 my $CurrentPath;
+
+my $WHQL = "";
 
 my $ClientRoot;
 
 my $result1;
+
+# Parse out arguments
+my $RC = ParseArguments();
+if ($RC == 0)
+{
+   close( LOG );
+   exit( 1 );
+}
+
 
 #----------------------------------------------------------------------------
 # Get the current time and date to be used in the output log filename
@@ -58,13 +71,7 @@ my $outputlog = "DriversBuild_$date.log";
 open( LOG , ">$outputlog") || die ("Couldn't open $outputlog : $!");
 LOG->autoflush(1);         # no buffering of output
 
-# Parse out arguments
-my $RC = ParseArguments();
-if ($RC == 0)
-{
-   close( LOG );
-   exit( 1 );
-}
+TRACE "\n Arg1 : $CurrentPath Arg2 :  $WHQL\n";
 
 $ClientRoot = $CurrentPath;
 $ClientRoot =~ s/\\$DriversDirName\\build//g; 
@@ -90,8 +97,11 @@ $tempCurrentPath =~ s/\\/\\\\/g;
 
 #Run(qq(perl -V));
 
-BuildCustomerTools();
-Run(qq(perl buildDrivers.pl $tempCurrentPath));
+if (index(lc($WHQL), lc("whql")) == -1) 
+{
+   BuildCustomerTools();
+}
+Run(qq(perl buildDrivers.pl $tempCurrentPath $WHQL $WHQLDir));
 BuildCustomerDrivers();
 
 close(LOG);
@@ -314,7 +324,7 @@ sub BuildCustomerDrivers
    my $HY11DriverDir = "$HY11Dir\\\\QMI\\\\win\\\\$DriversDirName";
    my $HY11BuildDir = "$HY11DriverDir\\\\build";
 
-   Run( "$tempStr\/doscommand.bat $HY11WinDir rd /q /s $HY11WinDir\\\\$DriversDirName\\\\build\\\\target" );
+   Run( "$tempStr\/doscommand.bat $HY11WinDir rd /q /s $HY11WinDir\\\\$DriversDirName\\\\build\\\\target\\\\Internal" );
 
    Run( "$tempStr\/doscommand.bat $HY11WinDir del /f /q /s $HY11WinDir\\\\$DriversDirName\\\\build\\\\excludeCust.txt" );
    Run( "$tempStr\/doscommand.bat $HY11WinDir del /f /q /s $HY11WinDir\\\\$DriversDirName\\\\build\\\\exclude.txt" );
@@ -339,11 +349,13 @@ sub BuildCustomerDrivers
    Run( "$tempStr\/doscommand.bat $HY11DriverDir del /f /q /s qcnetstrip.*" );
    Run( "$tempStr\/doscommand.bat $HY11DriverDir del /f /q /s stripsrc.log" );
 
+   $WHQLDir = "External";
+
    # run build script
    chdir(qq($HY11Dir\\\\QMI\\\\win\\\\$DriversDirName\\\\build)); 
 
    $tempCurrentPath = qq($HY11Dir\\\\QMI\\\\win\\\\$DriversDirName\\\\build);
-   Run(qq(perl buildDrivers.pl $tempCurrentPath));
+   Run(qq(perl buildDrivers.pl $tempCurrentPath $WHQL $WHQLDir));
    if ($? != 0)
    {
       TRACE "Error building drivers. Correct Problems and Try Again.\n";
@@ -445,6 +457,11 @@ sub ParseArguments
    if (defined( $ARGV[0] ))
    {
       $CurrentPath = $ARGV[0];
+   }
+
+   if (defined( $ARGV[1] ))
+   {
+      $WHQL = $ARGV[1];
    }
    
    $RC = 1;

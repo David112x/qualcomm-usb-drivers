@@ -723,6 +723,7 @@ QCFilterCreateControlObject( PDEVICE_OBJECT    DeviceObject, PFILTER_DEVICE_INFO
 
       QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterCreateControlObject : Initialize RemoveLock\n"));                          
       IoInitializeRemoveLock(&deviceExtension->RmLock, 0, 0, 0);
+      IoAcquireRemoveLock(&deviceExtension->RmLock, NULL);
          
       pFilterDeviceInfo->pControlDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 

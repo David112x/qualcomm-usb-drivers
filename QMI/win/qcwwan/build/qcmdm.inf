@@ -14,7 +14,7 @@ DriverVer=09/27/2017,2.1.2.9
 Catalogfile = qcser.cat
 
 [Manufacturer]
-%QUALCOMM%=Models, NTia64, NTamd64, NTarm
+%QUALCOMM%=Models, NTamd64, NTarm
 
 [SourceDisksNames.x86]
 1000 = %QcomSrcDisk%,"",,\serial\i386

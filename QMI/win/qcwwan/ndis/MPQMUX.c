@@ -7227,7 +7227,6 @@ USHORT MPQMUX_ComposeDmsSetOperatingModeReq
    PQMUX_MSG    qmux_msg
 )
 {
-   PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
    PNDIS_WWAN_SET_RADIO_STATE pRadioState = NULL;
    BOOLEAN bRadioActionOff = FALSE;
    USHORT qmux_len = 0;
@@ -7240,7 +7239,7 @@ USHORT MPQMUX_ComposeDmsSetOperatingModeReq
    );
 
    pRadioState = (PNDIS_WWAN_SET_RADIO_STATE)
-                  pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
+                  pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
    bRadioActionOff = (pRadioState->RadioAction == WwanRadioOff);
 
    qmux_msg->SetOperatingModeReq.Length = sizeof(QMIDMS_SET_OPERATING_MODE_REQ_MSG) - 4;
@@ -7317,8 +7316,7 @@ USHORT MPQMUX_ComposeDmsUIMUnblockCkReq
 )
 {
    USHORT qmux_len = 0;
-   PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
-   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
+   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
 
    UNICODE_STRING unicodeStr;
    ANSI_STRING ansiStr;
@@ -7430,8 +7428,7 @@ USHORT MPQMUX_ComposeDmsUIMSetCkProtectionReq
 )
 {
    USHORT qmux_len = 0;
-   PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
-   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
+   PNDIS_WWAN_SET_PIN  pSetPin = (PNDIS_WWAN_SET_PIN)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
 
    UNICODE_STRING unicodeStr;
    ANSI_STRING ansiStr;
@@ -18959,6 +18956,17 @@ ULONG MPQMUX_ProcessNasGetSysInfoResp
               pWwanServingState->PacketService.CurrentDataClass = GetDataClass(pAdapter);
            }
 
+#if SPOOF_PS_ONLY_DETACH                  
+            if ((pAdapter->IsLTE == TRUE) && (pOID->OidType == fMP_QUERY_OID) && 
+                (pAdapter->DevicePacketState == DeviceWWanPacketDetached))
+            {
+               pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
+               pWwanServingState->PacketService.AvailableDataClass = WWAN_DATA_CLASS_NONE;
+               pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
+               pAdapter->DevicePacketState = DeviceWWanPacketDetached;
+            }
+            else
+            {
            if ((RegState == QMI_NAS_REGISTERED) &&
                (pWwanServingState->PacketService.PacketServiceState == WwanPacketServiceStateAttached) && 
                (pWwanServingState->PacketService.AvailableDataClass != WWAN_DATA_CLASS_NONE) &&
@@ -18974,6 +18982,8 @@ ULONG MPQMUX_ProcessNasGetSysInfoResp
               pWwanServingState->PacketService.CurrentDataClass = WWAN_DATA_CLASS_NONE;
               pAdapter->DevicePacketState = DeviceWWanPacketDetached;
            }
+            }
+#endif           
            pWwanServingState->uStatus = pOID->OIDStatus;
 
            if (pAdapter->DeviceClass == DEVICE_CLASS_CDMA)
@@ -21390,9 +21400,8 @@ ULONG MPQMUX_ComposeNasSetTechnologyPrefReqSend
    NDIS_STATUS Status;
    PQCQMI QMI;
 
-   PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
    PNDIS_WWAN_SET_REGISTER_STATE pNdisSetRegisterState = 
-                         (PNDIS_WWAN_SET_REGISTER_STATE)pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
+                         (PNDIS_WWAN_SET_REGISTER_STATE)pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
 
    Status = NdisAllocateMemoryWithTag( &QMIElement, QMIElementSize, QUALCOMM_TAG );
    if( Status != NDIS_STATUS_SUCCESS )
@@ -21543,11 +21552,10 @@ USHORT MPQMUX_ComposeNasSetSystemSelPrefDomainReqSend
 )
 {
    ULONG        qmux_len = 0;
-   PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
    BOOLEAN      bAttach = FALSE;
    
    PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = (PNDIS_WWAN_SET_PACKET_SERVICE)
-      pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
+       pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;
    if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach)
    {
       bAttach = TRUE;
@@ -21838,11 +21846,10 @@ USHORT MPQMUX_ComposeNasInitiateAttachReq
 )
 {
    ULONG        qmux_len = 0;
-   PNDIS_OID_REQUEST pOIDReq = pOID->OidReference;
    BOOLEAN      bAttach = FALSE;
    
    PNDIS_WWAN_SET_PACKET_SERVICE pNdisSetPacketService = (PNDIS_WWAN_SET_PACKET_SERVICE)
-      pOIDReq->DATA.SET_INFORMATION.InformationBuffer;
+      pOID->OidReqCopy.DATA.SET_INFORMATION.InformationBuffer;    
    if (pNdisSetPacketService->PacketServiceAction == WwanPacketServiceActionAttach)
    {
       bAttach = TRUE;
