@@ -481,6 +481,8 @@ NTSTATUS QDBPNP_GetDeviceSerialNumber(IN WDFDEVICE Device, UCHAR Index, BOOLEAN 
    }
    else
    {
+      strLen *= sizeof(WCHAR);
+
       QDB_DbgPrint
       (
          QDB_DBG_MASK_CONTROL,
@@ -499,23 +501,17 @@ NTSTATUS QDBPNP_GetDeviceSerialNumber(IN WDFDEVICE Device, UCHAR Index, BOOLEAN 
       PCHAR p = (PCHAR)pSerLoc;
       BOOLEAN bMatchFound = FALSE;
 
-      for (idx = 0; idx < strLen*2; idx++)
+      for (idx = 0; idx < strLen; idx++)
       {
-         if ((*p == '_') && (*(p+1) == 0))
+         if ((*p     == '_') && (*(p+1) == 0) &&
+             (*(p+2) == 'S') && (*(p+3) == 0) &&
+             (*(p+4) == 'N') && (*(p+5) == 0) &&
+             (*(p+6) == ':') && (*(p+7) == 0))
          {
-            if ((*(p+2) == 'S') && (*(p+3) == 0))
-            {
-              if ((*(p+4) == 'N') && (*(p+5) == 0))
-              {
-                 if ((*(p+6) == ':') && (*(p+7) == 0))
-                 {
-                    pSerLoc = p + 8;
-                    adjusted += 8;
-                    bMatchFound = TRUE;
-                    break;
-                 }
-              }
-            }
+            pSerLoc = p + 8;
+            adjusted += 8;
+            bMatchFound = TRUE;
+            break;
          }
          p++;
          adjusted++;
@@ -524,11 +520,24 @@ NTSTATUS QDBPNP_GetDeviceSerialNumber(IN WDFDEVICE Device, UCHAR Index, BOOLEAN 
       // Adjust length
       if (bMatchFound == TRUE)
       {
-         strLen -= (adjusted / 2);
-         if (strLen > 8)
+         INT tmpLen = strLen;
+
+         tmpLen -= adjusted;
+         p = pSerLoc;
+         while (tmpLen > 0)
          {
-            strLen = 8;
+            if (((*p == ' ') && (*(p+1) == 0)) ||  // space
+                ((*p == '_') && (*(p+1) == 0)))    // or _ for another field
+            {
+               break;
+            }
+            else
+            {
+               p += 2;       // advance 1 unicode byte
+               tmpLen -= 2;  // remaining string length
+            }
          }
+         strLen = (USHORT)(p - pSerLoc); // 8;
       }
       else
       {
@@ -587,7 +596,7 @@ UpdateRegistry:
                     0,
                     REG_SZ,
                     (PVOID)pSerLoc,
-                    (strLen * 2)
+                    strLen
                  );
    }
    else

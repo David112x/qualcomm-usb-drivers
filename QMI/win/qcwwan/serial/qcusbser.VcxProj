@@ -163,6 +163,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>
@@ -174,6 +175,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>
@@ -185,6 +187,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>
@@ -196,6 +199,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>
@@ -207,6 +211,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>
@@ -218,6 +223,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>
@@ -229,6 +235,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>
@@ -240,6 +247,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>qcwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib</AdditionalDependencies>

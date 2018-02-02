@@ -242,20 +242,8 @@ NDIS_STATUS MPINI_MiniportInitialize
       );
 #endif
 
-#if defined(QCMP_QMAP_V2_SUPPORT)
-            QCNET_DbgPrint
-            (
-               MP_DBG_MASK_CONTROL,
-               MP_DBG_LEVEL_DETAIL,
-               ("<%s> MPEnableQMAPV2: %d\n", pAdapter->PortName, pAdapter->MPEnableQMAPV2)
-            );
-
-            QCNET_DbgPrint
-            (
-               MP_DBG_MASK_CONTROL,
-               MP_DBG_LEVEL_DETAIL,
-               ("<%s> MPEnableQMAPV3: %d\n", pAdapter->PortName, pAdapter->MPEnableQMAPV3)
-            );
+#ifdef QCUSB_MUX_PROTOCOL
+#error code not present
 #endif
 
 #if defined(QCMP_QMAP_V1_SUPPORT)

@@ -445,7 +445,7 @@ NTSTATUS QCPNP_GetStringDescriptor
    PCHAR pSerLoc = NULL;
    UNICODE_STRING ucValueName;
    HANDLE         hRegKey;
-   USHORT         strLen;
+   INT            strLen;
    BOOLEAN        bSetEntry = FALSE;
 
    pDevExt = DeviceObject->DeviceExtension;
@@ -544,14 +544,21 @@ NTSTATUS QCPNP_GetStringDescriptor
       );
    }
 
-   strLen = pSerNum->bLength;
+   if (pSerNum->bLength > 2)
+   {
+      strLen = (INT)pSerNum->bLength -2;  // exclude 2 bytes in header
+   }
+   else
+   {
+      strLen = 0;
+   }
    pSerLoc = (PCHAR)pSerNum->bString;
    bSetEntry = TRUE;
 
    // search for "_SN:"
-   if ((MatchPrefix == TRUE) && (pSerNum->bLength > 0))
+   if ((MatchPrefix == TRUE) && (strLen > 0))
    {
-      USHORT idx, adjusted = 0;
+      INT   idx, adjusted = 0;
       PCHAR p = pSerLoc;
       BOOLEAN bMatchFound = FALSE;
 
@@ -574,11 +581,24 @@ NTSTATUS QCPNP_GetStringDescriptor
       // Adjust length
       if (bMatchFound == TRUE)
       {
-         strLen -= adjusted;
-         if (strLen > 18)
+         INT tmpLen = strLen;
+
+         tmpLen -= adjusted;
+         p = pSerLoc;
+         while (tmpLen > 0)
          {
-            strLen = 18;
+            if (((*p == ' ') && (*(p+1) == 0)) ||  // space
+                ((*p == '_') && (*(p+1) == 0)))    // or _ for another field
+            {
+               break;
+            }
+            else
+            {
+               p += 2;       // advance 1 unicode byte
+               tmpLen -= 2;  // remaining string length
+            }
          }
+         strLen = (USHORT)(p - pSerLoc); // 18;
       }
       else
       {
@@ -637,7 +657,7 @@ UpdateRegistry:
          0,
          REG_SZ,
          (PVOID)pSerLoc,
-         (strLen-2)
+         strLen
       );
    }
    else

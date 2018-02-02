@@ -176,6 +176,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)qcusbwwan$(TargetExt)</OutputFile>
@@ -189,6 +190,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)qcusbwwan$(TargetExt)</OutputFile>
@@ -202,6 +204,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)qcusbwwan$(TargetExt)</OutputFile>
@@ -215,6 +218,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)qcusbwwan$(TargetExt)</OutputFile>
@@ -228,6 +232,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\ndis.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\Rtlver.lib;$(DDK_LIB_PATH)\netio.lib</AdditionalDependencies>
@@ -240,6 +245,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\ndis.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\Rtlver.lib;$(DDK_LIB_PATH)\netio.lib</AdditionalDependencies>
@@ -252,6 +258,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\ndis.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\Rtlver.lib;$(DDK_LIB_PATH)\netio.lib</AdditionalDependencies>
@@ -264,6 +271,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
+      <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)\ndis.lib;$(DDK_LIB_PATH)\usbd.lib;$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\Rtlver.lib;$(DDK_LIB_PATH)\netio.lib</AdditionalDependencies>

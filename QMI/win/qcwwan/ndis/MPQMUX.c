@@ -9360,6 +9360,7 @@ USHORT MPQMUX_SendDmsSetEventReportReq
       pOperatingMode->OperatingMode = 0x01;
    }
    
+#ifdef HW_RADIO_SWITCH
    // Wireless Disable
    {
       PWIRELESS_DISABLE_STATE pWirelessDisableState = (PWIRELESS_DISABLE_STATE)(pPayload);
@@ -9370,6 +9371,8 @@ USHORT MPQMUX_SendDmsSetEventReportReq
       pWirelessDisableState->TLVLength = 0x01;
       pWirelessDisableState->WirelessDisableState = 0x01;
    }
+#endif
+
    if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
    {
       if (pAdapter->ClientId[QMUX_TYPE_UIM] == 0)
@@ -11167,8 +11170,9 @@ ULONG MPQMUX_ProcessWdsGetMipModeResp
           {
              PNDIS_WWAN_DEVICE_CAPS pNdisDeviceCaps = (PNDIS_WWAN_DEVICE_CAPS)pOID->pOIDResp;
 
+#ifdef HW_RADIO_SWITCH
              pNdisDeviceCaps->DeviceCaps.WwanControlCaps = WWAN_CTRL_CAPS_HW_RADIO_SWITCH;
-
+#endif
              //Set the UniqieID flag for Carrier DoCoMo
              if (strcmp(pAdapter->CurrentCarrier, "DoCoMo") == 0)
              {
@@ -15861,6 +15865,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
                   }
+#if 0           
            if (pSystemInfo->SrvCapabilityValid == 0x01)
            {
               *CSAttachedState = 0x00;
@@ -15875,6 +15880,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
                }
             }
+#endif           
            if (pSystemInfo->RoamStatusValid == 0x01)
             {
               *pnRoamingInd = pSystemInfo->RoamStatus;
@@ -15946,6 +15952,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
               }
+#if 0           
            if (pSystemInfo->SrvCapabilityValid == 0x01)
               {
               *CSAttachedState = 0x00;
@@ -15960,6 +15967,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
               }
+#endif           
            if (pSystemInfo->RoamStatusValid == 0x01)
               {
               *pnRoamingInd = pSystemInfo->RoamStatus;
@@ -15997,6 +16005,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
                  }
+#if 0           
            if (pSystemInfo->SrvCapabilityValid == 0x01)
            {
               *CSAttachedState = 0x00;
@@ -16011,6 +16020,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
                  }
               }
+#endif           
            if (pSystemInfo->RoamStatusValid == 0x01)
            {
               *pnRoamingInd = pSystemInfo->RoamStatus;
@@ -16082,6 +16092,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
            }
+#if 0           
            if (pSystemInfo->SrvCapabilityValid == 0x01)
            {
               *CSAttachedState = 0x00;
@@ -16096,6 +16107,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
               }
+#endif           
            if (pSystemInfo->RoamStatusValid == 0x01)
               {
               *pnRoamingInd = pSystemInfo->RoamStatus;
@@ -16167,6 +16179,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
               }
+#if 0           
            if (pSystemInfo->SrvCapabilityValid == 0x01)
               {
               *CSAttachedState = 0x00;
@@ -16181,6 +16194,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
               }
            }
+#endif           
            if (pSystemInfo->RoamStatusValid == 0x01)
            {
               *pnRoamingInd = pSystemInfo->RoamStatus;
@@ -16252,6 +16266,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
                        }
                     }
+#if 0           
            if (pSystemInfo->SrvCapabilityValid == 0x01)
            {
               *CSAttachedState = 0x00;
@@ -16266,6 +16281,7 @@ BOOLEAN ParseNasGetSysInfo
                 *PSAttachedState = 0x01;               
                     }
                  }
+#endif           
            if (pSystemInfo->RoamStatusValid == 0x01)
                  {
               *pnRoamingInd = pSystemInfo->RoamStatus;
@@ -22166,7 +22182,7 @@ ULONG MPQMUX_ProcessNasSetSystemSelPrefResp
                   pAdapter->RegisterPacketTimerContext = pOID;
                   IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
                   QcStatsIncrement(pAdapter, MP_CNT_TIMER, 888);
-                  NdisSetTimer( &pAdapter->RegisterPacketTimer, 20000);
+                  NdisSetTimer( &pAdapter->RegisterPacketTimer, 12000);
                   NdisReleaseSpinLock(&pAdapter->QMICTLLock);
                   retVal = QMI_SUCCESS_NOT_COMPLETE;
                }
@@ -23613,7 +23629,7 @@ ULONG MPQMUX_ProcessNasInitiateAttachResp
                     pAdapter->RegisterPacketTimerContext = pOID;
                     IoAcquireRemoveLock(pAdapter->pMPRmLock, NULL);
                     QcStatsIncrement(pAdapter, MP_CNT_TIMER, 888);
-                    NdisSetTimer( &pAdapter->RegisterPacketTimer, 20000);
+                    NdisSetTimer( &pAdapter->RegisterPacketTimer, 12000);
                     NdisReleaseSpinLock(&pAdapter->QMICTLLock);
                     retVal = QMI_SUCCESS_NOT_COMPLETE;
                  }

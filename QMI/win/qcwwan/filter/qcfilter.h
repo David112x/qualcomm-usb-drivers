@@ -476,6 +476,20 @@ VOID QCFLT_PrintBytes
    ULONG DbgLevel
 );
 
+NTSTATUS QCFilterCreateFriendlyName
+(
+   PDEVICE_EXTENSION pDevExt,
+   PDEVICE_OBJECT QCPhysicalDeviceObject
+);
+
+NTSTATUS QCFilterSetFriendlyName
+(
+   PDEVICE_EXTENSION pDevExt,
+   PDEVICE_OBJECT    QCPhysicalDeviceObject,
+   PUNICODE_STRING   FriendlyName,
+   PWCHAR            TargetDriverKey
+);
+
 #ifdef EVENT_TRACING
 #include "QCFILTERWPP.h"
 #endif
