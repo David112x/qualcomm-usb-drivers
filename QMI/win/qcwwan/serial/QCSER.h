@@ -179,6 +179,13 @@ NTSTATUS SerialSendEncapusulatedCmd(PDEVICE_OBJECT DeviceObject, PVOID ioBuffer,
                                               METHOD_BUFFERED, \
                                               FILE_ANY_ACCESS)
 
+/* Make the following code as 3354 - Parent device name from filter device*/
+#define IOCTL_QCDEV_GET_PARENT_DEV_NAME CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                               QCOMSER_IOCTL_INDEX+1306, \
+                                               METHOD_BUFFERED, \
+                                               FILE_ANY_ACCESS)
+
+
 #define IOCTL_QCUSB_GET_CONTROL CTL_CODE(FILE_DEVICE_UNKNOWN, \
                                   QCOMSER_IOCTL_INDEX+10, \
                                   METHOD_BUFFERED, \

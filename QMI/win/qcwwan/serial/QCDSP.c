@@ -279,6 +279,7 @@ NTSTATUS QCDSP_QueuedDispatch(IN PDEVICE_OBJECT CalledDO, IN PIRP Irp)
       if (irpStack->MinorFunction == IRP_MN_SURPRISE_REMOVAL)
       {
          clearDevState(DEVICE_STATE_PRESENT_AND_STARTED);
+         pDevExt->bDeviceSurpriseRemoved = TRUE;
       }
    }
 
@@ -3497,6 +3498,19 @@ VOID QCDSP_RequestD0(PDEVICE_EXTENSION pDevExt)
       QCSER_DBG_LEVEL_DETAIL,
       ("<%s> -->RequestD0\n", pDevExt->PortName)
    );
+
+   if ((pDevExt->WdmVersion >= Win8OrHigher) &&
+       (pDevExt->bDeviceSurpriseRemoved == TRUE))
+   {
+      QCSER_DbgPrint
+      (
+         QCSER_DBG_MASK_PIRP,
+         QCSER_DBG_LEVEL_ERROR,
+         ("<%s> <--RequestD0: Win8 or higher, no act\n", pDevExt->PortName)
+      );
+      return;
+   }
+
    powerState.DeviceState = PowerDeviceD0;
    nts = IoAcquireRemoveLock(pDevExt->pRemoveLock, NULL);
    if (NT_SUCCESS(nts))

@@ -18900,7 +18900,7 @@ ULONG MPQMUX_ProcessNasGetSysInfoResp
                                    }
                                    else
                                    {
-                 pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateUnknown;
+                 pWwanServingState->PacketService.PacketServiceState = WwanPacketServiceStateDetached;
                                    }                       
 
               if (CSAttachedState == 1)
@@ -20237,7 +20237,7 @@ ULONG MPQMUX_ProcessNasGetSysInfoResp
    }
    else
    {
-            WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateUnknown;
+            WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
    }
 
          if (CSAttachedState == 1)
@@ -20567,7 +20567,7 @@ ULONG MPQMUX_ProcessNasSysInfoInd
    }
    else
      {
-      WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateUnknown;
+      WwanServingState.PacketService.PacketServiceState = WwanPacketServiceStateDetached;
    }
 
    if (CSAttachedState == 1)
@@ -26314,6 +26314,10 @@ ULONG MPQMUX_ProcessUimReadTransparantResp
                         }
                         else
                         {
+#ifdef QCUSB_MUX_PROTOCOL
+                           #error code not present
+#endif
+                           {
                            pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
                            pAdapter->DeviceReadyState = DeviceWWanOff;
                            MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
@@ -26321,6 +26325,7 @@ ULONG MPQMUX_ProcessUimReadTransparantResp
                            MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
                                                   QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
                         }
+                     }
                      }
                      else
                      {
@@ -26334,8 +26339,13 @@ ULONG MPQMUX_ProcessUimReadTransparantResp
                {
                    if (pAdapter->DeviceClass == DEVICE_CLASS_GSM)
                    {
+#ifdef QCUSB_MUX_PROTOCOL
+                      #error code not present
+#endif
+                      {
                       pAdapter->DeviceReadyState = DeviceWWanOff;
                       pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
+                      }
                    }
                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
                                           QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );

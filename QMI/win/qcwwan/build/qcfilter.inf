@@ -3,7 +3,7 @@
 ;
 ; Qualcomm Wireless Composite Device
 ;
-; Copyright (c) 2017 Qualcomm Technologies, Inc.
+; Copyright (c) 2018 Qualcomm Technologies, Inc.
 ; All rights reserved.
 ;-------------------------------------------------------------------------------
 
@@ -12,7 +12,7 @@ Signature   = "$WINDOWS NT$"
 Class       = USB
 Provider    = %QUALCOMM%
 ClassGUID   = {36FC9E60-C465-11CF-8056-444553540000}
-DriverVer   = 09/27/2017,1.0.5.1
+DriverVer   = 03/21/2018,1.0.5.2
 CatalogFile = qcfilter.cat
 
 [Manufacturer]
@@ -225,6 +225,13 @@ qcusbfilter.sys  = 1000
 %qcfilter.DeviceDesc90DF%     = qcfilter, USB\VID_05C6&PID_90DF
 %qcfilter.DeviceDesc90E0%     = qcfilter, USB\VID_05C6&PID_90E0
 %qcfilter.DeviceDesc90E1%     = qcfilter, USB\VID_05C6&PID_90E1
+%qcfilter.DeviceDesc90E3%     = qcfilter, USB\VID_05C6&PID_90E3
+%qcfilter.DeviceDesc90E4%     = qcfilter, USB\VID_05C6&PID_90E4
+%qcfilter.DeviceDesc90E5%     = qcfilter, USB\VID_05C6&PID_90E5
+%qcfilter.DeviceDesc90E6%     = qcfilter, USB\VID_05C6&PID_90E6
+%qcfilter.DeviceDesc90E7%     = qcfilter, USB\VID_05C6&PID_90E7
+%qcfilter.DeviceDesc90E8%     = qcfilter, USB\VID_05C6&PID_90E8
+%qcfilter.DeviceDesc90E9%     = qcfilter, USB\VID_05C6&PID_90E9
 %qcfilter.DeviceDesc9100%     = qcfilter, USB\VID_05C6&PID_9100
 %qcfilter.DeviceDesc9101%     = qcfilter, USB\VID_05C6&PID_9101
 %qcfilter.DeviceDesc9402%     = qcfilter, USB\VID_05C6&PID_9402
@@ -426,6 +433,13 @@ qcusbfilter.sys  = 1000
 %qcfilter.DeviceDesc90DF%     = qcfilter, USB\VID_05C6&PID_90DF
 %qcfilter.DeviceDesc90E0%     = qcfilter, USB\VID_05C6&PID_90E0
 %qcfilter.DeviceDesc90E1%     = qcfilter, USB\VID_05C6&PID_90E1
+%qcfilter.DeviceDesc90E3%     = qcfilter, USB\VID_05C6&PID_90E3
+%qcfilter.DeviceDesc90E4%     = qcfilter, USB\VID_05C6&PID_90E4
+%qcfilter.DeviceDesc90E5%     = qcfilter, USB\VID_05C6&PID_90E5
+%qcfilter.DeviceDesc90E6%     = qcfilter, USB\VID_05C6&PID_90E6
+%qcfilter.DeviceDesc90E7%     = qcfilter, USB\VID_05C6&PID_90E7
+%qcfilter.DeviceDesc90E8%     = qcfilter, USB\VID_05C6&PID_90E8
+%qcfilter.DeviceDesc90E9%     = qcfilter, USB\VID_05C6&PID_90E9
 %qcfilter.DeviceDesc9100%     = qcfilter, USB\VID_05C6&PID_9100
 %qcfilter.DeviceDesc9101%     = qcfilter, USB\VID_05C6&PID_9101
 %qcfilter.DeviceDesc9402%     = qcfilter, USB\VID_05C6&PID_9402
@@ -770,6 +784,13 @@ qcfilter.DeviceDesc90DE     = "Qualcomm USB Composite Device 90DE"
 qcfilter.DeviceDesc90DF     = "Qualcomm USB Composite Device 90DF"
 qcfilter.DeviceDesc90E0     = "Qualcomm USB Composite Device 90E0"
 qcfilter.DeviceDesc90E1     = "Qualcomm USB Composite Device 90E1"
+qcfilter.DeviceDesc90E3     = "Qualcomm USB Composite Device 90E3"
+qcfilter.DeviceDesc90E4     = "Qualcomm USB Composite Device 90E4"
+qcfilter.DeviceDesc90E5     = "Qualcomm USB Composite Device 90E5"
+qcfilter.DeviceDesc90E6     = "Qualcomm USB Composite Device 90E6"
+qcfilter.DeviceDesc90E7     = "Qualcomm USB Composite Device 90E7"
+qcfilter.DeviceDesc90E8     = "Qualcomm USB Composite Device 90E8"
+qcfilter.DeviceDesc90E9     = "Qualcomm USB Composite Device 90E9"
 qcfilter.DeviceDesc9100     = "Qualcomm USB Composite Device 9100"
 qcfilter.DeviceDesc9101     = "Qualcomm USB Composite Device 9101"
 qcfilter.DeviceDesc9402     = "Qualcomm USB Composite Device 9402"

@@ -468,13 +468,13 @@ UINT __stdcall Install( MSIHANDLE hMSI )
    cMSILogger dmLog;
    cDeviceManager dm( (LPCWSTR)oemName, dmLog );
    
-   if ((versionNT < 601) || (installEthernetDriver == 2))
+   if (versionNT < 603)
    {
-	   driversPath += L"XP-Vista";
+	   driversPath += L"Windows7";
    }
    else
    {
-	  driversPath += L"Windows7";
+	  driversPath += L"Windows10";
    }
 
    driversPath += _T('\\');

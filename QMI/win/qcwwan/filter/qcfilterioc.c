@@ -173,7 +173,7 @@ ProcessDispatchIrp
    }
    else
    {
-      QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("ProcessDispatchIrp : Release RemoveLock\n"));                          
+      // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("ProcessDispatchIrp : Release RemoveLock\n"));                          
       IoReleaseRemoveLock(&pDevExt->RemoveLock, Irp);
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
    }
@@ -306,7 +306,7 @@ ControlFilterThread(PVOID pContext)
                   ("<%s> FilterThread CIRP: (Cx 0x%p)\n", pDevExt->PortName, pDispatchIrp)
                );
                pDispatchIrp->IoStatus.Status = STATUS_CANCELLED;
-               QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("ControlFilterThread : Release RemoveLock\n"));                          
+               // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("ControlFilterThread : Release RemoveLock\n"));                          
                IoReleaseRemoveLock(&pDevExt->RemoveLock, pDispatchIrp);
                IoCompleteRequest(pDispatchIrp, IO_NO_INCREMENT);
                pDispatchIrp = pDevExt->pCurrentDispatch = NULL;

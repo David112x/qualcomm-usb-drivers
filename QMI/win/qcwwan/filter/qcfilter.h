@@ -204,6 +204,7 @@ typedef enum _DEVICE_TYPE
 #define QCFLT_STOP_FILTER                         3
 #define QCFLT_FILTER_EVENT_COUNT                  4
 
+#define MAX_NAME_LEN 1024
 
 typedef struct _FILTER_THREAD_CONTEXT
 {
@@ -300,6 +301,8 @@ typedef struct _DEVICE_EXTENSION
 
    CHAR  PeerDevName[4096];
    ULONG PeerDevNameLength;
+
+   WCHAR FriendlyNameHolder[MAX_NAME_LEN];
 
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 

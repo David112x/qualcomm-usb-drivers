@@ -35,6 +35,13 @@ NTSTATUS QCPNP_SetStamp
    HANDLE         hRegKey,
    BOOLEAN        Startup
 );
+NTSTATUS QCPNP_GetParentDeviceName(PDEVICE_EXTENSION pDevExt);
+VOID QCPNP_SaveParentDeviceNameToRegistry
+(
+   PDEVICE_EXTENSION pDevExt,
+   PVOID ParentDeviceName,
+   ULONG NameLength
+);
 NTSTATUS QCUSB_VendorRegistryProcess
 (
    IN PDRIVER_OBJECT pDriverObject,

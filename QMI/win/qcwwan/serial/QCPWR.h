@@ -31,13 +31,22 @@ GENERAL DESCRIPTION
 #define WDM_MN_VERSION_XP 0x20
 #define WDM_MJ_VERSION_VISTA 0x06
 #define WDM_MN_VERSION_VISTA 0x00
+#define WDM_MJ_VERSION_WIN7  0x06
+#define WDM_MN_VERSION_WIN7  0x01
+#define WDM_MJ_VERSION_WIN8  0x06
+#define WDM_MN_VERSION_WIN8  0x02
+#define WDM_MJ_VERSION_WIN81 0x06
+#define WDM_MN_VERSION_WIN81 0x03
+
+#define QC_NTDDI_WIN8_1 0x06030000
 
 typedef enum _WDM_VERSION
 {
    WinMeOrOlder = 0,
    Win2kOrHigher,
    WinXpOrHigher,
-   WinVistaOrHigher
+   WinVistaOrHigher,
+   Win8OrHigher
 }WDM_VERSION;
 
 typedef enum _QCUSB_POWER_REQ_TYPE

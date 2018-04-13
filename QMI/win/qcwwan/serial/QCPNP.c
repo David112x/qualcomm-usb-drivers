@@ -1587,6 +1587,8 @@ NTSTATUS QCPNP_StartDevice( IN  PDEVICE_OBJECT DeviceObject, IN UCHAR cookie )
             KdPrint (("bNumConfigurations 0x%x\n", deviceDesc->bNumConfigurations));
    #endif  //DEBUG_MSGS
 
+           QCPNP_GetParentDeviceName(pDevExt);
+
             ntStatus = QCPNP_GetStringDescriptor(DeviceObject, deviceDesc->iProduct, 0x0409, TRUE);
             if ((!NT_SUCCESS(ntStatus)) && (deviceDesc->iProduct != 2))
             {
@@ -2526,7 +2528,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.2.9");
+             DbgPrint("Driver Version %s\n", "2.1.3.1");
              DbgPrint("   |============================|\n");
           }
           else
@@ -2549,7 +2551,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.2.9");
+             DbgPrint("Driver Version %s\n", "2.1.3.1");
              DbgPrint("   |===============================|\n");
           }
           QCSER_DbgPrint
@@ -2593,7 +2595,7 @@ NTSTATUS QCPNP_SelectInterfaces
          DbgPrint("   |   IF: CT%02d-CC%02d-DA%02d          |\n", pDevExt->ControlInterface,
                    pDevExt->usCommClassInterface, pDevExt->DataInterface);
          DbgPrint("   |   HS 0x%x       |\n", pDevExt->HighSpeedUsbOk);
-         DbgPrint("Driver Version 2.1.2.9\n");
+         DbgPrint("Driver Version 2.1.3.1\n");
          DbgPrint("   |===============================|\n\n");
       }
       else
@@ -3383,4 +3385,126 @@ NTSTATUS QCPNP_RegisterDevNameCompletion
 
    return STATUS_MORE_PROCESSING_REQUIRED;
 }  // QCPNP_RegisterDevNameCompletion
+
+NTSTATUS QCPNP_GetParentDeviceName(PDEVICE_EXTENSION pDevExt)
+{
+   CHAR parentDevName[MAX_NAME_LEN];
+   PIRP pIrp = NULL;
+   PIO_STACK_LOCATION nextstack;
+   NTSTATUS ntStatus;
+   KEVENT event;
+
+   RtlZeroMemory(parentDevName, MAX_NAME_LEN);
+   KeInitializeEvent(&event, SynchronizationEvent, FALSE);
+
+   pIrp = IoAllocateIrp((CCHAR)(pDevExt->StackDeviceObject->StackSize+2), FALSE);
+   if( pIrp == NULL )
+   {
+       QCSER_DbgPrint
+       (
+          QCSER_DBG_MASK_CONTROL,
+          QCSER_DBG_LEVEL_ERROR,
+          ("<%s> QCPNP_GetParentDeviceName failed to allocate an IRP\n", pDevExt->PortName)
+       );
+       return STATUS_UNSUCCESSFUL;
+   }
+
+   pIrp->AssociatedIrp.SystemBuffer = parentDevName;
+   pIrp->UserEvent = &event;
+
+   nextstack = IoGetNextIrpStackLocation(pIrp);
+   nextstack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+   nextstack->Parameters.DeviceIoControl.IoControlCode = IOCTL_QCDEV_GET_PARENT_DEV_NAME;
+   nextstack->Parameters.DeviceIoControl.OutputBufferLength = MAX_NAME_LEN;
+
+   IoSetCompletionRoutine
+   (
+      pIrp,
+      (PIO_COMPLETION_ROUTINE)QCPNP_RegisterDevNameCompletion,  // borrow this completion routine
+      (PVOID)pDevExt,
+      TRUE,TRUE,TRUE
+   );
+
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_CONTROL,
+      QCSER_DBG_LEVEL_TRACE,
+      ("<%s> QCPNP_GetParentDeviceName (IRP 0x%p)\n", pDevExt->PortName, pIrp)
+   );
+
+   ntStatus = IoCallDriver(pDevExt->StackDeviceObject, pIrp);
+
+   ntStatus = KeWaitForSingleObject(&event, Executive, KernelMode, TRUE, 0);
+
+   if (ntStatus == STATUS_SUCCESS)
+   {
+      ntStatus = pIrp->IoStatus.Status;
+      QCPNP_SaveParentDeviceNameToRegistry(pDevExt, parentDevName, pIrp->IoStatus.Information);
+   }
+   else
+   {
+      QCPNP_SaveParentDeviceNameToRegistry(pDevExt, parentDevName, 0);
+   }
+
+   IoFreeIrp(pIrp);
+
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_CONTROL,
+      QCSER_DBG_LEVEL_TRACE,
+      ("<%s> <--- QCPNP_GetParentDeviceName: ST %x\n", pDevExt->PortName, ntStatus)
+   );
+
+   return ntStatus;
+
+}  // QCPNP_GetParentDeviceName
+
+VOID QCPNP_SaveParentDeviceNameToRegistry
+(
+   PDEVICE_EXTENSION pDevExt,
+   PVOID ParentDeviceName,
+   ULONG NameLength
+)
+{
+   HANDLE hRegKey;
+   NTSTATUS ntStatus;
+   UNICODE_STRING ucValueName;
+
+   // update registry
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevExt->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QCSER_DbgPrint
+      (
+         QCSER_DBG_MASK_CONTROL,
+         QCSER_DBG_LEVEL_ERROR,
+         ("<%s> QCPNP_SaveParentDeviceNameToRegistry: reg access failure 0x%x\n", pDevExt->PortName, ntStatus)
+      );
+      return;
+   }
+   RtlInitUnicodeString(&ucValueName, L"QCDeviceParent");
+   if (NameLength > 0)
+   {
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_SZ,
+         ParentDeviceName,
+         NameLength
+      );
+   }
+   else
+   {
+      ZwDeleteValueKey(hRegKey, &ucValueName);
+   }
+   ZwClose(hRegKey);
+}  // QCPNP_SaveParentDeviceNameToRegistry
 

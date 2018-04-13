@@ -707,6 +707,8 @@ NTSTATUS QDBPNP_EnumerateDevice(IN WDFDEVICE Device)
       &usbDeviceDesc
    );
 
+   QDBPNP_GetParentDeviceName(Device);
+
    ntStatus = QDBPNP_GetDeviceSerialNumber(Device, usbDeviceDesc.iProduct, TRUE);
    if ((!NT_SUCCESS(ntStatus)) && (usbDeviceDesc.iProduct != 2))
    {
@@ -1825,3 +1827,129 @@ NTSTATUS QDBPNP_SetStamp
 
    return STATUS_SUCCESS;
 }  // QDBPNP_SetStamp
+
+NTSTATUS QDBPNP_GetParentDeviceName(WDFDEVICE Device)
+{
+   PDEVICE_CONTEXT pDevContext;
+   CHAR parentDevName[MAX_NAME_LEN];
+   PIRP pIrp = NULL;
+   PIO_STACK_LOCATION nextstack;
+   NTSTATUS ntStatus;
+   KEVENT event;
+
+   pDevContext = QdbDeviceGetContext(Device);
+
+   RtlZeroMemory(parentDevName, MAX_NAME_LEN);
+   KeInitializeEvent(&event, SynchronizationEvent, FALSE);
+
+   pIrp = IoAllocateIrp((CCHAR)(pDevContext->MyDevice->StackSize+1), FALSE);
+   if( pIrp == NULL )
+   {
+       QDB_DbgPrint
+       (
+          QDB_DBG_MASK_CONTROL,
+          QDB_DBG_LEVEL_ERROR,
+          ("<%s> QDBPNP_GetParentDeviceName failed to allocate an IRP\n", pDevContext->PortName)
+       );
+       return STATUS_UNSUCCESSFUL;
+   }
+
+   pIrp->AssociatedIrp.SystemBuffer = parentDevName;
+   pIrp->UserEvent = &event;
+
+   nextstack = IoGetNextIrpStackLocation(pIrp);
+   nextstack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+   nextstack->Parameters.DeviceIoControl.IoControlCode = IOCTL_QCDEV_GET_PARENT_DEV_NAME;
+   nextstack->Parameters.DeviceIoControl.OutputBufferLength = MAX_NAME_LEN;
+
+   IoSetCompletionRoutine
+   (
+      pIrp,
+      (PIO_COMPLETION_ROUTINE)QDBDSP_IrpIoCompletion,
+      (PVOID)pDevContext,
+      TRUE,TRUE,TRUE
+   );
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> QDBPNP_GetParentDeviceName (IRP 0x%p)\n", pDevContext->PortName, pIrp)
+   );
+
+   ntStatus = IoCallDriver(pDevContext->TargetDevice, pIrp);
+
+   ntStatus = KeWaitForSingleObject(&event, Executive, KernelMode, TRUE, 0);
+
+   if (ntStatus == STATUS_SUCCESS)
+   {
+      ntStatus = pIrp->IoStatus.Status;
+      QDBPNP_SaveParentDeviceNameToRegistry(pDevContext, parentDevName, pIrp->IoStatus.Information);
+   }
+   else
+   {
+      QDBPNP_SaveParentDeviceNameToRegistry(pDevContext, parentDevName, 0);
+   }
+
+   IoFreeIrp(pIrp);
+
+   QDB_DbgPrint
+   (
+      QDB_DBG_MASK_CONTROL,
+      QDB_DBG_LEVEL_TRACE,
+      ("<%s> <--- QDBPNP_GetParentDeviceName: ST %x\n", pDevContext->PortName, ntStatus)
+   );
+
+   return ntStatus;
+
+}  // QDBPNP_GetParentDeviceName
+
+VOID QDBPNP_SaveParentDeviceNameToRegistry
+(
+   PDEVICE_CONTEXT pDevContext,
+   PVOID ParentDeviceName,
+   ULONG NameLength
+)
+{
+   HANDLE hRegKey;
+   NTSTATUS ntStatus;
+   UNICODE_STRING ucValueName;
+
+   // update registry
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevContext->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QDB_DbgPrint
+      (
+         QDB_DBG_MASK_CONTROL,
+         QDB_DBG_LEVEL_ERROR,
+         ("<%s> QDBPNP_SaveParentDeviceNameToRegistry: reg access failure 0x%x\n", pDevContext->PortName, ntStatus)
+      );
+      return;
+   }
+   RtlInitUnicodeString(&ucValueName, L"QCDeviceParent");
+   if (NameLength > 0)
+   {
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_SZ,
+         ParentDeviceName,
+         NameLength
+      );
+   }
+   else
+   {
+      ZwDeleteValueKey(hRegKey, &ucValueName);
+   }
+   ZwClose(hRegKey);
+}  // QDBPNP_SaveParentDeviceNameToRegistry
+

@@ -1444,6 +1444,10 @@ typedef struct _MP_ADAPTER
    USHORT IndexGWPri;
    ULONG UIMICCID;
    ULONG EnableSSDisconnectTimer;
+
+#ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#endif
 } MP_ADAPTER, *PMP_ADAPTER;
 
 

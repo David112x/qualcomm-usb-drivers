@@ -37,8 +37,8 @@ use strict;
 # Only serial driver is compiled for arm builds
 
 my @DriversList = ("serial","ndisnet","ndismbb","filter","qdss");
-my @BuildArchList = ("Win32","x64", "arm");
-my @OSList = ("XPVista", "Win7", "Win8");
+my @BuildArchList = ("Win32","x64");
+my @OSList = ("Win7", "Win10");
 my $Rebuild = 'Rebuild'; 
 my $Checked = "Checked";
 
@@ -61,11 +61,11 @@ my $InstallShieldCmd = "\"C:\\Program Files (x86)\\InstallShield\\2012\\System\\
 #   use $PROJ_ indexes
 
 my %Projects = (
-   serial   => ["qcusbser", "", "qcusbser", "serial", "serial", "Win8", "qcser.inf", "qcmdm.inf"],
+   serial   => ["qcusbser", "", "qcusbser", "serial", "serial", "win10", "qcser.inf", "qcmdm.inf"],
    filter   => ["qcusbfilter", "", "qcusbfilter", "filter", "filter", "No", "qcfilter.inf"],
    ndisnet  => ["qcusbnet", "WindowsVista", "qcusbnet",  "ndis\\5.1", "ndis", "No", "qcnet.inf"],
    ndismbb  => ["qcusbnet", "", "qcusbwwan",  "ndis\\6.2", "ndis", "No", "qcwwan.inf"],
-   qdss     => ["qdbusb", "", "qdbusb", "qdss", "qdss", "No", "qdbusb.inf"]
+   qdss     => ["qdbusb", "", "qdbusb", "qdss", "qdss", "win10", "",""]
 );   
 
 # indexes for %Projects array
@@ -82,23 +82,21 @@ my $PROJ_INF2        = 7;
 # Install OS directories
 #----------------------------------------------------------------------------
 my %InstallDrivers = (
-   XPVista => {
-      dir     => "XP-Vista",
-      serial  => 1,
-      ndisnet => 1,
-      filter  => 1,
-      qdss    => 1      
-   },
    Win7 => {
       dir     => "Windows7",
       serial  => 1,
+      ndisnet => 1,
+      ndismbb => 1,
+      filter  => 1,
+      qdss    => 1      
+   },
+   Win10 => {
+      dir    => "Windows10",
+      serial  => 1,
+      ndisnet => 1,
       ndismbb => 1,
       filter  => 1,
       qdss    => 1
-   },
-   Win8 => {
-      dir    => "Windows8",
-      serial => 1,
    },
 );
 
@@ -110,8 +108,7 @@ my %InstallDrivers = (
 
 my %ArchDir = (
    Win32   => ["x86","i386"],
-   x64     => ["x64","amd64"],
-   arm     => ["arm","arm"]
+   x64     => ["x64","amd64"]
 );
 
 # Build directories
@@ -412,8 +409,8 @@ sub MakeCat
       # if Win8 not suported, copy only infs for non-Win8 supported drivers
       foreach $Driver (@DriversList)
       {
-         if ( (($Win8 eq "Win8") && ($Projects{$Driver}[$PROJ_WIN8] eq "Win8")) ||
-              (($Win8 ne "Win8") && ($Projects{$Driver}[$PROJ_WIN8] ne "Win8")) )
+         if ( (($Win8 eq "win10") && ($Projects{$Driver}[$PROJ_WIN8] eq "win10")) ||
+              (($Win8 ne "Win10") && ($Projects{$Driver}[$PROJ_WIN8] ne "Win10")) )
          {
             $INFsCopied = 1;
             Run(qq(xcopy /R /F /Y /I $BuildDir\\$Projects{$Driver}[$PROJ_INF1] $TargetDir\\$BuildType\\));
@@ -533,8 +530,8 @@ sub BuildDrivers
    # Create a CAT file, currently only serial driver supports Win8
    #   Inf2Cat must be called twice - once with Win8 and once with non-Win8 drivers
 
-   MakeCat("Win8", "false");
-   MakeCat("false", "true");
+   # MakeCat("Win7", "false");
+   # MakeCat("Win10", "true");
 
    #----------------------------------------------------------------------------
    # Testsign all drivers in target folder
@@ -575,9 +572,6 @@ sub BuildDrivers
    
    #Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\ReadMe.rtf $TargetDir));
 
-   # Signing 
-   Run(qq(perl $DriversDir\\build\\tcLocal.pl $TargetDir\\chk\\ $TargetDir\\chk\\ cat));
-   Run(qq(perl $DriversDir\\build\\tcLocal.pl $TargetDir\\fre\\ $TargetDir\\fre\\ cat ));
 
    CreateInstallDirs();
 }
@@ -588,6 +582,7 @@ sub BuildDrivers
 sub CreateInstallDirs
 {
    my $BuildType;
+   my $MakeCatOSList = "XP_X86,Server2003_X86,XP_X64,Server2003_X64,Vista_X86,Server2008_X86,Vista_X64,Server2008_X64,7_X86,7_X64,Server2008R2_X64,8_X86,8_X64,Server8_X64";
 
    # to make it easier for user to install by pointing to same path (vs specific inf) for each device, create a
    # separate OS directory with inf/drivers specific to that OS
@@ -614,14 +609,23 @@ sub CreateInstallDirs
                my $inf1 = $Projects{$key}[$PROJ_INF1];
                my $inf2 = $Projects{$key}[$PROJ_INF2];
 
-               Run(qq(xcopy /R /F /Y /I $inf1 $OSDir\\));
+               Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\$inf1 $OSDir\\));
                $inf1 =~ s/inf/cat/g; 
-               Run(qq(xcopy /R /F /Y /I $inf1 $OSDir\\));
+               Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\$inf1 $OSDir\\));
                if ($inf2)
                {
-                  Run(qq(xcopy /R /F /Y /I $inf2 $OSDir\\));
+                  Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\$inf2 $OSDir\\));
                   $inf2 =~ s/inf/cat/g; 
-                  Run(qq(xcopy /R /F /Y /I $inf2 $OSDir\\));
+                  Run(qq(xcopy /R /F /Y /I $DriversDir\\build\\$inf2 $OSDir\\));
+               }
+
+               if ($OS ne "Win10")
+               {
+                  Run(qq(copy /Y $DriversDir\\build\\qdbusb7.inf $OSDir\\qdbusb.inf));
+               }
+               else
+               {
+                  Run(qq(copy /Y $DriversDir\\build\\qdbusb10.inf $OSDir\\qdbusb.inf));
                }
 
                # copy driver to OS directory (e.g. serial to Windows7)
@@ -630,6 +634,11 @@ sub CreateInstallDirs
                Run(qq(xcopy /R /F /Y /I /S $driverDir\\* $OSDir\\$driverDir\\));
             }
          }
+
+         Run(qq($WDKPath\\Inf2Cat /driver:$OSDir /os:$MakeCatOSList ));
+
+         # Signing 
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ $OSDir\\ cat));
       }
       # remove all .inf, .cat, and driver directories from target since they are in OS dir now
       Run(qq(del *.inf));

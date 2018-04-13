@@ -2224,6 +2224,18 @@ NTSTATUS QCPWR_IdleNotificationIrpCompletionEpisode
          goto ExitPoint;
       }
 
+      if ((pDevExt->WdmVersion >= Win8OrHigher) &&
+          (pDevExt->bDeviceSurpriseRemoved == TRUE))
+      {
+         QCSER_DbgPrint
+         (
+            QCSER_DBG_MASK_PIRP,
+            QCSER_DBG_LEVEL_ERROR,
+            ("<%s> IdleNotificationIrpCompletionEpisode: Win8 or higher, no act\n", pDevExt->PortName)
+         );
+         goto ExitPoint;
+      }
+
       // #ifdef QCUSB_REQ_D0_ON_IDLE_ERR
 
       // Raise power back to D0
@@ -2796,7 +2808,11 @@ VOID QCPWR_CancelWaitWakeIrp(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
 // ========================================================
 VOID QCPWR_GetWdmVersion(PDEVICE_EXTENSION pDevExt)
 {
-   if (IoIsWdmVersionAvailable(WDM_MJ_VERSION_VISTA, WDM_MN_VERSION_VISTA))
+   if (RtlIsNtDdiVersionAvailable(QC_NTDDI_WIN8_1) == TRUE)
+   {
+      pDevExt->WdmVersion = Win8OrHigher;
+   }
+   else if (IoIsWdmVersionAvailable(WDM_MJ_VERSION_VISTA, WDM_MN_VERSION_VISTA))
    {
       pDevExt->WdmVersion = WinVistaOrHigher;
    }
@@ -2846,6 +2862,18 @@ BOOLEAN QCPWR_CheckToWakeup
       ("<%s> -->CheckToWakeup(%u) IRQL(%u): IRP 0x%p Susp %u\n", pDevExt->PortName,
         Cookie, KeGetCurrentIrql(), Irp, pDevExt->PowerSuspended)
    );
+
+   if ((pDevExt->WdmVersion >= Win8OrHigher) &&
+       (pDevExt->bDeviceSurpriseRemoved == TRUE))
+   {
+      QCSER_DbgPrint
+      (
+         QCSER_DBG_MASK_PIRP,
+         QCSER_DBG_LEVEL_ERROR,
+         ("<%s> <--CheckToWakeup: Win8 or higher, no wake for removal\n", pDevExt->PortName)
+      );
+      return FALSE;
+   }
 
    if (Irp == NULL)
    {

@@ -342,8 +342,10 @@ VOID MPIP_WdsIpThread(PVOID Context)
    #error code not present
 #endif // QCUSB_MUX_PROTOCOL   
 
-   KeClearEvent(&pAdapter->WdsIpThreadCancelEvent);
-   KeClearEvent(&pAdapter->WdsIpThreadClosedEvent);
+   // 3/13/2018: follwing could cause potential race condition
+   // 3/13/2018: remove following, they are initialized in MPINI_AllocAdapter
+   // KeClearEvent(&pAdapter->WdsIpThreadCancelEvent);
+   // KeClearEvent(&pAdapter->WdsIpThreadClosedEvent);
 
    pAdapter->WdsIpThreadEvent[WDSIP_CANCEL_EVENT_INDEX] = &pAdapter->WdsIpThreadCancelEvent;
    pAdapter->WdsIpThreadEvent[WDSIP_READ_EVENT_INDEX] = &pIocDev->ReadDataAvailableEvent;

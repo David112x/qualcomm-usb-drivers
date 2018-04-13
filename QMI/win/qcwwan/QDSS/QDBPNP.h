@@ -57,4 +57,13 @@ NTSTATUS QDBPNP_CreateSymbolicName(WDFDEVICE Device);
 
 NTSTATUS QDBPNP_EnableSelectiveSuspend(WDFDEVICE Device);
 
+NTSTATUS QDBPNP_GetParentDeviceName(WDFDEVICE Device);
+
+VOID QDBPNP_SaveParentDeviceNameToRegistry
+(
+   PDEVICE_CONTEXT pDevContext,
+   PVOID ParentDeviceName,
+   ULONG NameLength
+);
+
 #endif // QDBPNP_H

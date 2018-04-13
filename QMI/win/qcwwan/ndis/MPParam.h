@@ -273,6 +273,10 @@ GENERAL DESCRIPTION
 #define PARAM_EnableSigStrDisconTimer_MIN     0
 #define PARAM_EnableSigStrDisconTimer_MAX     1
 
+#ifdef QCUSB_MUX_PROTOCOL
+#error code not present
+#endif
+
 NDIS_STATUS MPParam_GetConfigValues
 (
    IN NDIS_HANDLE AdapterHandle,

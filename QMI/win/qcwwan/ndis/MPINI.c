@@ -297,6 +297,9 @@ NDIS_STATUS MPINI_MiniportInitialize
          ("<%s> MPMaxPendingQMIReqs: %d\n", pAdapter->PortName, pAdapter->MaxPendingQMIReqs)
       );
 
+#ifdef QCUSB_MUX_PROTOCOL
+      #error code not present
+#endif
       // We can't call alloc buffers until after the parse registry because some of
       // the buffer counts are setup from registry values.
       Status = MPINI_AllocAdapterBuffers(pAdapter);
@@ -700,6 +703,9 @@ NDIS_STATUS MPINI_MiniportInitializeEx
          ("<%s> MuxId: 0x%x\n", pAdapter->PortName, pAdapter->MuxId)
       );
 
+#ifdef QCUSB_MUX_PROTOCOL
+      #error code not present
+#endif
       // We can't call alloc buffers until after the parse registry because some of
       // the buffer counts are setup from registry values.
       Status = MPINI_AllocAdapterBuffers(pAdapter);

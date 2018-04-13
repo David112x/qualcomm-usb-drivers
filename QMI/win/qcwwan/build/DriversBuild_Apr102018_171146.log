@@ -1,0 +1,813 @@
+
+WHQL -WHQL and WHQLDir Internal ...
+
+... Tue Apr 10 17:11:46 2018 ...
+--------------------------------
+Beginning Drivers Builds... (in Z:\\\\b\\\\Q
+
+Command: perl buildDrivers.pl Z:\\b\\QMI\\win\\qcwwan\\build -WHQL Internal
+
+WHQL -WHQL and WHQLDir Internal ...
+
+... Tue Apr 10 17:11:46 2018 ...
+--------------------------------
+Beginning Drivers Builds... (in Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build)
+
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\CustomActions\\DriversInstallerCA.vcxproj -- Release -- Win32.
+
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 4/10/2018 5:11:46 PM.
+The target "_ConvertPdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,37)" does not exist in the project, and will be ignored.
+The target "_CollectPdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,70)" does not exist in the project, and will be ignored.
+The target "_CollectMdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,38)" does not exist in the project, and will be ignored.
+The target "_CopyMdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,71)" does not exist in the project, and will be ignored.
+Project "Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj" on node 1 (Rebuild target(s)).
+CoreClean:
+  Creating directory "Release\".
+DriverBuildNotifications:
+  Building 'DriversInstallerCA' with toolset 'WindowsApplicationForDrivers10.0' and the 'Desktop' target platform.
+PrepareForBuild:
+  Creating directory "Release\DriversI.0AED3758.tlog\".
+InitializeBuildStatus:
+  Creating "Release\DriversI.0AED3758.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I.\..\Shared /IRelease\ /Zi /nologo /W2 /WX- /O2 /Oi /Oy- /GL /D UNICODE /D _UNICODE /D "WIN32_WINNT 0x0409" /D "_WIN32_WINNT 0x0409" /D _X86_=1 /D i386=1 /D STD_CALL /D WIN32_LEAN_AND_MEAN=1 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000003 /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t- /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp"Release\DriversInstallerCA.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gz /TP /FI"C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\shared\warning.h" /analyze- /errorReport:queue Stdafx.cpp
+  Stdafx.cpp
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I.\..\Shared /IRelease\ /Zi /nologo /W2 /WX- /O2 /Oi /Oy- /GL /D UNICODE /D _UNICODE /D "WIN32_WINNT 0x0409" /D "_WIN32_WINNT 0x0409" /D _X86_=1 /D i386=1 /D STD_CALL /D WIN32_LEAN_AND_MEAN=1 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000003 /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t- /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"Release\DriversInstallerCA.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gz /TP /FI"C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\shared\warning.h" /analyze- /errorReport:queue ..\Shared\CoreUtilities.cpp ..\Shared\DB2TextFile.cpp ..\Shared\InfDev.cpp CustomActions.cpp ..\Shared\DeviceManagement.cpp
+  CoreUtilities.cpp
+  DB2TextFile.cpp
+  InfDev.cpp
+..\Shared\InfDev.cpp(670): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj]
+  ..\Shared\InfDev.cpp(670): note: consider using '%hs' in the format string
+  ..\Shared\InfDev.cpp(670): note: consider using '%s' in the format string
+  ..\Shared\InfDev.cpp(670): note: consider using '%Ts' in the format string
+..\Shared\InfDev.cpp(713): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj]
+  ..\Shared\InfDev.cpp(713): note: consider using '%hs' in the format string
+  ..\Shared\InfDev.cpp(713): note: consider using '%s' in the format string
+  ..\Shared\InfDev.cpp(713): note: consider using '%Ts' in the format string
+..\Shared\InfDev.cpp(721): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj]
+  ..\Shared\InfDev.cpp(721): note: consider using '%hs' in the format string
+  ..\Shared\InfDev.cpp(721): note: consider using '%s' in the format string
+  ..\Shared\InfDev.cpp(721): note: consider using '%Ts' in the format string
+  CustomActions.cpp
+  DeviceManagement.cpp
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I..\Shared /I.\..\Shared /IRelease\ /Zi /nologo /W2 /WX- /O2 /Oi /Oy- /GL /D UNICODE /D _UNICODE /D "WIN32_WINNT 0x0409" /D "_WIN32_WINNT 0x0409" /D _X86_=1 /D i386=1 /D STD_CALL /D WIN32_LEAN_AND_MEAN=1 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000003 /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t- /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"Release\DriversInstallerCA.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gz /TP /FI"C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\shared\warning.h" /analyze- /errorReport:queue ..\Shared\Wizard.cpp
+  Wizard.cpp
+ResourceCompile:
+  C:\Program Files (x86)\Windows Kits\10\bin\x86\rc.exe /D NDEBUG /D _X86_=1 /D i386=1 /D STD_CALL /D WIN32_LEAN_AND_MEAN=1 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000003 /D _UNICODE /D UNICODE /l"0x0409" /IRelease\ /IRelease\ /nologo /fo"Release\CustomActions.res" CustomActions.rc 
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.dll" /INCREMENTAL:NO /NOLOGO /WX "C:\Program Files (x86)\Windows Kits\10\lib\10.0.15063.0\km\x86\\cfg_support_v1.lib" msi.lib setupapi.lib Newdev.lib newdev.lib crypt32.lib /DEF:".\CustomActions.def" /MANIFEST /ManifestFile:"Release\DriversInstallerCA.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG:incremental /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.lib" /MACHINE:X86 /SAFESEH /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221 /DLL Release\CustomActions.res
+  Release\CoreUtilities.obj
+  Release\DB2TextFile.obj
+  Release\InfDev.obj
+  Release\CustomActions.obj
+  Release\DeviceManagement.obj
+  Release\Stdafx.obj
+  Release\Wizard.obj
+     Creating library Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.lib and object Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.exp
+  Generating code
+  All 1029 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  DriversInstallerCA.vcxproj -> Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.dll
+  DriversInstallerCA.vcxproj -> Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.pdb (Full PDB)
+Manifest:
+  C:\Program Files (x86)\Windows Kits\10\bin\x86\mt.exe /nologo /verbose /out:"Z:\b\QMI\win\qcwwan\installer\CustomActions\\Release\DriversInstallerCA.dll.manifest" /manifest Release\DriversInstallerCA.dll.intermediate.manifest "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\Include\Manifest\dpiaware.manifest"
+FinalizeBuildStatus:
+  Deleting file "Release\DriversI.0AED3758.tlog\unsuccessfulbuild".
+  Touching "Release\DriversI.0AED3758.tlog\DriversInstallerCA.lastbuildstate".
+Done Building Project "Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+"Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj" (Rebuild target) (1) ->
+(ClCompile target) -> 
+  ..\Shared\InfDev.cpp(670): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj]
+  ..\Shared\InfDev.cpp(713): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj]
+  ..\Shared\InfDev.cpp(721): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\CustomActions\DriversInstallerCA.vcxproj]
+
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.37
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\DriverInstaller64\\DriverInstaller64.vcxproj -- Release -- X64.
+
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 4/10/2018 5:11:56 PM.
+The target "_ConvertPdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,37)" does not exist in the project, and will be ignored.
+The target "_CollectPdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,70)" does not exist in the project, and will be ignored.
+The target "_CollectMdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,38)" does not exist in the project, and will be ignored.
+The target "_CopyMdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,71)" does not exist in the project, and will be ignored.
+Project "Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj" on node 1 (Rebuild target(s)).
+CoreClean:
+  Creating directory "Release\".
+DriverBuildNotifications:
+  Building 'DriverInstaller64' with toolset 'WindowsApplicationForDrivers10.0' and the 'Desktop' target platform.
+PrepareForBuild:
+  Creating directory "Release\DriverIn.48F73747.tlog\".
+InitializeBuildStatus:
+  Creating "Release\DriverIn.48F73747.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I..\Shared /IRelease\ /Zi /nologo /W2 /WX- /O2 /Oi /GL /D _WINDOWS /D NOCOINSTALLER /D NDEBUG /D NOCOINSTALLER /D _WIN64 /D _AMD64_ /D AMD64 /D WIN32_LEAN_AND_MEAN=1 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000003 /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t- /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp"Release\DriverInstaller64.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gz /TP /FI"C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\shared\warning.h" /errorReport:queue Stdafx.cpp
+  Stdafx.cpp
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I..\Shared /IRelease\ /Zi /nologo /W2 /WX- /O2 /Oi /GL /D _WINDOWS /D NOCOINSTALLER /D NDEBUG /D NOCOINSTALLER /D _WIN64 /D _AMD64_ /D AMD64 /D WIN32_LEAN_AND_MEAN=1 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000003 /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t- /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"Release\DriverInstaller64.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gz /TP /FI"C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\shared\warning.h" /errorReport:queue ..\Shared\CoreUtilities.cpp ..\Shared\DB2TextFile.cpp ..\Shared\DeviceManagement.cpp ..\Shared\InfDev.cpp DriverInstaller64.cpp
+  CoreUtilities.cpp
+  DB2TextFile.cpp
+  DeviceManagement.cpp
+  InfDev.cpp
+..\Shared\InfDev.cpp(670): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj]
+  ..\Shared\InfDev.cpp(670): note: consider using '%hs' in the format string
+  ..\Shared\InfDev.cpp(670): note: consider using '%s' in the format string
+  ..\Shared\InfDev.cpp(670): note: consider using '%Ts' in the format string
+..\Shared\InfDev.cpp(713): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj]
+  ..\Shared\InfDev.cpp(713): note: consider using '%hs' in the format string
+  ..\Shared\InfDev.cpp(713): note: consider using '%s' in the format string
+  ..\Shared\InfDev.cpp(713): note: consider using '%Ts' in the format string
+..\Shared\InfDev.cpp(721): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj]
+  ..\Shared\InfDev.cpp(721): note: consider using '%hs' in the format string
+  ..\Shared\InfDev.cpp(721): note: consider using '%s' in the format string
+  ..\Shared\InfDev.cpp(721): note: consider using '%Ts' in the format string
+  DriverInstaller64.cpp
+ResourceCompile:
+  C:\Program Files (x86)\Windows Kits\10\bin\x86\rc.exe /D NDEBUG /D _WIN64 /D _AMD64_=1 /D AMD64 /D WIN32_LEAN_AND_MEAN=1 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000003 /D _UNICODE /D UNICODE /l"0x0409" /IRelease\ /IRelease\ /nologo /fo"Release\DriverInstaller64.res" DriverInstaller64.rc 
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:".\Release\DriverInstaller64.exe" /INCREMENTAL:NO /NOLOGO /WX "C:\Program Files (x86)\Windows Kits\10\lib\10.0.15063.0\km\x64\\cfg_support_v1.lib" setupapi.lib Newdev.lib newdev.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:".\Release\DriverInstaller64.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG:incremental /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:".\Release\DriverInstaller64.lib" /MACHINE:X64 /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221,4108,4088,4218,4218,4235 Release\DriverInstaller64.res
+  Release\CoreUtilities.obj
+  Release\DB2TextFile.obj
+  Release\DeviceManagement.obj
+  Release\InfDev.obj
+  Release\DriverInstaller64.obj
+  Release\Stdafx.obj
+  Generating code
+  All 879 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  DriverInstaller64.vcxproj -> Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\.\Release\DriverInstaller64.exe
+  DriverInstaller64.vcxproj -> .\Release\DriverInstaller64.pdb (Full PDB)
+FinalizeBuildStatus:
+  Deleting file "Release\DriverIn.48F73747.tlog\unsuccessfulbuild".
+  Touching "Release\DriverIn.48F73747.tlog\DriverInstaller64.lastbuildstate".
+Done Building Project "Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+"Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj" (Rebuild target) (1) ->
+(ClCompile target) -> 
+  ..\Shared\InfDev.cpp(670): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj]
+  ..\Shared\InfDev.cpp(713): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj]
+  ..\Shared\InfDev.cpp(721): warning C4477: 'printf' : format string '%ws' requires an argument of type '__wchar_t *', but variadic argument 1 has type 'CHAR *' [Z:\b\QMI\win\qcwwan\installer\DriverInstaller64\DriverInstaller64.vcxproj]
+
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.34
+
+
+Command: xcopy /R /F /Y /I /S Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\target\\Internal\\* Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\drivers\\Qualcomm\\target\\
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcfilter.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcfilter.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcfilter.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcfilter.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcmdm.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcmdm.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcnet.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcnet.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcnet.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcnet.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcser.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcser.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcser.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcser.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcwwan.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcwwan.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qcwwan.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qcwwan.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdbusb.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdbusb.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdbusb.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdbusb.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\filter\amd64\qcusbfilter.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\filter\amd64\qcusbfilter.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\filter\amd64\qcusbfilter.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\filter\amd64\qcusbfilter.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\filter\i386\qcusbfilter.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\filter\i386\qcusbfilter.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\filter\i386\qcusbfilter.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\filter\i386\qcusbfilter.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\5.1\amd64\qcusbnet.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\amd64\qcusbnet.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\5.1\amd64\qcusbnet.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\amd64\qcusbnet.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\5.1\i386\qcusbnet.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\i386\qcusbnet.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\5.1\i386\qcusbnet.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\i386\qcusbnet.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\6.2\amd64\qcusbwwan.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\amd64\qcusbwwan.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\6.2\amd64\qcusbwwan.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\amd64\qcusbwwan.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\6.2\i386\qcusbwwan.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\i386\qcusbwwan.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\ndis\6.2\i386\qcusbwwan.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\i386\qcusbwwan.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdss\amd64\qdbusb.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\qdbusb.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdss\amd64\qdbusb.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\qdbusb.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdss\amd64\WdfCoInstaller01009.dll -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\WdfCoInstaller01009.dll
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdss\i386\qdbusb.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdss\i386\qdbusb.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdss\i386\qdbusb.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdss\i386\qdbusb.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\qdss\i386\WdfCoInstaller01009.dll -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\qdss\i386\WdfCoInstaller01009.dll
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\serial\amd64\qcusbser.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\serial\amd64\qcusbser.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\serial\amd64\qcusbser.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\serial\amd64\qcusbser.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\serial\i386\qcusbser.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\serial\i386\qcusbser.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows10\serial\i386\qcusbser.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows10\serial\i386\qcusbser.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcfilter.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcfilter.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcfilter.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcfilter.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcmdm.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcmdm.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcnet.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcnet.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcnet.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcnet.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcser.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcser.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcser.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcser.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcwwan.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcwwan.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qcwwan.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qcwwan.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdbusb.cat -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdbusb.cat
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdbusb.inf -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdbusb.inf
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\filter\amd64\qcusbfilter.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\filter\amd64\qcusbfilter.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\filter\amd64\qcusbfilter.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\filter\amd64\qcusbfilter.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\filter\i386\qcusbfilter.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\filter\i386\qcusbfilter.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\filter\i386\qcusbfilter.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\filter\i386\qcusbfilter.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\5.1\amd64\qcusbnet.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\amd64\qcusbnet.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\5.1\amd64\qcusbnet.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\amd64\qcusbnet.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\5.1\i386\qcusbnet.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\i386\qcusbnet.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\5.1\i386\qcusbnet.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\i386\qcusbnet.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\6.2\amd64\qcusbwwan.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\6.2\amd64\qcusbwwan.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\6.2\i386\qcusbwwan.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\i386\qcusbwwan.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\ndis\6.2\i386\qcusbwwan.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\i386\qcusbwwan.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdss\amd64\qdbusb.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\qdbusb.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdss\amd64\qdbusb.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\qdbusb.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdss\amd64\WdfCoInstaller01009.dll -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\WdfCoInstaller01009.dll
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdss\i386\qdbusb.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdss\i386\qdbusb.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdss\i386\qdbusb.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdss\i386\qdbusb.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\qdss\i386\WdfCoInstaller01009.dll -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\qdss\i386\WdfCoInstaller01009.dll
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\serial\amd64\qcusbser.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\serial\amd64\qcusbser.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\serial\amd64\qcusbser.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\serial\amd64\qcusbser.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\serial\i386\qcusbser.pdb -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\serial\i386\qcusbser.pdb
+Z:\b\QMI\win\qcwwan\build\target\Internal\fre\Windows7\serial\i386\qcusbser.sys -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\fre\Windows7\serial\i386\qcusbser.sys
+Z:\b\QMI\win\qcwwan\build\target\Internal\Tools\x86\logReader.exe -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\Tools\x86\logReader.exe
+Z:\b\QMI\win\qcwwan\build\target\Internal\Tools\x86\qcmtusvc.exe -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\Tools\x86\qcmtusvc.exe
+Z:\b\QMI\win\qcwwan\build\target\Internal\Tools\x86\qdcfg.exe -> Z:\b\QMI\win\qcwwan\installer\drivers\Qualcomm\target\Tools\x86\qdcfg.exe
+69 File(s) copied
+
+
+Command: "C:/Program Files (x86)/InstallShield/2014/System/IsCmdBld.exe" -p Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\QualcommDriverInstall.ism
+InstallShield (R)
+Release Builder
+Copyright (c) 2013 Flexera Software LLC.
+
+All Rights Reserved.
+
+Build started at Apr 10 2018 05:12 PM
+
+Upgrading table _Validation
+Upgrading table ActionText
+Upgrading table AppSearch
+Upgrading table BindImage
+Upgrading table CCPSearch
+Upgrading table AdminExecuteSequence
+Upgrading table Condition
+Upgrading table AdminUISequence
+Upgrading table AdvtExecuteSequence
+Upgrading table AdvtUISequence
+Upgrading table AppId
+Upgrading table Property
+Upgrading table BBControl
+Upgrading table Billboard
+Upgrading table Binary
+Upgrading table CheckBox
+Upgrading table Class
+Upgrading table ComboBox
+Upgrading table CompLocator
+Upgrading table Complus
+Upgrading table Component
+Upgrading table Control
+Upgrading table Icon
+Upgrading table ListBox
+Upgrading table ControlCondition
+Upgrading table ControlEvent
+Upgrading table CreateFolder
+Upgrading table CustomAction
+Upgrading table Dialog
+Upgrading table Error
+Upgrading table Directory
+Upgrading table DrLocator
+Upgrading table DuplicateFile
+Upgrading table Environment
+Upgrading table EventMapping
+Upgrading table Extension
+Upgrading table Feature
+Upgrading table FeatureComponents
+Upgrading table File
+Upgrading table FileSFPCatalog
+Upgrading table Font
+Upgrading table ISAssistantTag
+Upgrading table ISBillBoard
+Upgrading table ISChainPackage
+Upgrading table ISChainPackageData
+Upgrading table ISClrWrap
+Upgrading table ISComCatalogAttribute
+Upgrading table ISComCatalogCollection
+Upgrading table ISComCatalogCollectionObjects
+Upgrading table ISComCatalogObject
+Upgrading table ISComPlusApplication
+Upgrading table ISComPlusApplicationDLL
+Upgrading table ProgId
+Upgrading table ISComPlusProxy
+Upgrading table ISComPlusProxyDepFile
+Upgrading table ISComPlusProxyFile
+Upgrading table ISComPlusServerDepFile
+Upgrading table ISComPlusServerFile
+Upgrading table ISComponentExtended
+Upgrading table ISCustomActionReference
+Upgrading table ISDIM
+Upgrading table ISDIMDependency
+Upgrading table ISDIMReference
+Upgrading table ISDIMReferenceDependencies
+Upgrading table ISDIMVariable
+Upgrading table ISDLLWrapper
+Upgrading table ISDRMFile
+Upgrading table ISDRMFileAttribute
+Upgrading table ISDRMLicense
+Upgrading table ISDependency
+Upgrading table ISDisk1File
+Upgrading table ISDynamicFile
+Upgrading table ISFeatureDIMReferences
+Upgrading table ISFeatureDIMs
+Upgrading table ISFeatureMergeModuleExcludes
+Upgrading table ISFeatureMergeModules
+Upgrading table ISFeatureSetupPrerequisites
+Upgrading table ISFileManifests
+Upgrading table ISIISItem
+Upgrading table ISIISProperty
+Upgrading table ISInstallScriptAction
+Upgrading table ISLanguage
+Upgrading table ISLinkerLibrary
+Upgrading table ISLocalControl
+Upgrading table ISLocalDialog
+Upgrading table ISLocalRadioButton
+Upgrading table ISLockPermissions
+Upgrading table ISLogicalDisk
+Upgrading table ISLogicalDiskFeatures
+Upgrading table ISMergeModule
+Upgrading table ISMergeModuleCfgValues
+Upgrading table ISObject
+Upgrading table ISObjectProperty
+Upgrading table ISPatchConfigImage
+Upgrading table ISPatchConfiguration
+Upgrading table ISPatchConfigurationProperty
+Upgrading table ISPatchExternalFile
+Upgrading table ISPatchWholeFile
+Upgrading table ISPathVariable
+Upgrading table ISProductConfiguration
+Upgrading table ISProductConfigurationInstance
+Upgrading table ISProductConfigurationProperty
+Upgrading table ISRelease
+Upgrading table ISReleaseASPublishInfo
+Upgrading table ISReleaseExtended
+Upgrading table ISReleaseProperty
+Upgrading table ISReleasePublishInfo
+Upgrading table ISSQLConnection
+Upgrading table ISSQLConnectionDBServer
+Upgrading table ISSQLConnectionScript
+Upgrading table ISSQLDBMetaData
+Upgrading table ISSQLRequirement
+Upgrading table ISSQLScriptError
+Upgrading table ISSQLScriptFile
+Upgrading table ISSQLScriptImport
+Upgrading table ISSQLScriptReplace
+Upgrading table ISScriptFile
+Upgrading table ISSearchReplace
+Upgrading table ISSearchReplaceSet
+Upgrading table ISSelfReg
+Upgrading table ISSetupFile
+Upgrading table ISSetupPrerequisites
+Upgrading table ISStorages
+Upgrading table ISString
+Upgrading table InstallShield
+Upgrading table ISSwidtagProperty
+Upgrading table ISTargetImage
+Upgrading table ISUpgradeMsiItem
+Upgrading table ISUpgradedImage
+Upgrading table ISVirtualDirectory
+Upgrading table ISVirtualFile
+Upgrading table ISVirtualPackage
+Upgrading table ISVirtualRegistry
+Upgrading table ISVirtualRelease
+Upgrading table ISVirtualShortcut
+Upgrading table ISXmlElement
+Upgrading table ISXmlElementAttrib
+Upgrading table ISXmlFile
+Upgrading table ISXmlLocator
+Upgrading table IniFile
+Upgrading table IniLocator
+Upgrading table InstallExecuteSequence
+Upgrading table InstallUISequence
+Upgrading table IsolatedComponent
+Upgrading table LaunchCondition
+Upgrading table ListView
+Upgrading table LockPermissions
+Upgrading table MIME
+Upgrading table Media
+Upgrading table MoveFile
+Upgrading table MsiAssembly
+Upgrading table MsiAssemblyName
+Upgrading table MsiDigitalCertificate
+Upgrading table MsiDigitalSignature
+Upgrading table MsiDriverPackages
+Upgrading table MsiEmbeddedChainer
+Upgrading table MsiEmbeddedUI
+Upgrading table MsiFileHash
+Upgrading table MsiLockPermissionsEx
+Upgrading table MsiPackageCertificate
+Upgrading table MsiPatchCertificate
+Upgrading table MsiPatchMetadata
+Upgrading table MsiPatchOldAssemblyFile
+Upgrading table MsiPatchOldAssemblyName
+Upgrading table MsiPatchSequence
+Upgrading table MsiServiceConfig
+Upgrading table MsiServiceConfigFailureActions
+Upgrading table MsiShortcutProperty
+Upgrading table ODBCAttribute
+Upgrading table ODBCDataSource
+Upgrading table ODBCDriver
+Upgrading table ODBCSourceAttribute
+Upgrading table ODBCTranslator
+Upgrading table Patch
+Upgrading table PatchPackage
+Upgrading table PublishComponent
+Upgrading table RadioButton
+Upgrading table RegLocator
+Upgrading table Registry
+Upgrading table RemoveFile
+Upgrading table RemoveIniFile
+Upgrading table RemoveRegistry
+Upgrading table ReserveCost
+Upgrading table SFPCatalog
+Upgrading table SelfReg
+Upgrading table ServiceControl
+Upgrading table ServiceInstall
+Upgrading table Shortcut
+Upgrading table Signature
+Upgrading table TextStyle
+Upgrading table TypeLib
+Upgrading table UIText
+Upgrading table Upgrade
+Upgrading table Verb
+ISDEV : warning -6047: The release 'Release' is set to use an unsupported MSI redist version. The release will be updated to use MSI 3.1.
+ISDEV : warning -6047: The release 'Debug' is set to use an unsupported MSI redist version. The release will be updated to use MSI 3.1.
+ISDEV : warning -6047: The release 'SINGLE_MSI_IMAGE' is set to use an unsupported MSI redist version. The release will be updated to use MSI 3.1.
+Value for binary entry ISSetup.dll differs from original.  Reverting back to original value.
+Upgrade completed with 0 errors, 3 warnings
+Created release folders
+InstallShield Script Compiler
+Version 21.0.0.338
+Copyright (c) 2014 Flexera Software LLC. All Rights Reserved.
+
+Compiling...
+Setup.rul
+Linking...
+Setup.inx - 0 error(s), 0 warning(s)
+AdminExecuteSequence table successfully built
+AdminUISequence table successfully built
+AdvtExecuteSequence table successfully built
+AdvtUISequence table successfully built
+InstallExecuteSequence table successfully built
+InstallUISequence table successfully built
+Directory table successfully built
+Feature table successfully built
+FeatureComponents table successfully built
+Component table successfully built
+Loading File table
+Building File table
+File table successfully built
+Building MsiFileHash table
+MsiFileHash table successfully built
+Class table successfully built
+Extension table successfully built
+ODBCDataSource table successfully built
+ODBCDriver table successfully built
+ISSQLScriptFile table successfully built
+ISSQLScriptReplace table successfully built
+ISSQLConnectionScript table successfully built
+ISSQLConnection table successfully built
+ISSQLConnectionDBServer table successfully built
+ISSQLRequirement table successfully built
+ISComPlusProxy table successfully built
+ISComPlusApplication table successfully built
+ISComCatalogCollection table successfully built
+ISComCatalogCollectionObjects table successfully built
+ISComCatalogObject table successfully built
+ISComCatalogAttribute table successfully built
+ISComPlusApplicationDLL table successfully built
+ISComPlusServerFile table successfully built
+ISComPlusProxyFile table successfully built
+ISComPlusServerDepFile table successfully built
+ISComPlusProxyDepFile table successfully built
+ISXmlFile table successfully built
+ISXmlElement table successfully built
+ISXmlElementAttrib table successfully built
+ISSearchReplaceSet table successfully built
+ISSearchReplace table successfully built
+ActionText table successfully built
+AppSearch table successfully built
+BindImage table successfully built
+CCPSearch table successfully built
+Condition table successfully built
+AppId table successfully built
+Started signing 6C40.tmp ...
+Property table successfully built
+BBControl table successfully built
+Billboard table successfully built
+Binary table successfully built
+CompLocator table successfully built
+Complus table successfully built
+ControlCondition table successfully built
+ControlEvent table successfully built
+CreateFolder table successfully built
+CustomAction table successfully built
+Error table successfully built
+DrLocator table successfully built
+DuplicateFile table successfully built
+Environment table successfully built
+EventMapping table successfully built
+FileSFPCatalog table successfully built
+Font table successfully built
+ISBillBoard table successfully built
+ISChainPackage table successfully built
+ISChainPackageData table successfully built
+ProgId table successfully built
+ISComponentExtended table successfully built
+ISCustomActionReference table successfully built
+ISDRMFile table successfully built
+ISFileManifests table successfully built
+ISIISItem table successfully built
+ISIISProperty table successfully built
+ISLockPermissions table successfully built
+ISNetworkShares table successfully built
+ISObjectProperty table successfully built
+ISSQLDBMetaData table successfully built
+ISSQLScriptError table successfully built
+ISScheduledTasks table successfully built
+ISSelfReg table successfully built
+ISSetupType table successfully built
+ISSetupTypeFeatures table successfully built
+ISVirtualDirectory table successfully built
+ISVirtualFile table successfully built
+ISVirtualPackage table successfully built
+ISVirtualRegistry table successfully built
+ISVirtualRelease table successfully built
+ISVirtualShortcut table successfully built
+ISXmlLocator table successfully built
+IniFile table successfully built
+IniLocator table successfully built
+IsolatedComponent table successfully built
+LaunchCondition table successfully built
+LockPermissions table successfully built
+MIME table successfully built
+MoveFile table successfully built
+MsiAssembly table successfully built
+MsiAssemblyName table successfully built
+MsiDigitalCertificate table successfully built
+MsiDigitalSignature table successfully built
+MsiDriverPackages table successfully built
+MsiEmbeddedChainer table successfully built
+MsiEmbeddedUI table successfully built
+MsiLockPermissionsEx table successfully built
+MsiPackageCertificate table successfully built
+MsiPatchCertificate table successfully built
+MsiServiceConfig table successfully built
+MsiServiceConfigFailureActions table successfully built
+MsiShortcutProperty table successfully built
+ODBCAttribute table successfully built
+ODBCSourceAttribute table successfully built
+ODBCTranslator table successfully built
+PatchPackage table successfully built
+PublishComponent table successfully built
+RegLocator table successfully built
+Registry table successfully built
+RemoveFile table successfully built
+RemoveIniFile table successfully built
+RemoveRegistry table successfully built
+ReserveCost table successfully built
+SFPCatalog table successfully built
+SelfReg table successfully built
+ServiceControl table successfully built
+ServiceInstall table successfully built
+Shortcut table successfully built
+Signature table successfully built
+TextStyle table successfully built
+TypeLib table successfully built
+UIText table successfully built
+Upgrade table successfully built
+Verb table successfully built
+_Validation table successfully built
+Searching project for extract-at-build components...
+Validating Custom Action sequencing
+Validating architecture for custom actions.
+Checking string table references...
+Dialog AdminChangeFolder for language English (United States) built
+Dialog AdminNetworkLocation for language English (United States) built
+Dialog AdminWelcome for language English (United States) built
+Dialog CancelSetup for language English (United States) built
+Dialog CustomSetup for language English (United States) built
+Dialog CustomSetupTips for language English (United States) built
+Dialog CustomerInformation for language English (United States) built
+Dialog DatabaseFolder for language English (United States) built
+Dialog DestinationFolder for language English (United States) built
+Dialog DiskSpaceRequirements for language English (United States) built
+Dialog FilesInUse for language English (United States) built
+Dialog InstallChangeFolder for language English (United States) built
+Dialog InstallWelcome for language English (United States) built
+Dialog LicenseAgreement for language English (United States) built
+Dialog MaintenanceType for language English (United States) built
+Dialog MaintenanceWelcome for language English (United States) built
+Dialog MsiRMFilesInUse for language English (United States) built
+Dialog OutOfSpace for language English (United States) built
+Dialog PatchWelcome for language English (United States) built
+Dialog ReadyToInstall for language English (United States) built
+Dialog ReadyToRemove for language English (United States) built
+Dialog SetupCompleteError for language English (United States) built
+Dialog SetupCompleteSuccess for language English (United States) built
+Dialog SetupError for language English (United States) built
+Dialog SetupInitialization for language English (United States) built
+Dialog SetupInterrupted for language English (United States) built
+Dialog SetupProgress for language English (United States) built
+Dialog SetupResume for language English (United States) built
+Dialog SetupType for language English (United States) built
+Dialog SplashBitmap for language English (United States) built
+Resolving strings...
+Language English (United States) built
+Building .cab files...
+Data1.cab built
+Files built
+Media table successfully built
+Performing Upgrading and Patching Validation
+Windows validation is disabled. To enable Windows validation: on the Tools menu, click Options and select the Validation tab.
+Automatic update notification disabled
+Default Configuration\Release - 0 error(s), 0 warning(s)
+Log file has been created: <file:Z:\b\QMI\win\qcwwan\installer\QualcommDriverInstall\Default Configuration\Release\LogFiles\4-10-2018 05-12-10 PM.txt>
+
+
+Build finished at Apr 10 2018 05:12 PM
+
+
+Command: xcopy /R /F /Y /I /S "Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\QualcommDriverInstall\\Default Configuration\\Release\\DiskImages\\DISK1\\*" Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup\\
+Z:\b\QMI\win\qcwwan\installer\QualcommDriverInstall\Default Configuration\Release\DiskImages\DISK1\Qualcomm USB Drivers For Windows.msi -> Z:\b\QMI\win\qcwwan\installer\setup\Qualcomm USB Drivers For Windows.msi
+1 File(s) copied
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup\\setup.10.sln -- Release -- Win32.
+
+Microsoft (R) Build Engine version 14.0.25420.1
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Building the projects in this solution one at a time. To enable parallel build, please add the "/m" switch.
+Build started 4/10/2018 5:12:40 PM.
+Project "Z:\b\QMI\win\qcwwan\installer\setup\setup.10.sln" on node 1 (Rebuild target(s)).
+ValidateSolutionConfiguration:
+  Building solution configuration "Release|Win32".
+The target "_ConvertPdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,37)" does not exist in the project, and will be ignored.
+The target "_CollectPdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (34,70)" does not exist in the project, and will be ignored.
+The target "_CollectMdbFiles" listed in a BeforeTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,38)" does not exist in the project, and will be ignored.
+The target "_CopyMdbFiles" listed in an AfterTargets attribute at "C:\Program Files (x86)\MSBuild\14.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets (41,71)" does not exist in the project, and will be ignored.
+Project "Z:\b\QMI\win\qcwwan\installer\setup\setup.10.sln" (1) is building "Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj" (2) on node 1 (Rebuild target(s)).
+CoreClean:
+  Creating directory "Release\".
+PrepareForBuild:
+  Creating directory "Release\Setup.tlog\".
+InitializeBuildStatus:
+  Creating "Release\Setup.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I..\Shared /Zi /nologo /W4 /WX- /O2 /Oy- /GL /D WIN32 /D _WINDOWS /D NDEBUG /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp"Release\Setup.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gd /TP /analyze- /errorReport:queue Stdafx.cpp
+  Stdafx.cpp
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /I..\Shared /Zi /nologo /W4 /WX- /O2 /Oy- /GL /D WIN32 /D _WINDOWS /D NDEBUG /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"Release\Setup.pch" /Fo"Release\\" /Fd"Release\vc140.pdb" /Gd /TP /analyze- /errorReport:queue ..\Shared\CoreUtilities.cpp ..\Shared\DB2TextFile.cpp Setup.cpp SetupCommandLineInfo.cpp
+  CoreUtilities.cpp
+  DB2TextFile.cpp
+  Setup.cpp
+Setup.cpp(200): warning C4100: 'PackageName': unreferenced formal parameter [Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj]
+Setup.cpp(444): warning C4456: declaration of 'cmd' hides previous local declaration [Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj]
+  Setup.cpp(335): note: see declaration of 'cmd'
+Setup.cpp(445): warning C4101: 'tempVal': unreferenced local variable [Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj]
+  SetupCommandLineInfo.cpp
+ResourceCompile:
+  C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe /D NDEBUG /D _UNICODE /D UNICODE /l"0x0409" /IRelease\ /nologo /fo"Release\Setup.res" Setup.rc 
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"Z:\b\QMI\win\qcwwan\installer\setup\Release\Setup.exe" /INCREMENTAL:NO /NOLOGO /MANIFEST /MANIFESTUAC:"level='requireAdministrator' uiAccess='false'" /manifest:embed /manifestinput:Manifest.txt /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"Z:\b\QMI\win\qcwwan\installer\setup\Release\Setup.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG:incremental /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE:NO /IMPLIB:"Z:\b\QMI\win\qcwwan\installer\setup\Release\Setup.lib" /MACHINE:X86 /SAFESEH Release\Setup.res
+  Release\CoreUtilities.obj
+  Release\DB2TextFile.obj
+  Release\Setup.obj
+  Release\SetupCommandLineInfo.obj
+  Release\Stdafx.obj
+  Generating code
+  All 459 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Setup.vcxproj -> Z:\b\QMI\win\qcwwan\installer\setup\Release\Setup.exe
+  Setup.vcxproj -> Z:\b\QMI\win\qcwwan\installer\setup\Release\Setup.pdb (Full PDB)
+FinalizeBuildStatus:
+  Deleting file "Release\Setup.tlog\unsuccessfulbuild".
+  Touching "Release\Setup.tlog\Setup.lastbuildstate".
+Done Building Project "Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj" (Rebuild target(s)).
+Done Building Project "Z:\b\QMI\win\qcwwan\installer\setup\setup.10.sln" (Rebuild target(s)).
+
+Build succeeded.
+
+"Z:\b\QMI\win\qcwwan\installer\setup\setup.10.sln" (Rebuild target) (1) ->
+"Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj" (Rebuild target) (2) ->
+(ClCompile target) -> 
+  Setup.cpp(200): warning C4100: 'PackageName': unreferenced formal parameter [Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj]
+  Setup.cpp(444): warning C4456: declaration of 'cmd' hides previous local declaration [Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj]
+  Setup.cpp(445): warning C4101: 'tempVal': unreferenced local variable [Z:\b\QMI\win\qcwwan\installer\setup\Setup.vcxproj]
+
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.83
+
+
+Command: perl Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\build\\tc.pl Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\ Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\ exe
+Signing location <\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368>
+Source Signing files:
+
+Signing command to copy <copy /Y "Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\" "\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368">
+Signingcommand:
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\CoreUtilities.obj
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\DB2TextFile.obj
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Setup.exe
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Setup.iobj
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Setup.ipdb
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Setup.obj
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Setup.pch
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Setup.pdb
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Setup.res
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\SetupCommandLineInfo.obj
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\Stdafx.obj
+Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\\\..\\\\installer\\\\setup\\\\Release\\\\vc140.pdb
+       12 file(s) copied.
+
+tempsign Signing files:
+CoreUtilities.obj  Setup.iobj  Setup.pch  SetupCommandLineInfo.obj
+DB2TextFile.obj    Setup.ipdb  Setup.pdb  Stdafx.obj
+Setup.exe	   Setup.obj   Setup.res  vc140.pdb
+
+Signing result destination folder:
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\CoreUtilities.obj
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\DB2TextFile.obj
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Setup.exe
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Setup.iobj
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Setup.ipdb
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Setup.obj
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Setup.pch
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Setup.pdb
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Setup.res
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\SetupCommandLineInfo.obj
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\Stdafx.obj
+\\SAGA-TEST-03\dropbox\SignTemp\2018-04-10-17-12-48.05368\vc140.pdb
+       12 file(s) copied.
+
+
+
+
+Command: xcopy /R /F /Y /I /S "Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup\\Release\\*.exe" Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\target\\72\\
+Z:\b\QMI\win\qcwwan\installer\setup\Release\Setup.exe -> Z:\b\QMI\win\qcwwan\build\target\72\Setup.exe
+1 File(s) copied
+
+
+Command: xcopy /R /F /Y /I "Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\InstallerGuide.*" Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\target\\72\\
+Z:\b\QMI\win\qcwwan\installer\InstallerGuide.rtf -> Z:\b\QMI\win\qcwwan\build\target\72\InstallerGuide.rtf
+1 File(s) copied
+
+
+Command: xcopy /R /F /Y /I "Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\ReadMe.*" Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\target\\72\\
+Z:\b\QMI\win\qcwwan\installer\ReadMe.txt -> Z:\b\QMI\win\qcwwan\build\target\72\ReadMe.txt
+1 File(s) copied
+
+
+Command: Z://b//QMI//win//qcwwan//build/../build/doscommand.bat Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\CustomActions rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\CustomActions\\Release
+
+Z:\b\QMI\win\qcwwan\build>start /DZ:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\CustomActions /MAX /WAIT CMD.EXE /C rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\CustomActions\\Release  
+
+
+Command: Z://b//QMI//win//qcwwan//build/../build/doscommand.bat Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\DriverInstaller64 rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\DriverInstaller64\\Release
+
+Z:\b\QMI\win\qcwwan\build>start /DZ:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\DriverInstaller64 /MAX /WAIT CMD.EXE /C rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\DriverInstaller64\\Release  
+
+
+Command: Z://b//QMI//win//qcwwan//build/../build/doscommand.bat Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\Drivers
+
+Z:\b\QMI\win\qcwwan\build>start /DZ:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer /MAX /WAIT CMD.EXE /C rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\Drivers  
+
+
+Command: Z://b//QMI//win//qcwwan//build/../build/doscommand.bat Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\QualcommDriverInstall rd /S /Q "Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\QualcommDriverInstall\\Default Configuration"
+
+Z:\b\QMI\win\qcwwan\build>start /DZ:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\QualcommDriverInstall /MAX /WAIT CMD.EXE /C rd /S /Q "Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\QualcommDriverInstall\\Default Configuration"  
+
+
+Command: Z://b//QMI//win//qcwwan//build/../build/doscommand.bat Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup\\Release
+
+Z:\b\QMI\win\qcwwan\build>start /DZ:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup /MAX /WAIT CMD.EXE /C rd /S /Q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup\\Release  
+
+
+Command: Z://b//QMI//win//qcwwan//build/../build/doscommand.bat Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup del /f /q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup\\*.msi
+
+Z:\b\QMI\win\qcwwan\build>start /DZ:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup /MAX /WAIT CMD.EXE /C del /f /q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\..\\installer\\setup\\*.msi  
+
+
+Command: Z://b//QMI//win//qcwwan//build/../build/doscommand.bat Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build del /f /q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\devenv*
+
+Z:\b\QMI\win\qcwwan\build>start /DZ:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build /MAX /WAIT CMD.EXE /C del /f /q Z:\\\\b\\\\QMI\\\\win\\\\qcwwan\\\\build\\devenv*  
+
+... Tue Apr 10 17:13:10 2018 ...
+--------------------------------
+Drivers Build was successful
+
+
+... Tue Apr 10 17:13:10 2018 ...
+--------------------------------
+Start copying HM11
+

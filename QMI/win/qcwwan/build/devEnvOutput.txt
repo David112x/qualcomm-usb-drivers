@@ -1,4 +1,4 @@
-Build started 1/25/2018 5:19:48 PM.
+Build started 4/10/2018 5:14:05 PM.
 __________________________________________________
 Project "Z:\b\HY11\QMI\win\qcwwan\installer\setup\setup.10.sln" (Rebuild target(s)):
 
@@ -59,4 +59,4 @@ Setup.cpp(445): warning C4101: 'tempVal': unreferenced local variable
     3 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:06.56
+Time Elapsed 00:00:06.66

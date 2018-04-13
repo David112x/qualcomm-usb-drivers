@@ -112,4 +112,13 @@ NTSTATUS QCPNP_RegisterDevNameCompletion
    PVOID          pContext
 );
 
+NTSTATUS QCPNP_GetParentDeviceName(PDEVICE_EXTENSION pDevExt);
+
+VOID QCPNP_SaveParentDeviceNameToRegistry
+(
+   PDEVICE_EXTENSION pDevExt,
+   PVOID ParentDeviceName,
+   ULONG NameLength
+);
+
 #endif // QCPNP_H

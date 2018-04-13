@@ -137,6 +137,10 @@ typedef enum _MP_REG_INDEX
    
    MP_ENABLE_SS_DISCONNECT_TIMER,
 
+   MP_FAKE_IMSI,
+
+   MP_FAKE_ICCID,
+
    MP_REG_INDEX_MAX
 } MP_REG_INDEX;
 
@@ -253,7 +257,12 @@ NDIS_STRING MPRegString[] =
 
    NDIS_STRING_CONST("QCMPMaxPendingQMIReqs"),
 
+#ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#else
    NDIS_STRING_CONST("QCMPEnableSigStrDisconnectTimer")
+#endif
+
 };
 
 
@@ -803,6 +812,9 @@ NDIS_STATUS MPParam_GetConfigValues
       pAdapter->ndpSignature = 0x50444E51; //QNDP
    }
 
+#ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#endif
    status = MPPARAM_ConfigurationGetString
             (
                configurationHandle,

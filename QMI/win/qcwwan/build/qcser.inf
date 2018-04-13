@@ -1,6 +1,6 @@
 ; Windows Virtual Serial Port Setup File
 ; Manufacturer: Qualcomm Incorporated
-; Copyright (c) 2017 Qualcomm Technologies, Inc.
+; Copyright (c) 2018 Qualcomm Technologies, Inc.
 ; All rights reserved.
 ;
 
@@ -9,7 +9,7 @@ signature  = "$WINDOWS NT$"
 Class      = Ports
 Provider   = %QUALCOMM%
 ClassGuid  = {4D36E978-E325-11CE-BFC1-08002BE10318}
-DriverVer  = 09/27/2017,2.1.3.0
+DriverVer  = 03/21/2018,2.1.3.1
 Catalogfile= qcser.cat
 
 [ControlFlags]
@@ -372,6 +372,20 @@ ExcludeFromSelect = *
 %QcomDevice90E10%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_00
 %QcomDevice90E11%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_01
 %QcomDevice90E12%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_02
+%QcomDevice90E30%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_00
+%QcomDevice90E31%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_01
+%QcomDevice90E32%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_02
+%QcomDevice90E33%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_03
+%QcomDevice90E40%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_00
+%QcomDevice90E41%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_01
+%QcomDevice90E50%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_00
+%QcomDevice90E51%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_01
+%QcomDevice90E62%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_02
+%QcomDevice90E63%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_03
+%QcomDevice90E72%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_02
+%QcomDevice90E73%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_03
+%QcomDevice90E82%  = QportInstall00, USB\VID_05C6&PID_90E8&MI_02
+%QcomDevice90E92%  = QportInstall00, USB\VID_05C6&PID_90E9&MI_02
 %QcomDevice91000%  = QportInstall00, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall00, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall00, USB\VID_05C6&PID_9101&MI_00
@@ -741,6 +755,20 @@ ExcludeFromSelect = *
 %QcomDevice90E10%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_00
 %QcomDevice90E11%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_01
 %QcomDevice90E12%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_02
+%QcomDevice90E30%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_00
+%QcomDevice90E31%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_01
+%QcomDevice90E32%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_02
+%QcomDevice90E33%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_03
+%QcomDevice90E40%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_00
+%QcomDevice90E41%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_01
+%QcomDevice90E50%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_00
+%QcomDevice90E51%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_01
+%QcomDevice90E62%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_02
+%QcomDevice90E63%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_03
+%QcomDevice90E72%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_02
+%QcomDevice90E73%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_03
+%QcomDevice90E82%  = QportInstall00, USB\VID_05C6&PID_90E8&MI_02
+%QcomDevice90E92%  = QportInstall00, USB\VID_05C6&PID_90E9&MI_02
 %QcomDevice91000%  = QportInstall00, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall00, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall00, USB\VID_05C6&PID_9101&MI_00
@@ -1111,6 +1139,20 @@ ExcludeFromSelect = *
 %QcomDevice90E10%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_00
 %QcomDevice90E11%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_01
 %QcomDevice90E12%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_02
+%QcomDevice90E30%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_00
+%QcomDevice90E31%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_01
+%QcomDevice90E32%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_02
+%QcomDevice90E33%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_03
+%QcomDevice90E40%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_00
+%QcomDevice90E41%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_01
+%QcomDevice90E50%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_00
+%QcomDevice90E51%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_01
+%QcomDevice90E62%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_02
+%QcomDevice90E63%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_03
+%QcomDevice90E72%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_02
+%QcomDevice90E73%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_03
+%QcomDevice90E82%  = QportInstall00, USB\VID_05C6&PID_90E8&MI_02
+%QcomDevice90E92%  = QportInstall00, USB\VID_05C6&PID_90E9&MI_02
 %QcomDevice91000%  = QportInstall00, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall00, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall00, USB\VID_05C6&PID_9101&MI_00
@@ -1481,6 +1523,20 @@ ExcludeFromSelect = *
 %QcomDevice90E10%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_00
 %QcomDevice90E11%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_01
 %QcomDevice90E12%  = QportInstall00, USB\VID_05C6&PID_90E1&MI_02
+%QcomDevice90E30%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_00
+%QcomDevice90E31%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_01
+%QcomDevice90E32%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_02
+%QcomDevice90E33%  = QportInstall00, USB\VID_05C6&PID_90E3&MI_03
+%QcomDevice90E40%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_00
+%QcomDevice90E41%  = QportInstall00, USB\VID_05C6&PID_90E4&MI_01
+%QcomDevice90E50%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_00
+%QcomDevice90E51%  = QportInstall00, USB\VID_05C6&PID_90E5&MI_01
+%QcomDevice90E62%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_02
+%QcomDevice90E63%  = QportInstall00, USB\VID_05C6&PID_90E6&MI_03
+%QcomDevice90E72%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_02
+%QcomDevice90E73%  = QportInstall00, USB\VID_05C6&PID_90E7&MI_03
+%QcomDevice90E82%  = QportInstall00, USB\VID_05C6&PID_90E8&MI_02
+%QcomDevice90E92%  = QportInstall00, USB\VID_05C6&PID_90E9&MI_02
 %QcomDevice91000%  = QportInstall05, USB\VID_05C6&PID_9100&MI_00
 %QcomDevice91001%  = QportInstall05, USB\VID_05C6&PID_9100&MI_01
 %QcomDevice91010%  = QportInstall05, USB\VID_05C6&PID_9101&MI_00
@@ -1581,6 +1637,9 @@ HKLM,SYSTEM\CurrentControlSet\Control\UsbFlags,IgnoreHWSerNum05C69031,1,1
 HKLM,SYSTEM\CurrentControlSet\Control\UsbFlags,IgnoreHWSerNum05C69032,1,1
 HKLM,SYSTEM\CurrentControlSet\Control\UsbFlags,IgnoreHWSerNum05C69037,1,1
 HKLM,SYSTEM\CurrentControlSet\Control\UsbFlags,IgnoreHWSerNum05C69038,1,1
+HKLM,SYSTEM\CurrentControlSet\Control\UsbFlags,IgnoreHWSerNum05C690B8,1,1
+HKLM,SYSTEM\CurrentControlSet\Control\UsbFlags,IgnoreHWSerNum05C690DB,1,1
+HKLM,SYSTEM\CurrentControlSet\Control\UsbFlags,IgnoreHWSerNum05C690DC,1,1
 
 [Strings]
 QCUSBSER = "Qualcomm USB Device for Legacy Serial Communication"
@@ -1909,15 +1968,15 @@ QcomDevice90D30 = "Qualcomm HS-USB Diagnostics 90D3"
 QcomDevice90D40 = "Qualcomm HS-USB Diagnostics 90D4"
 QcomDevice90D50 = "Qualcomm HS-USB Diagnostics 90D5"
 QcomDevice90D60 = "Qualcomm HS-USB Diagnostics 90D6"
-QcomDevice90D70 = "Qualcomm HS-USB Diagnostics 90D7"
+QcomDevice90D70 = "Qualcomm HS-USB MSM Diagnostics 90D7"
 QcomDevice90D71 = "Qualcomm HS-USB MDM Diagnostics 90D7"
-QcomDevice90D80 = "Qualcomm HS-USB Diagnostics 90D8"
+QcomDevice90D80 = "Qualcomm HS-USB MSM Diagnostics 90D8"
 QcomDevice90D81 = "Qualcomm HS-USB MDM Diagnostics 90D8"
 QcomDevice90D90 = "Qualcomm HS-USB MSM Diagnostics 90D9"
 QcomDevice90D91 = "Qualcomm HS-USB MDM Diagnostics 90D9"
-QcomDevice90DA0 = "Qualcomm HS-USB MSM Diagnostics 90DA"
-QcomDevice90DB0 = "Qualcomm HS-USB MSM Diagnostics 90DB"
-QcomDevice90DC0 = "Qualcomm HS-USB MSM Diagnostics 90DC"
+QcomDevice90DA0 = "Qualcomm HS-USB Diagnostics 90DA"
+QcomDevice90DB0 = "Qualcomm HS-USB Diagnostics 90DB"
+QcomDevice90DC0 = "Qualcomm HS-USB Diagnostics 90DC"
 QcomDevice90DD0 = "Qualcomm HS-USB MSM Diagnostics 90DD"
 QcomDevice90DD1 = "Qualcomm HS-USB MDM Diagnostics 90DD"
 QcomDevice90DE0 = "Qualcomm HS-USB MSM Diagnostics 90DE"
@@ -1927,6 +1986,20 @@ QcomDevice90E00 = "Qualcomm HS-USB Diagnostics 90E0"
 QcomDevice90E10 = "Qualcomm HS-USB Diagnostics 90E1"
 QcomDevice90E11 = "Qualcomm HS-USB SER3 90E1"
 QcomDevice90E12 = "Qualcomm HS-USB SER5 90E1"
+QcomDevice90E30 = "Qualcomm HS-USB Diagnostics 90E3"
+QcomDevice90E31 = "Qualcomm HS-USB SER3 90E3"
+QcomDevice90E32 = "Qualcomm HS-USB SER5 90E3"
+QcomDevice90E33 = "Qualcomm HS-USB SER6 90E3"
+QcomDevice90E40 = "Qualcomm HS-USB MSM Diagnostics 90E4"
+QcomDevice90E41 = "Qualcomm HS-USB MDM Diagnostics 90E4"
+QcomDevice90E50 = "Qualcomm HS-USB MSM Diagnostics 90E5"
+QcomDevice90E51 = "Qualcomm HS-USB MDM Diagnostics 90E5"
+QcomDevice90E62 = "Qualcomm HS-USB MSM Diagnostics 90E6"
+QcomDevice90E63 = "Qualcomm HS-USB MDM Diagnostics 90E6"
+QcomDevice90E72 = "Qualcomm HS-USB MSM Diagnostics 90E7"
+QcomDevice90E73 = "Qualcomm HS-USB MDM Diagnostics 90E7"
+QcomDevice90E82 = "Qualcomm HS-USB Diagnostics 90E8"
+QcomDevice90E92 = "Qualcomm HS-USB Diagnostics 90E9"
 QcomDevice91000 = "Qualcomm Symbian USB Diagnostics 9100"
 QcomDevice91001 = "Qualcomm Symbian USB Trace 9100"
 QcomDevice91010 = "Qualcomm Symbian USB Diagnostics 9101"

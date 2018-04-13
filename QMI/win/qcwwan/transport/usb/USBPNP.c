@@ -23,6 +23,7 @@ GENERAL DESCRIPTION
 #include "USBWT.h"
 #include "USBDSP.h"
 #include "USBPWR.h"
+#include "USBIOC.h"
 
 #ifdef NDIS_WDM
 #include "USBIF.h"
@@ -723,6 +724,150 @@ NTSTATUS QCPNP_SetFunctionProtocol(PDEVICE_EXTENSION pDevExt, ULONG ProtocolCode
    return ntStatus;
 }  // QCPNP_SetFunctionProtocol
 
+NTSTATUS QCPNP_GenericCompletion
+(
+   PDEVICE_OBJECT pDO,
+   PIRP           pIrp,
+   PVOID          pContext
+)
+{
+   PDEVICE_EXTENSION pDevExt = (PDEVICE_EXTENSION)pContext;
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_TRACE,
+      ("<%s> QCPNP_GenericCompletion (IRP 0x%p IoStatus: 0x%x)\n", pDevExt->PortName, pIrp, pIrp->IoStatus.Status)
+   );
+
+   KeSetEvent(pIrp->UserEvent, 0, FALSE);
+
+   return STATUS_MORE_PROCESSING_REQUIRED;
+}  // QCPNP_GenericCompletion
+
+NTSTATUS QCPNP_GetParentDeviceName(PDEVICE_EXTENSION pDevExt)
+{
+   CHAR parentDevName[MAX_NAME_LEN];
+   PIRP pIrp = NULL;
+   PIO_STACK_LOCATION nextstack;
+   NTSTATUS ntStatus;
+   KEVENT event;
+
+   RtlZeroMemory(parentDevName, MAX_NAME_LEN);
+   KeInitializeEvent(&event, SynchronizationEvent, FALSE);
+
+   pIrp = IoAllocateIrp((CCHAR)(pDevExt->StackDeviceObject->StackSize+2), FALSE);
+   if( pIrp == NULL )
+   {
+       QCUSB_DbgPrint
+       (
+          QCUSB_DBG_MASK_CONTROL,
+          QCUSB_DBG_LEVEL_ERROR,
+          ("<%s> QCPNP_GetParentDeviceName failed to allocate an IRP\n", pDevExt->PortName)
+       );
+       return STATUS_UNSUCCESSFUL;
+   }
+
+   pIrp->AssociatedIrp.SystemBuffer = parentDevName;
+   pIrp->UserEvent = &event;
+
+   nextstack = IoGetNextIrpStackLocation(pIrp);
+   nextstack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+   nextstack->Parameters.DeviceIoControl.IoControlCode = IOCTL_QCDEV_GET_PARENT_DEV_NAME;
+   nextstack->Parameters.DeviceIoControl.OutputBufferLength = MAX_NAME_LEN;
+
+   IoSetCompletionRoutine
+   (
+      pIrp,
+      (PIO_COMPLETION_ROUTINE)QCPNP_GenericCompletion,
+      (PVOID)pDevExt,
+      TRUE,TRUE,TRUE
+   );
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_TRACE,
+      ("<%s> QCPNP_GetParentDeviceName (IRP 0x%p)\n", pDevExt->PortName, pIrp)
+   );
+
+   ntStatus = IoCallDriver(pDevExt->StackDeviceObject, pIrp);
+
+   ntStatus = KeWaitForSingleObject(&event, Executive, KernelMode, TRUE, 0);
+
+   if (ntStatus == STATUS_SUCCESS)
+   {
+      ntStatus = pIrp->IoStatus.Status;
+      QCPNP_SaveParentDeviceNameToRegistry(pDevExt, parentDevName, pIrp->IoStatus.Information);
+   }
+   else
+   {
+      QCPNP_SaveParentDeviceNameToRegistry(pDevExt, parentDevName, 0);
+   }
+
+   IoFreeIrp(pIrp);
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_TRACE,
+      ("<%s> <--- QCPNP_GetParentDeviceName: ST %x\n", pDevExt->PortName, ntStatus)
+   );
+
+   return ntStatus;
+
+}  // QCPNP_GetParentDeviceName
+
+VOID QCPNP_SaveParentDeviceNameToRegistry
+(
+   PDEVICE_EXTENSION pDevExt,
+   PVOID ParentDeviceName,
+   ULONG NameLength
+)
+{
+   HANDLE hRegKey;
+   NTSTATUS ntStatus;
+   UNICODE_STRING ucValueName;
+
+   // update registry
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevExt->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_ERROR,
+         ("<%s> QCPNP_SaveParentDeviceNameToRegistry: reg access failure 0x%x\n", pDevExt->PortName, ntStatus)
+      );
+      return;
+   }
+   RtlInitUnicodeString(&ucValueName, L"QCDeviceParent");
+   if (NameLength > 0)
+   {
+      ZwSetValueKey
+      (
+         hRegKey,
+         &ucValueName,
+         0,
+         REG_SZ,
+         ParentDeviceName,
+         NameLength
+      );
+   }
+   else
+   {
+      ZwDeleteValueKey(hRegKey, &ucValueName);
+   }
+   ZwClose(hRegKey);
+}  // QCPNP_SaveParentDeviceNameToRegistry
+
+
 #ifndef NDIS_WDM
 
 NTSTATUS QCUSB_VendorRegistryProcess
@@ -1146,6 +1291,9 @@ NTSTATUS USBPNP_StartDevice( IN  PDEVICE_OBJECT DeviceObject, IN UCHAR cookie )
             DbgPrint("iSerialNumber 0x%x\n", deviceDesc->iSerialNumber);
             DbgPrint("bNumConfigurations 0x%x\n", deviceDesc->bNumConfigurations);
 // #endif  //QCUSB_DBGPRINT2
+
+            QCPNP_GetParentDeviceName(pDevExt);
+
             ntStatus = QCPNP_GetStringDescriptor(DeviceObject, deviceDesc->iProduct, 0x0409, TRUE);
             if ((!NT_SUCCESS(ntStatus)) && (deviceDesc->iProduct != 2))
             {
@@ -2078,7 +2226,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.4.9");
+             DbgPrint("Driver Version %s\n", "4.0.5.2");
              DbgPrint("   |============================|\n");
              #endif // QCNET_WHQL
           }
@@ -2099,7 +2247,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.4.9");
+             DbgPrint("Driver Version %s\n", "4.0.5.2");
              DbgPrint("   |===============================|\n");
              #endif // QCNET_WHQL
           }
@@ -3154,3 +3302,4 @@ BOOLEAN USBPNP_ValidateDeviceDescriptor
    return TRUE;
 
 }  // USBPNP_ValidateDeviceDescriptor
+

@@ -280,7 +280,7 @@ QCFilterPass ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
    if (deviceExtension->Type == DEVICE_TYPE_QCFIDO) 
    {
 
-      DbgPrint("QCFilterPass : Acquire RemoveLock\n");
+      // DbgPrint("QCFilterPass : Acquire RemoveLock\n");
       status = IoAcquireRemoveLock( &deviceExtension->RemoveLock, Irp );
       if (!NT_SUCCESS (status)) 
       {
@@ -291,7 +291,7 @@ QCFilterPass ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
       
       IoSkipCurrentIrpStackLocation (Irp);
       status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-      DbgPrint("QCFilterPass : Release RemoveLock\n");
+      // DbgPrint("QCFilterPass : Release RemoveLock\n");
       IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
       return status;
    }
@@ -335,7 +335,7 @@ QCFilterDispatchPnp( PDEVICE_OBJECT DeviceObject, PIRP Irp )
          ("<%s> FilterDO PNP MINOR 0x%x IRP:0x%p \n", deviceExtension->PortName, irpStack->MinorFunction, Irp)
       );
 
-      DbgPrint("QCFilterDispatchPnp : Acquire RemoveLock\n");
+      // DbgPrint("QCFilterDispatchPnp : Acquire RemoveLock\n");
       status = IoAcquireRemoveLock(&deviceExtension->RemoveLock, Irp);
       if (!NT_SUCCESS (status)) 
       {
@@ -373,7 +373,7 @@ QCFilterDispatchPnp( PDEVICE_OBJECT DeviceObject, PIRP Irp )
                Irp->IoStatus.Status = STATUS_SUCCESS;
             }
             IoCompleteRequest (Irp, IO_NO_INCREMENT);
-            DbgPrint("QCFilterDispatchPnp : Release RemoveLock\n");
+            // DbgPrint("QCFilterDispatchPnp : Release RemoveLock\n");
             IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
             return status;
          }   
@@ -392,7 +392,7 @@ QCFilterDispatchPnp( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 
             QCFilterDeleteControlObject(DeviceObject, NULL);
 
-            DbgPrint("QCFilterDispatchPnp : Release RemoveLock and wait\n");
+            // DbgPrint("QCFilterDispatchPnp : Release RemoveLock and wait\n");
 
             IoReleaseRemoveLockAndWait(&deviceExtension->RemoveLock, Irp);
 
@@ -484,7 +484,7 @@ QCFilterDispatchPnp( PDEVICE_OBJECT DeviceObject, PIRP Irp )
       Irp->IoStatus.Status = status;
       IoSkipCurrentIrpStackLocation (Irp);
       status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-      DbgPrint("QCFilterDispatchPnp : Release RemoveLock\n");
+      // DbgPrint("QCFilterDispatchPnp : Release RemoveLock\n");
       IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
       return status;
    }
@@ -565,7 +565,7 @@ QCFilterDeviceUsageNotificationCompletionRoutine( PDEVICE_OBJECT   DeviceObject,
    {
       DeviceObject->Flags &= ~DO_POWER_PAGABLE;
    }
-   DbgPrint("QCFilterDeviceUsageNotificationCompletionRoutine : Release RemoveLock\n");
+   // DbgPrint("QCFilterDeviceUsageNotificationCompletionRoutine : Release RemoveLock\n");
    IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
    return STATUS_CONTINUE_COMPLETION;
 }
@@ -600,7 +600,7 @@ QCFilterDispatchPower( PDEVICE_OBJECT QCDeviceObject,
    }
    else
    {
-      DbgPrint("QCFilterDispatchPower : Acquire RemoveLock\n");
+      // DbgPrint("QCFilterDispatchPower : Acquire RemoveLock\n");
       NTstatus = IoAcquireRemoveLock (&QCdeviceExtension->RemoveLock, Irp);
       if (NTstatus != STATUS_SUCCESS) 
       { 
@@ -612,7 +612,7 @@ QCFilterDispatchPower( PDEVICE_OBJECT QCDeviceObject,
       PoStartNextPowerIrp(Irp);
       IoSkipCurrentIrpStackLocation(Irp);
       NTstatus = PoCallDriver(QCdeviceExtension->NextLowerDriver, Irp);
-      DbgPrint("QCFilterDispatchPower : Release RemoveLock\n");
+      // DbgPrint("QCFilterDispatchPower : Release RemoveLock\n");
       IoReleaseRemoveLock(&QCdeviceExtension->RemoveLock, Irp); 
       return NTstatus;
    }    
@@ -899,7 +899,7 @@ QCFilterDispatchIo( PDEVICE_OBJECT DeviceObject, PIRP Irp )
    //
    if (deviceExtension->Type == DEVICE_TYPE_QCFIDO) 
    {
-      QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Acquire RemoveLock\n"));
+      // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Acquire RemoveLock\n"));
       status = IoAcquireRemoveLock (&deviceExtension->RemoveLock, Irp);
       if (!NT_SUCCESS (status)) 
       {
@@ -1199,11 +1199,43 @@ Success:
                   break;
                }
 
+               case IOCTL_QCDEV_GET_PARENT_DEV_NAME:
+               {
+                  UNICODE_STRING parentDevNameU;
+                  ULONG          nameLen;
+
+                  RtlInitUnicodeString(&parentDevNameU, pDevExt->FriendlyNameHolder);
+                  QCFLT_DbgPrint
+                  (
+                     DBG_LEVEL_TRACE,
+                     ("MPFILTER: IOCTL_QCDEV_GET_PARENT_DEV_NAME: outlen %d/%d\n", outlen,
+                       parentDevNameU.Length)
+                  );
+
+                  if ((outlen < parentDevNameU.Length) || (parentDevNameU.Length == 0))
+                  {
+                     QCFLT_DbgPrint
+                     (
+                        DBG_LEVEL_TRACE,
+                        ("MPFILTER: IOCTL_QCDEV_GET_PARENT_DEV_NAME: failure\n")
+                     );
+                     status = STATUS_UNSUCCESSFUL;
+                     Irp->IoStatus.Information = 0;
+                  }
+                  else
+                  {
+                     RtlCopyMemory(buffer, parentDevNameU.Buffer, parentDevNameU.Length);
+                     status = STATUS_SUCCESS;
+                     Irp->IoStatus.Information = parentDevNameU.Length;
+                  }
+                  break;
+               }
+
                default:
                {
                   IoSkipCurrentIrpStackLocation (Irp);
                   status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-                  QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+                  // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
                   IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
                   return status;
                }
@@ -1312,7 +1344,7 @@ Success:
 						   }
                           Irp->IoStatus.Status = status;
                           IoCompleteRequest (Irp, IO_NO_INCREMENT);
-                          QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+                          // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
                           IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
                           return status;
 					   }
@@ -1423,7 +1455,7 @@ Success:
                           }
                           Irp->IoStatus.Status = status;
                           IoCompleteRequest (Irp, IO_NO_INCREMENT);
-                          QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+                          // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
                           IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
                           return status;
                        }
@@ -1431,7 +1463,7 @@ Success:
                        {
                           IoSkipCurrentIrpStackLocation (Irp);
                           status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-                          QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));                          
+                          // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));                          
                           IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
                           return status;
                        }
@@ -1446,7 +1478,7 @@ Success:
 
                   IoSkipCurrentIrpStackLocation (Irp);
                   status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-                  QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+                  // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
                   IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
                   return status;
                }
@@ -1463,7 +1495,7 @@ Success:
 
                 IoSkipCurrentIrpStackLocation (Irp);
                 status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-                QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+                // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
                 IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
                 return status;
               }
@@ -1480,7 +1512,7 @@ Success:
 
                   IoSkipCurrentIrpStackLocation (Irp);
                   status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-                  QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+                  // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
                   IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
                   return status;
                }
@@ -1497,7 +1529,7 @@ Success:
          );
             IoSkipCurrentIrpStackLocation (Irp);
             status = IoCallDriver (deviceExtension->NextLowerDriver, Irp);
-            QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+            // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
             IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
             return status;
          }
@@ -1512,7 +1544,7 @@ Success:
          );
          Irp->IoStatus.Status = status;
          IoSetCancelRoutine(Irp, NULL);
-         QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
+         // QCFLT_DbgPrint( DBG_LEVEL_DETAIL,("QCFilterDispatchIo : Release RemoveLock\n"));
          IoReleaseRemoveLock(&deviceExtension->RemoveLock, Irp); 
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
       }
@@ -1571,18 +1603,18 @@ Success:
          case IRP_MJ_CLEANUP:
          {
             KIRQL levelOrHandle;
-               DbgPrint( "QCFilterDispatchIo IRP_MJ_CLEANUP: Acquire RemoveLock\n" );
+               // DbgPrint( "QCFilterDispatchIo IRP_MJ_CLEANUP: Acquire RemoveLock\n" );
             status = IoAcquireRemoveLock(&pCtlExt->RmLock, NULL);
                if (NT_SUCCESS( status ))
                {
             if (pIocFilterDev->DispatchTable[IRP_MJ_CLEANUP] != NULL)
             {
                      status = (pIocFilterDev->DispatchTable[IRP_MJ_CLEANUP])(DeviceObject, Irp);
-                     DbgPrint("QCFilterDispatchIo IRP_MJ_CLEANUP: Release RemoveLock\n");
+                     // DbgPrint("QCFilterDispatchIo IRP_MJ_CLEANUP: Release RemoveLock\n");
                   IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
                      return status;
                   }
-                  DbgPrint( "QCFilterDispatchIo IRP_MJ_CLEANUP: Release RemoveLock\n" );
+                  // DbgPrint( "QCFilterDispatchIo IRP_MJ_CLEANUP: Release RemoveLock\n" );
                IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
                break;
             }
@@ -1590,18 +1622,18 @@ Success:
          case  IRP_MJ_DEVICE_CONTROL:
          {
             KIRQL levelOrHandle;
-               DbgPrint( "QCFilterDispatchIo IRP_MJ_DEVICE_CONTROL: Acquire RemoveLock\n" );
+               // DbgPrint( "QCFilterDispatchIo IRP_MJ_DEVICE_CONTROL: Acquire RemoveLock\n" );
             status = IoAcquireRemoveLock(&pCtlExt->RmLock, NULL);
                if (NT_SUCCESS( status ))
                {
             if (pIocFilterDev->DispatchTable[IRP_MJ_DEVICE_CONTROL] != NULL)
             {
                      status = (pIocFilterDev->DispatchTable[IRP_MJ_DEVICE_CONTROL])(DeviceObject, Irp);
-                     DbgPrint( "QCFilterDispatchIo IRP_MJ_DEVICE_CONTROL: Release RemoveLock\n" );
+                     // DbgPrint( "QCFilterDispatchIo IRP_MJ_DEVICE_CONTROL: Release RemoveLock\n" );
                   IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
                      return status;
                   }
-                  DbgPrint( "QCFilterDispatchIo IRP_MJ_DEVICE_CONTROL: Release RemoveLock\n" );
+                  // DbgPrint( "QCFilterDispatchIo IRP_MJ_DEVICE_CONTROL: Release RemoveLock\n" );
                IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
             }
             break;
@@ -1609,18 +1641,18 @@ Success:
          case  IRP_MJ_READ:
          {
             KIRQL levelOrHandle;
-               DbgPrint( "QCFilterDispatchIo IRP_MJ_READ: Acquire RemoveLock\n" );
+               // DbgPrint( "QCFilterDispatchIo IRP_MJ_READ: Acquire RemoveLock\n" );
             status = IoAcquireRemoveLock(&pCtlExt->RmLock, NULL);
                if (NT_SUCCESS( status ))
                {
   	          if (pIocFilterDev->DispatchTable[IRP_MJ_READ] != NULL)
                   {
                      status = (pIocFilterDev->DispatchTable[IRP_MJ_READ])(DeviceObject, Irp);
-                     DbgPrint( "QCFilterDispatchIo IRP_MJ_READ: Release RemoveLock\n" );
+                     // DbgPrint( "QCFilterDispatchIo IRP_MJ_READ: Release RemoveLock\n" );
                   IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
                      return status;
                   }
-                  DbgPrint( "QCFilterDispatchIo IRP_MJ_READ: Release RemoveLock\n" );
+                  // DbgPrint( "QCFilterDispatchIo IRP_MJ_READ: Release RemoveLock\n" );
                IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
             }
             break;
@@ -1628,18 +1660,18 @@ Success:
          case  IRP_MJ_WRITE:
          {
             KIRQL levelOrHandle;
-               DbgPrint( "QCFilterDispatchIo IRP_MJ_WRITE: Acquire RemoveLock\n" );
+               // DbgPrint( "QCFilterDispatchIo IRP_MJ_WRITE: Acquire RemoveLock\n" );
             status = IoAcquireRemoveLock(&pCtlExt->RmLock, NULL);
                if (NT_SUCCESS( status ))
                {
             if (pIocFilterDev->DispatchTable[IRP_MJ_WRITE] != NULL)
             {
                      status = (pIocFilterDev->DispatchTable[IRP_MJ_WRITE])(DeviceObject, Irp);
-                     DbgPrint( "QCFilterDispatchIo IRP_MJ_WRITE: Release RemoveLock\n" );
+                     // DbgPrint( "QCFilterDispatchIo IRP_MJ_WRITE: Release RemoveLock\n" );
                   IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
                      return status;
                   }
-                  DbgPrint( "QCFilterDispatchIo IRP_MJ_WRITE: Release RemoveLock\n");
+                  // DbgPrint( "QCFilterDispatchIo IRP_MJ_WRITE: Release RemoveLock\n");
                IoReleaseRemoveLock(&pCtlExt->RmLock, NULL);
             }
             break;
@@ -2897,11 +2929,9 @@ NTSTATUS QCFilterCreateFriendlyName
    PDEVICE_OBJECT QCPhysicalDeviceObject
 )
 {
-#define MAX_NAME_LEN 1024
    NTSTATUS        nts = STATUS_UNSUCCESSFUL;
    ULONG           bufLen = MAX_NAME_LEN, resultLen = 0;
    CHAR            driverKey[512];
-   WCHAR           FriendlyNameHolder[MAX_NAME_LEN];
    UNICODE_STRING  friendlyNameU;
    PCHAR           pSwInstance = NULL;
    BOOLEAN         bMatched = FALSE;
@@ -2910,14 +2940,14 @@ NTSTATUS QCFilterCreateFriendlyName
 #define RIGHT_P L")"
 
    RtlZeroMemory(driverKey, 512);
-   RtlZeroMemory(FriendlyNameHolder, bufLen*sizeof(WCHAR));
+   RtlZeroMemory(pDevExt->FriendlyNameHolder, bufLen*sizeof(WCHAR));
 
    nts = IoGetDeviceProperty
          (
             QCPhysicalDeviceObject,
             DevicePropertyFriendlyName,
             bufLen,
-            (PVOID)FriendlyNameHolder,
+            (PVOID)pDevExt->FriendlyNameHolder,
             &resultLen
          );
    if (nts == STATUS_SUCCESS)
@@ -2974,16 +3004,16 @@ NTSTATUS QCFilterCreateFriendlyName
                QCPhysicalDeviceObject,
                DevicePropertyDeviceDescription,
                bufLen,
-               (PVOID)FriendlyNameHolder,
+               (PVOID)pDevExt->FriendlyNameHolder,
                &resultLen
             );
 
       if (nts == STATUS_SUCCESS)
       {
-         RtlStringCbCatW(FriendlyNameHolder, MAX_NAME_LEN, LEFT_P);
-         RtlStringCbCatW(FriendlyNameHolder, MAX_NAME_LEN, (PCWSTR)pSwInstance);
-         RtlStringCbCatW(FriendlyNameHolder, MAX_NAME_LEN, RIGHT_P);
-         RtlInitUnicodeString(&friendlyNameU, FriendlyNameHolder);
+         RtlStringCbCatW(pDevExt->FriendlyNameHolder, MAX_NAME_LEN, LEFT_P);
+         RtlStringCbCatW(pDevExt->FriendlyNameHolder, MAX_NAME_LEN, (PCWSTR)pSwInstance);
+         RtlStringCbCatW(pDevExt->FriendlyNameHolder, MAX_NAME_LEN, RIGHT_P);
+         RtlInitUnicodeString(&friendlyNameU, pDevExt->FriendlyNameHolder);
 
          // Create FriendlyName in registry
          nts = QCFilterSetFriendlyName

@@ -37,6 +37,12 @@ GENERAL DESCRIPTION
                                                METHOD_BUFFERED, \
                                                FILE_ANY_ACCESS)
 
+/* Make the following code as 3354 - Parent device name from filter device*/
+#define IOCTL_QCDEV_GET_PARENT_DEV_NAME CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                               QCDEV_IOCTL_INDEX+1306, \
+                                               METHOD_BUFFERED, \
+                                               FILE_ANY_ACCESS)
+
 #define IOCTL_QCDEV_REPORT_DEV_NAME CTL_CODE(FILE_DEVICE_UNKNOWN, \
                                        QCDEV_IOCTL_INDEX+34, \
                                        METHOD_BUFFERED, \

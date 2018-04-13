@@ -46,7 +46,7 @@ sub RequestToSign
    # server socket
    my $socket = new IO::Socket::INET
                     (
-                       PeerHost => '10.52.121.149',
+                       PeerHost => 'saga-test-03',
                        PeerPort => '3197',
                        Proto => 'tcp',
                     );

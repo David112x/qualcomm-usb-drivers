@@ -1562,15 +1562,15 @@ NTSTATUS QCUSB_ClearRemoteWakeup(IN PDEVICE_OBJECT pDevObj)
 
     RtlZeroMemory(urb, size);
     urb->UrbHeader.Length = (USHORT) size;
-    if (pDevExt->wMaxPktSize >= QC_SS_BLK_PKT_SZ)  // SS device
-    {
-       UCHAR ifNum = (UCHAR)pDevExt->usCommClassInterface;
-       urb->UrbHeader.Function = URB_FUNCTION_SET_FEATURE_TO_INTERFACE;
-       urb->UrbControlFeatureRequest.UrbLink = NULL;
-       urb->UrbControlFeatureRequest.FeatureSelector = 0;  // function suspend  -- wValue
-       urb->UrbControlFeatureRequest.Index = (0x0000 | (ifNum << 8));  // TODO - verify if ifNum needs shift
-    }
-    else
+    // if (pDevExt->wMaxPktSize >= QC_SS_BLK_PKT_SZ)  // SS device
+    // {
+    //    UCHAR ifNum = (UCHAR)pDevExt->usCommClassInterface;
+    //    urb->UrbHeader.Function = URB_FUNCTION_SET_FEATURE_TO_INTERFACE;
+    //    urb->UrbControlFeatureRequest.UrbLink = NULL;
+    //    urb->UrbControlFeatureRequest.FeatureSelector = 0;  // function suspend  -- wValue
+    //    urb->UrbControlFeatureRequest.Index = (0x0000 | (ifNum << 8));  // TODO - verify if ifNum needs shift
+    // }
+    // else
     {
        urb->UrbHeader.Function = URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE;
        urb->UrbControlFeatureRequest.UrbLink = NULL;
