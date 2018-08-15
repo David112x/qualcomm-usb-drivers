@@ -2818,6 +2818,7 @@ NTSTATUS QCDSP_Dispatch
                           pDevExt->Sts.lRmlCount[0], pDevExt->Sts.lRmlCount[1],
                           pDevExt->Sts.lRmlCount[2], pDevExt->Sts.lRmlCount[3])
                      );
+                     QCPWR_ResetPowerState(pDevExt, 1);
                      QcIoReleaseRemoveLock(pDevExt->pRemoveLock, Irp, 0);
 
                      QcReleaseEntryPass(&gSyncEntryEvent, myPortName, "RMDEV");
@@ -3496,7 +3497,7 @@ VOID QCDSP_RequestD0(PDEVICE_EXTENSION pDevExt)
    (
       QCSER_DBG_MASK_CONTROL,
       QCSER_DBG_LEVEL_DETAIL,
-      ("<%s> -->RequestD0\n", pDevExt->PortName)
+      ("<%s> -->RequestD0: IdleNotificationIrp 0x%p\n", pDevExt->PortName, pDevExt->IdleNotificationIrp)
    );
 
    if ((pDevExt->WdmVersion >= Win8OrHigher) &&
@@ -3508,6 +3509,24 @@ VOID QCDSP_RequestD0(PDEVICE_EXTENSION pDevExt)
          QCSER_DBG_LEVEL_ERROR,
          ("<%s> <--RequestD0: Win8 or higher, no act\n", pDevExt->PortName)
       );
+
+      QcAcquireSpinLock(&pDevExt->SingleIrpSpinLock, &levelOrHandle);
+      irp = pDevExt->IdleNotificationIrp;
+      pDevExt->IdleNotificationIrp = NULL;
+      QcReleaseSpinLock(&pDevExt->SingleIrpSpinLock, levelOrHandle);
+
+      if (irp != NULL)
+      {
+         QCSER_DbgPrint
+         (
+            QCSER_DBG_MASK_PIRP,
+            QCSER_DBG_LEVEL_ERROR,
+            ("<%s> RequestD0: Win8OrHigher cancelling idle IRP 0x%p\n", pDevExt->PortName, irp)
+         );
+         IoCancelIrp(irp);
+      }
+
+      QcIoReleaseRemoveLock(pDevExt->pRemoveLock, NULL, 0);
       return;
    }
 

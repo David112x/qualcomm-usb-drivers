@@ -3061,6 +3061,7 @@ BOOLEAN QCPNP_ValidateConfigDescriptor
       return FALSE;
    }
 
+#if 0
    if (ConfigDesc->bConfigurationValue != 1)
    {
       QCSER_DbgPrint
@@ -3072,7 +3073,7 @@ BOOLEAN QCPNP_ValidateConfigDescriptor
       );
       return FALSE;
    }
-
+#endif
    return TRUE;
 
 }  // QCPNP_ValidateConfigDescriptor

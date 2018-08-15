@@ -1238,6 +1238,7 @@ PDEVICE_OBJECT QCPTDO_Create
       portDoExt->bFdoReused = TRUE;
       portDoExt->PhysicalDeviceObject = pdo;
       portDoExt->bmDevState &= ~(DEVICE_STATE_DEVICE_REMOVED0);
+      QCPWR_ResetPowerState(portDoExt, 0);
 
       // #ifdef QCSER_SYNC_DISPATCH_AND_ADD_DEV
       while (TRUE)

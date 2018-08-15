@@ -4016,3 +4016,20 @@ VOID QCPWR_PurgeDevicePowerQueue(PDEVICE_EXTENSION  pDevExt)
    QcReleaseSpinLock(&pDevExt->SingleIrpSpinLock, levelOrHandle);
 
 }  // QCPWR_PurgeDevicePowerQueue
+
+VOID QCPWR_ResetPowerState(PDEVICE_EXTENSION  pDevExt, UCHAR Cookie)
+{
+   QCSER_DbgPrint
+   (
+      QCSER_DBG_MASK_PIRP,
+      QCSER_DBG_LEVEL_ERROR,
+      ("<%s> QCPWR_ResetPowerState: %d/%d -- %d\n", pDevExt->PortName,
+        pDevExt->WdmVersion, Win8OrHigher, Cookie)
+   );
+
+   if (pDevExt->WdmVersion >= Win8OrHigher)
+   {
+      pDevExt->DevicePower = PowerDeviceD0;
+      pDevExt->PowerSuspended = FALSE;
+   }
+}

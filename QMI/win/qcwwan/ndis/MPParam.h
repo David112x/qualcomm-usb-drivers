@@ -157,6 +157,13 @@ GENERAL DESCRIPTION
 #define PARAM_MPEnableMBIMDL_MAX        1
 #endif // QCMP_MBIM_DL_SUPPORT
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+#define PARAM_MPEnableQMAPV4             "QCMPEnableQMAPV4"
+#define PARAM_MPEnableQMAPV4_DEFAULT     1
+#define PARAM_MPEnableQMAPV4_MIN         0
+#define PARAM_MPEnableQMAPV4_MAX         1
+#endif // QCMP_QMAP_V2_SUPPORT
+
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif

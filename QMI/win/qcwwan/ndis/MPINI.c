@@ -253,6 +253,13 @@ NDIS_STATUS MPINI_MiniportInitialize
                  MP_DBG_LEVEL_DETAIL,
                  ("<%s> MPEnableQMAPV1: %d\n", pAdapter->PortName, pAdapter->MPEnableQMAPV1)
               );
+
+              QCNET_DbgPrint
+              (
+                  MP_DBG_MASK_CONTROL,
+                  MP_DBG_LEVEL_DETAIL,
+                  ("<%s> MPEnableQMAPV4: %d\n", pAdapter->PortName, pAdapter->MPEnableQMAPV4)
+              );
 #endif
 
       QCNET_DbgPrint
@@ -665,8 +672,13 @@ NDIS_STATUS MPINI_MiniportInitializeEx
                MP_DBG_LEVEL_DETAIL,
                ("<%s> MPEnableQMAPV1 : %d\n", pAdapter->PortName, pAdapter->MPEnableQMAPV1)
             );
+            QCNET_DbgPrint
+            (
+               MP_DBG_MASK_CONTROL,
+               MP_DBG_LEVEL_DETAIL,
+               ("<%s> MPEnableQMAPV4 : %d\n", pAdapter->PortName, pAdapter->MPEnableQMAPV4)
+            );
 #endif
-
       QCNET_DbgPrint
       (
          MP_DBG_MASK_CONTROL,
@@ -1932,7 +1944,11 @@ NDIS_STATUS MPINI_SetNdisAttributes
    NDIS_STATUS status;
 #ifdef NDIS620_MINIPORT
    NDIS_PM_CAPABILITIES                     pmCap;
+#endif
 
+   NdisZeroMemory(&GeneralAttributes, sizeof(NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES));
+
+#ifdef NDIS620_MINIPORT
    NdisZeroMemory(&pmCap, sizeof(NDIS_PM_CAPABILITIES));
    pmCap.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
    pmCap.Header.Revision = NDIS_PM_CAPABILITIES_REVISION_1;
@@ -1955,7 +1971,6 @@ NDIS_STATUS MPINI_SetNdisAttributes
 #endif
 
 
-   NdisZeroMemory(&GeneralAttributes, sizeof(NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES));
    GeneralAttributes.Header.Type = NDIS_OBJECT_TYPE_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES;
    
    GeneralAttributes.Header.Revision = NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES_REVISION_1;

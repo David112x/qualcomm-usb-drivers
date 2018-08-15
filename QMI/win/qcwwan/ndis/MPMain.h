@@ -807,6 +807,33 @@ typedef struct _QMAP_STRUCT
    USHORT PacketLen;
 } QMAP_STRUCT, *PQMAP_STRUCT;
 
+typedef struct _QMAP_UL_CHECKSUM
+{
+   USHORT CksumStartOffset;
+   union {
+         USHORT CksumInsertOffsetCU;
+      struct {
+         USHORT  CksumInsertOffset:14;
+         USHORT  UDPIP4Ind:1;
+         USHORT  CkEnable:1;
+      };
+   };
+} QMAP_UL_CHECKSUM, *PQMAP_UL_CHECKSUM;
+
+typedef struct _QMAP_DL_CHECKSUM
+{
+   union {
+      USHORT RsvdV;
+      struct {
+         USHORT  Reserved:15;
+         USHORT  Valid:1;
+      };
+   };
+   USHORT CksumStartOffset;
+   USHORT CksumLength;
+   USHORT CksumValue;
+} QMAP_DL_CHECKSUM, *PQMAP_DL_CHECKSUM;
+
 #pragma pack(pop)
 
 #endif
@@ -1336,6 +1363,11 @@ typedef struct _MP_ADAPTER
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
+
+   #if defined(QCMP_QMAP_V1_SUPPORT)
+   LONG MPEnableQMAPV4;
+   BOOLEAN QMAPEnabledV4;
+   #endif
    
    #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT)
    BOOLEAN    NumTLPBuffersConfigured;

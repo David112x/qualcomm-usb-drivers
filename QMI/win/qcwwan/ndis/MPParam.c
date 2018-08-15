@@ -99,6 +99,10 @@ typedef enum _MP_REG_INDEX
 
    MP_DISABLE_TIMER_RESOLUTION,
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+      MP_ENABLE_QMAP_V4,
+#endif // 
+
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -218,6 +222,10 @@ NDIS_STRING MPRegString[] =
    NDIS_STRING_CONST("QCDriverDeregister"),
 
    NDIS_STRING_CONST("QCDriverDisableTimerResolution"),
+
+#if defined(QCMP_QMAP_V1_SUPPORT)
+   NDIS_STRING_CONST("QCMPEnableQMAPV4"),
+#endif // 
 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
@@ -569,6 +577,19 @@ NDIS_STATUS MPParam_GetConfigValues
       );
    
 #endif //
+
+#if defined(QCMP_QMAP_V1_SUPPORT)
+   
+      MPPARAM_ConfigurationGetValue
+      (
+         configurationHandle,
+         (UCHAR)MP_ENABLE_QMAP_V4,
+         &pAdapter->MPEnableQMAPV4,
+         PARAM_MPEnableQMAPV4_DEFAULT, PARAM_MPEnableQMAPV4_MIN, PARAM_MPEnableQMAPV4_MAX,
+         MP_ENABLE_QMAP_V4
+      );
+
+#endif
 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present

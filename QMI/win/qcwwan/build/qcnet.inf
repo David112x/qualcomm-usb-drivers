@@ -11,7 +11,7 @@ Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider    = %QCOM%
-DriverVer   = 12/04/2017,4.0.5.2
+DriverVer   = 07/19/2017,4.0.5.3
 Catalogfile = qcnet.cat
 
 [ControlFlags]
@@ -217,7 +217,9 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90E14%    = qcwwan.ndi, USB\VID_05C6&PID_90E1&MI_04
 %qcwwan.DeviceDesc90E35%    = qcwwan.ndi, USB\VID_05C6&PID_90E3&MI_05
 %qcwwan.DeviceDesc90E46%    = qcwwan.ndi, USB\VID_05C6&PID_90E4&MI_06
-%qcwwan.DeviceDesc90E56%    = qcwwan.ndi, USB\VID_05C6&PID_90E5&MI_06
+%qcwwan.DeviceDesc90E56%    = qcwwan.ndi1, USB\VID_05C6&PID_90E5&MI_06
+%qcwwan.DeviceDesc90EA0%    = qcwwan.ndi, USB\VID_05C6&PID_90EA&MI_00
+%qcwwan.DeviceDesc90EB0%    = qcwwan.ndi, USB\VID_05C6&PID_90EB&MI_00
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 %qcwwan.DeviceDesc920D5%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_05
 
@@ -413,7 +415,9 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90E14%    = qcwwan.ndi, USB\VID_05C6&PID_90E1&MI_04
 %qcwwan.DeviceDesc90E35%    = qcwwan.ndi, USB\VID_05C6&PID_90E3&MI_05
 %qcwwan.DeviceDesc90E46%    = qcwwan.ndi, USB\VID_05C6&PID_90E4&MI_06
-%qcwwan.DeviceDesc90E56%    = qcwwan.ndi, USB\VID_05C6&PID_90E5&MI_06
+%qcwwan.DeviceDesc90E56%    = qcwwan.ndi1, USB\VID_05C6&PID_90E5&MI_06
+%qcwwan.DeviceDesc90EA0%    = qcwwan.ndi, USB\VID_05C6&PID_90EA&MI_00
+%qcwwan.DeviceDesc90EB0%    = qcwwan.ndi, USB\VID_05C6&PID_90EB&MI_00
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 %qcwwan.DeviceDesc920D5%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_05
 
@@ -427,6 +431,15 @@ AddReg          = qcwwan.Reg
 CopyFiles       = qcwwan.CopyFiles
 
 [qcwwan.ndi.Services]
+AddService      = qcusbnet, 2, qcwwan.Service, qcwwan.EventLog
+
+[qcwwan.ndi1]
+Characteristics = 0x4 ; NCF_PHYSICAL
+BusType         = 15  ; PNPBus
+AddReg          = qcwwan.Reg1
+CopyFiles       = qcwwan.CopyFiles
+
+[qcwwan.ndi1.Services]
 AddService      = qcusbnet, 2, qcwwan.Service, qcwwan.EventLog
 
 ;-----------------------------------------------------------------------------
@@ -448,6 +461,59 @@ HKR,, QCDevDisableQoS, 0x00010001, 0x00000003
 
 ; Diable QMI
 ; HKR,, QCMPDisableQMI, 0x00010001, 0x00000001
+
+; Disable QMAP V4
+HKR,, QCMPEnableQMAPV4, 0x00010001, 0x00000000
+
+; Disable QMAP V3
+HKR,, QCMPEnableQMAPV3, 0x00010001, 0x00000000
+
+; Disable QMAP V2
+HKR,, QCMPEnableQMAPV2, 0x00010001, 0x00000000
+
+; Disable QMAP V1
+; HKR,, QCMPEnableQMAPV1, 0x00010001, 0x00000000
+
+; Disable QCNCM UL
+; HKR,, QCMPEnableMBIMUL, 0x00010001, 0x00000000
+
+; Disable QCNCM DL
+; HKR,, QCMPEnableMBIMDL, 0x00010001, 0x00000000
+
+; Disable TLP UL
+; HKR,, QCMPEnableTLP, 0x00010001, 0x00000000
+
+; Disable TLP DL
+; HKR,, QCMPEnableDLTLP, 0x00010001, 0x00000000
+
+; Max UL aggregated packets
+; HKR,, QCDriverTLPMaxPackets, 0x00010001, 0x00000003
+
+; Max DL aggregated packets
+HKR,, QCDriverDLMaxPackets, 0x00010001, 0x00000020
+
+; Max DL aggregated Size
+HKR,, QCDriverDLAggregationSize, 0x00010001, 0x00008000
+
+[qcwwan.Reg1]
+HKR,    ,                         BusNumber,           0, "0" 
+HKR, Ndi,                         Service,             0, "qcusbnet"
+HKR, Ndi\Interfaces,              UpperRange,          0, "ndis5"
+HKR, Ndi\Interfaces,              LowerRange,          0, "ethernet"
+; HKR, Ndi\params\VlanID,     ParamDesc,       0, %VlanID%
+; HKR, Ndi\params\VlanID,     default,         0, "777"
+; HKR, Ndi\params\VlanID,     type,            0, "long"
+; HKR, Ndi\params\VlanID,     min,             0, "0"
+; HKR, Ndi\params\VlanID,     max,             0, "4095"
+; HKR, Ndi\params\VlanID,     step,            0, "1"
+; HKR, Ndi\params\VlanID,     base,            0, "10"
+HKR,, QCDevDisableQoS, 0x00010001, 0x00000003
+
+; Diable QMI
+; HKR,, QCMPDisableQMI, 0x00010001, 0x00000001
+
+; Disable QMAP V4
+; HKR,, QCMPEnableQMAPV4, 0x00010001, 0x00000000
 
 ; Disable QMAP V3
 HKR,, QCMPEnableQMAPV3, 0x00010001, 0x00000000
@@ -707,6 +773,8 @@ qcwwan.DeviceDesc90E14      = "Qualcomm Wireless HS-USB Ethernet Adapter 90E1"
 qcwwan.DeviceDesc90E35      = "Qualcomm Wireless HS-USB Ethernet Adapter 90E3"
 qcwwan.DeviceDesc90E46      = "Qualcomm Wireless HS-USB Ethernet Adapter 90E4"
 qcwwan.DeviceDesc90E56      = "Qualcomm Wireless HS-USB Ethernet Adapter 90E5"
+qcwwan.DeviceDesc90EA0      = "Qualcomm Wireless HS-USB Ethernet Adapter 90EA"
+qcwwan.DeviceDesc90EB0      = "Qualcomm Wireless HS-USB Ethernet Adapter 90EB"
 qcwwan.DeviceDesc920D0      = "Qualcomm Gobi 3000 Wireless HS-USB Ethernet Adapter 920D"
 qcwwan.DeviceDesc920D5      = "Qualcomm Gobi 3000 Wireless HS-USB Ethernet Adapter 920D"
 qcwwan.Service.DispName     = "Qualcomm USB-NDIS miniport"

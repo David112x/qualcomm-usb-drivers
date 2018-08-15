@@ -455,7 +455,7 @@ VOID MPTX_MiniportCancelSend
 
    
    if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-          (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+          (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) || (pAdapter->QMAPEnabledV4 == TRUE) 
 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
@@ -753,7 +753,7 @@ VOID MPTX_MiniportSendNetBufferLists
    pAdapter = (PMP_ADAPTER)MiniportAdapterContext;
    
    if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-       (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+       (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) || (pAdapter->QMAPEnabledV4 == TRUE) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -995,7 +995,7 @@ BOOLEAN MPTX_ProcessPendingTxQueueEx(IN PMP_ADAPTER pAdapter)
    UINT         processed;
 
    if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-       (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+       (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif

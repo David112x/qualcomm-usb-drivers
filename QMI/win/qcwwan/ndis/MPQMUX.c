@@ -9359,7 +9359,7 @@ USHORT MPQMUX_SendDmsSetEventReportReq
       pOperatingMode->TLVLength = 0x01;
       pOperatingMode->OperatingMode = 0x01;
    }
-   
+
 #ifdef HW_RADIO_SWITCH
    // Wireless Disable
    {
@@ -16004,7 +16004,7 @@ BOOLEAN ParseNasGetSysInfo
                 *CSAttachedState = 0x01;
                 *PSAttachedState = 0x01;               
               }
-                 }
+           }
 #if 0           
            if (pSystemInfo->SrvCapabilityValid == 0x01)
            {
@@ -16019,7 +16019,7 @@ BOOLEAN ParseNasGetSysInfo
                 *CSAttachedState = 0x01;
                 *PSAttachedState = 0x01;               
                  }
-              }
+           }
 #endif           
            if (pSystemInfo->RoamStatusValid == 0x01)
            {
@@ -24682,6 +24682,20 @@ VOID MPQMI_ProcessInboundQWDSADMINResponse
                             ("<%s> UL AGGREGATION %u\n",
                              pAdapter->PortName, *pValue)
                         );
+#if defined(QCMP_QMAP_V1_SUPPORT)
+                        if (pAdapter->MPEnableQMAPV4 != 0)
+                        {
+                           if(*pValue == 0x08)
+                           {
+                              pAdapter->QMAPEnabledV4 = TRUE;
+                              pAdapter->MPQuickTx = 1;                           
+                           }
+                           else
+                           {
+                               pAdapter->QMAPEnabledV4 = FALSE;
+                           }
+                        }
+#endif                        
 #ifdef QCUSB_MUX_PROTOCOL                        
 #error code not present
 #endif
@@ -24750,6 +24764,19 @@ VOID MPQMI_ProcessInboundQWDSADMINResponse
                             ("<%s> DL AGGREGATION %u\n",
                              pAdapter->PortName, *pValue)
                         );
+#if defined(QCMP_QMAP_V1_SUPPORT)
+                        if (pAdapter->MPEnableQMAPV4 != 0)
+                        {
+                           if(*pValue == 0x08)
+                           {
+                              pAdapter->QMAPEnabledV4 = TRUE;
+                           }
+                           else
+                           {
+                               pAdapter->QMAPEnabledV4 = FALSE;
+                           }
+                        }
+#endif                        
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -24888,7 +24915,8 @@ VOID MPQMI_ProcessInboundQWDSADMINResponse
                   case 0x1A:
                   {
 #if defined(QCMP_QMAP_V1_SUPPORT)
-                      if ((pAdapter->MPEnableQMAPV1 != 0) 
+                      if ((pAdapter->MPEnableQMAPV1 != 0) ||
+                          (pAdapter->MPEnableQMAPV4 != 0) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif           
@@ -25119,6 +25147,22 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
     }
 #endif // QC_IP_MODE      
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+    if (pAdapter->MPEnableQMAPV4 != 0) // registry setting
+    {
+       PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV ulTlp;
+       pWdsAdminSetDataFormat->Length += sizeof(QMIWDS_ADMIN_SET_DATA_FORMAT_TLV);
+           
+       ulTlp = (PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV)bufPtr;
+       ulTlp->TLVType = 0x12;
+       ulTlp->TLVLength = 4;
+       ulTlp->Value = 0x08;
+       bufPtr = (PUCHAR)&(ulTlp->Value);
+       bufPtr += ulTlp->TLVLength;
+    }
+    else
+    {
+#endif    
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -25186,7 +25230,26 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
+#if defined(QCMP_QMAP_V1_SUPPORT)
+    }
+#endif
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+if (pAdapter->MPEnableQMAPV4 != 0) // registry setting
+{
+   PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV dlTlp;
+   pWdsAdminSetDataFormat->Length += sizeof(QMIWDS_ADMIN_SET_DATA_FORMAT_TLV);
+   dlTlp = (PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV)bufPtr;
+   dlTlp->Value = 0x00;
+   dlTlp->TLVType = 0x13;
+   dlTlp->TLVLength = 4;
+   dlTlp->Value = 0x08;
+   bufPtr = (PUCHAR)&(dlTlp->Value);
+   bufPtr += dlTlp->TLVLength;
+}
+else
+{
+#endif
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -25242,6 +25305,9 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
 #endif
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
+#endif
+#if defined(QCMP_QMAP_V1_SUPPORT)
+    }
 #endif
 
     if (pAdapter->DLAggMaxPackets != 0)
@@ -25313,7 +25379,8 @@ NTSTATUS MPQMUX_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
     }
 #endif        
 #if defined(QCMP_QMAP_V1_SUPPORT)
-    if (((pAdapter->MPEnableQMAPV1 != 0) 
+    if (((pAdapter->MPEnableQMAPV1 != 0) ||
+        (pAdapter->MPEnableQMAPV4 != 0) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif   
@@ -25656,6 +25723,7 @@ NDIS_STATUS MPQMUX_SetQMUXBindMuxDataPort
    qmux_msg->BindMuxDataPortReq.TLV2Length = sizeof(UCHAR);
 
    if ((pAdapter->QMAPEnabledV1 == TRUE)
+       || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL                        
 #error code not present
 #endif
@@ -26318,14 +26386,14 @@ ULONG MPQMUX_ProcessUimReadTransparantResp
                            #error code not present
 #endif
                            {
-                           pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
-                           pAdapter->DeviceReadyState = DeviceWWanOff;
-                           MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
-                                                 QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
-                           MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
-                                                  QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+                               pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
+                               pAdapter->DeviceReadyState = DeviceWWanOff;
+                               MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 
+                                                     QMIDMS_SET_EVENT_REPORT_REQ, MPQMUX_SendDmsSetEventReportReq, TRUE );
+                               MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_UIM, 
+                                                      QMIUIM_EVENT_REG_REQ, MPQMUX_SendUimSetEventReportReq, TRUE );
+                           }                               
                         }
-                     }
                      }
                      else
                      {
@@ -26343,8 +26411,8 @@ ULONG MPQMUX_ProcessUimReadTransparantResp
                       #error code not present
 #endif
                       {
-                      pAdapter->DeviceReadyState = DeviceWWanOff;
-                      pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
+                         pAdapter->DeviceReadyState = DeviceWWanOff;
+                         pNdisReadyInfo->ReadyInfo.ReadyState = WwanReadyStateOff;
                       }
                    }
                    MPQMUX_ComposeQMUXReq( pAdapter, NULL, QMUX_TYPE_DMS, 

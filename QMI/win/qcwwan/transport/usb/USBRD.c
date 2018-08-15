@@ -2046,6 +2046,7 @@ NTSTATUS USBRD_InitializeL2Buffers(PDEVICE_EXTENSION pDevExt)
 #error code not present
 #endif
 #if defined(QCMP_QMAP_V1_SUPPORT)
+          && (pDevExt->QMAPEnabledV4 == FALSE)
           && (pDevExt->QMAPEnabledV1 == FALSE)
 #endif       
       )

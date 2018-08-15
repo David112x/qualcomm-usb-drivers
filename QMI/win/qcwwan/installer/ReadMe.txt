@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.52
-92/21/2018
+Qualcomm USB Host Drivers Version 1.00.53
+07/05/2018
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,7 +20,28 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.52) 02/21/2018
+This Release (Qualcomm USB Host Drivers Version 1.00.53) 07/05/2018
+USB Driver updates:
+   Serial driver 2.1.3.2
+      a. Added PID 90E2 support for UDE enumeration.
+      b. Added Multi config 90EA, 90EB PIDs support.
+      c. Added PID 90EC support.
+      d. Added device removal/add in device power D2 state.
+   Network driver 4.0.5.3
+      a. Added QMAPv4 support.
+      b. Added Multi config 90EA, 90EB PID support.
+      c. Added PID 90EC support.
+      d. Added device removal/add in device power D2 state.
+   Filter driver 1.0.5.3
+      a. Added PID 90E2 support for UDE enumeration.
+      b. Added Multi config 90EA, 90EB PID support.
+      c. Added PID 90EC support.
+   QDSS/DPL driver 1.0.1.6
+      a. Added PID 90E2 support for UDE enumeration.
+      b. Added Multi config 90EA, 90EB PID support.
+      c. Added PID 90EC support.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.52) 02/21/2018
 USB Driver updates:
    Serial driver 2.1.3.1
       a. Added PID 90E2 - 90E9.
@@ -697,9 +718,9 @@ USB Driver updates:
 To build the drivers: 
 
 1. Install the following: 
-·	Microsoft Windows Driver Kit (WDK) for Windows Developer Preview 8141 or newer
-·	Perl 5.0 or newer 
-·	Visual Studio 2010
+?Microsoft Windows Driver Kit (WDK) for Windows Developer Preview 8141 or newer
+?Perl 5.0 or newer 
+?Visual Studio 2010
 2. Run the buildDriver.pl script (found in QMI\win\qcdrivers\) using the following syntax: 
 
 Perl buildDrivers.pl [Checked]

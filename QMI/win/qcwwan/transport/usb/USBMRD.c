@@ -1592,6 +1592,7 @@ VOID USBMRD_FillReadRequest(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
 #error code not present
 #endif
 #if defined(QCMP_QMAP_V1_SUPPORT)
+               && pDevExt->QMAPEnabledV4 == FALSE
                && pDevExt->QMAPEnabledV1 == FALSE
 #endif                 
                )
@@ -1666,6 +1667,7 @@ VOID USBMRD_FillReadRequest(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
 #error code not present
 #endif
 #if defined(QCMP_QMAP_V1_SUPPORT)
+                 && pDevExt->QMAPEnabledV4 == FALSE
                  && pDevExt->QMAPEnabledV1 == FALSE
 #endif                 
       )
@@ -1915,6 +1917,7 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
    }
 
    if ((pDevExt->QMAPEnabledV1 == TRUE)
+       || (pDevExt->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif                         
@@ -1986,7 +1989,184 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
                   
                   if (pDevExt->TlpBufferState == QCTLP_BUF_STATE_IDLE)
                   {
+                      if (pDevExt->QMAPEnabledV4 == TRUE)
+                      {
+                          if (remBytes > (sizeof(QCQMAP_STRUCT) + sizeof(QCQMAP_DL_CHECKSUM)))
+                          {
+                             PUCHAR ipPtr;
+                             UCHAR ipVer;
+                             USHORT CkOffset = 0;
+                             PUSHORT ckOffsetPtr;
+                             ULONG CheckSumTemp;
+                             USHORT CheckSumTempShort;
+                             USHORT pseudoChecksum = 0;
+                             UCHAR FragPacket = 0x00;
+                             PQCQMAP_DL_CHECKSUM pDLCheckSum = NULL;
+                             qmap = (PQCQMAP_STRUCT)(pDevExt->pL2ReadBuffer[pDevExt->L2FillIdx].DataPtr);
+                             pktLen = RtlUshortByteSwap(qmap->PacketLen);
+                             dataPtr = (PCHAR)((PCHAR)qmap + sizeof(QCQMAP_STRUCT));
+                             
+                             // Padding //TODO: check order
+                             {
+                                padBytes = (0x3F&(qmap->PadCD));
+                             }
+                          
+                             if (pDevExt->QMAPDLMinPadding > 0)
+                             {
+                                padBytes += pDevExt->QMAPDLMinPadding;
+                             }
+                          
+                             QCUSB_DbgPrint
+                             (
+                             QCUSB_DBG_MASK_READ,
+                             QCUSB_DBG_LEVEL_DETAIL,
+                             ("<%s> RIC : QMAP: Actual Length of IP packet : 0x%x Pad : 0x%x\n", pDevExt->PortName, pktLen, padBytes)
+                             );
+                          
+                             // Get the adapter and respective IRP
+                             if (pDevExt->MuxInterface.MuxEnabled != 0)
+                             {
+                                pIrp = GetAdapterReadDataItemIrp(pDevExt, qmap->MuxId, &pReturnDevExt, &ReadQueueEmpty);
+                             }
+                             else
+                             {
+                                if (pIrp == NULL)
+                                {
+                                   ReadQueueEmpty = TRUE;
+                                }
+                             }
+                             if (pIrp != NULL)
+                             {
+                                if ( (pReturnDevExt != NULL) && (pDevExt != pReturnDevExt))
+                                {
+                                  // check completion status
+                                  QcAcquireSpinLock(&pReturnDevExt->ReadSpinLock, &levelOrHandle);
+                                }
 
+                                irpStack = IoGetCurrentIrpStackLocation(pIrp);
+                                if (pIrp->MdlAddress)
+                                {
+                                   ulReqLength = MmGetMdlByteCount(pIrp->MdlAddress);
+                                   ioBuffer = (PUCHAR)MmGetSystemAddressForMdlSafe(pIrp->MdlAddress, HighPagePriority);
+                                   if (ioBuffer == NULL)
+                                   {
+                                      QCUSB_DbgPrint
+                                      (
+                                         QCUSB_DBG_MASK_READ,
+                                         QCUSB_DBG_LEVEL_CRITICAL,
+                                         ("<%s> ERROR: Mdl translation 0x%p\n", pDevExt->PortName, pIrp->MdlAddress)
+                                      );
+                                   }
+                                }
+                                else
+                                {
+                                   ulReqLength = irpStack->Parameters.Read.Length;
+                                   ioBuffer = (PUCHAR)pIrp->AssociatedIrp.SystemBuffer;
+                                }
+                             }
+                             else
+                             {
+                                 // Done with this buffer
+                                 QCUSB_DbgPrint
+                                 (
+                                    QCUSB_DBG_MASK_RIRP,
+                                    QCUSB_DBG_LEVEL_ERROR,
+                                    ("<%s> MRIC - error: pIrp 2 - is NULL\n", pDevExt->PortName)
+                                 );
+                          
+                                 ntStatus = STATUS_WAIT_63;
+                                 if ((ReadQueueEmpty == FALSE) || ((pktLen == 0) || ((pktLen - padBytes) > ulL2Length)))
+                                 {
+                                    DbgPrint("<%s> FRAME DROPPED : %ldB\n", pDevExt->PortName, ulL2Length);
+                                pDevExt->TLPCount = 0;
+                                USBMRD_RecycleL2FillBuffer(pDevExt, currentFillIdx, 7);
+                                    DbgPrint("<%s> FRAME DROPPED Count : %ld and Total Size : 0x%ldB\n", pDevExt->PortName, ++(pDevExt->FrameDropCount), (pDevExt->FrameDropBytes+= ulL2Length));
+                                ntStatus = STATUS_UNSUCCESSFUL;
+                                 }
+                                 if ((qmap->PadCD&0x80))
+                                 {
+                                 }
+                                 else
+                                 {
+                                return ntStatus;
+                             }
+                             }
+                          
+                             if (qmap->PadCD&0x80)
+                             {
+                                NTSTATUS Status;
+                                PQCQMAPCONTROLQUEUE pQMAPControl;
+                                if ( (pktLen != 0) && 
+                                   ((pktLen - padBytes) <= ulL2Length))
+                                {
+                                    // Status = NdisAllocateMemoryWithTag( &pQMAPControl, sizeof(QCQMAPCONTROLQUEUE), 'MOCQ' );
+                                    // if( Status != NDIS_STATUS_SUCCESS )
+                                    // {
+                                    //   QCUSB_DbgPrint
+                                    //   (
+                                    //     QCUSB_DBG_MASK_READ,
+                                    //     QCUSB_DBG_LEVEL_ERROR,
+                                    //     ("<%s> RIC : QMAP: error: Failed to allocate memory for QMI Writes\n", pDevExt->PortName)
+                                    //   );
+                                    // }
+                                    // else
+                                    // {
+                                    //    RtlCopyMemory(pQMAPControl->Buffer, dataPtr, (pktLen - padBytes));
+                                   if ( (pReturnDevExt != NULL) && (pDevExt != pReturnDevExt))
+                                   {
+                                          // USBIF_QMAPAddtoControlQueue(pReturnDevExt->MyDeviceObject, pQMAPControl);
+                                          USBIF_QMAPProcessControlMessage(pReturnDevExt, dataPtr, (pktLen - padBytes));
+                                   }
+                                   else
+                                   {
+                                          // USBIF_QMAPAddtoControlQueue(pDevExt->MyDeviceObject, pQMAPControl);
+                                          USBIF_QMAPProcessControlMessage(pDevExt, dataPtr, (pktLen - padBytes));
+                                }
+                                    // }
+                          
+                                dataPtr += pktLen;
+                                if (dataPtr >= (bufStart + ulL2Length)) // "==" in fact
+                                {
+                                   // Done with this buffer
+                                   pDevExt->TLPCount = 0;
+                                   USBMRD_RecycleL2FillBuffer(pDevExt, currentFillIdx, 7);
+                                }
+                                else
+                                {
+                                   // Continue signaling completion
+                                   pDevExt->pL2ReadBuffer[pDevExt->L2FillIdx].DataPtr = dataPtr;
+                                }
+                                }
+                                else
+                                {
+                                    // Done with this buffer
+                                    QCUSB_DbgPrint
+                                    (
+                                       QCUSB_DBG_MASK_RIRP,
+                                       QCUSB_DBG_LEVEL_ERROR,
+                                       ("<%s> MRIC - error: invalid data - end of buf\n", pDevExt->PortName)
+                                    );
+                                    pDevExt->TLPCount = 0;
+                                    USBMRD_RecycleL2FillBuffer(pDevExt, currentFillIdx, 7);
+                                }
+                                
+                                break;
+                             }
+                         }
+                         else
+                         {
+                            QCUSB_DbgPrint
+                            (
+                               QCUSB_DBG_MASK_RIRP,
+                               QCUSB_DBG_LEVEL_ERROR,
+                               ("<%s> MRIC - error: invalid data - end of buf\n", pDevExt->PortName)
+                            );
+                            pDevExt->TLPCount = 0;
+                            USBMRD_RecycleL2FillBuffer(pDevExt, currentFillIdx, 4);   
+                            break;
+                         }
+                      }
+                      else
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif                         
@@ -2387,12 +2567,18 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
                      }
 
                       if ((pDevExt->QMAPEnabledV1 == TRUE)
+                          || (pDevExt->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif                         
                        )
                      {
                         dataPtr += pktLen;
+                        if(pDevExt->QMAPEnabledV4 == TRUE)
+                        {
+                           dataPtr += sizeof(QCQMAP_DL_CHECKSUM);
+                        }
+                        else
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif                         

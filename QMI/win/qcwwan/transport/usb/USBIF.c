@@ -1898,6 +1898,14 @@ VOID USBIF_SetAggregationMode(PDEVICE_OBJECT UsbFDO)
 #endif
 
 #if defined(QCMP_QMAP_V1_SUPPORT)   
+   pDevExt->QMAPEnabledV4 = pAdapter->QMAPEnabledV4;
+   QCUSB_DbgPrint
+   ( 
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> QMAP Chesksum V4:%d\n", pDevExt->PortName, pDevExt->QMAPEnabledV4)
+   );
+   
    pDevExt->QMAPEnabledV1 = pAdapter->QMAPEnabledV1;
    QCUSB_DbgPrint
    ( 

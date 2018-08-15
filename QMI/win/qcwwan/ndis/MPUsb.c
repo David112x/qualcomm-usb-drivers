@@ -2537,7 +2537,7 @@ VOID MP_USBTxPacketEx
          {
             qosHdr->FlowId = 0;
          }
-	 }
+     }
          InterlockedIncrement(&pAdapter->QosPendingPackets);
       }
       #endif // MP_QCQOS_ENABLED
@@ -3316,6 +3316,7 @@ NDIS_STATUS MPUSB_InitializeTLP(PMP_ADAPTER pAdapter)
    if ((pAdapter->MPDisableQoS >= 3) &&
        (pAdapter->TLPEnabled == FALSE) && (pAdapter->MBIMULEnabled == FALSE) &&
        (pAdapter->QMAPEnabledV1 == FALSE)
+       && (pAdapter->QMAPEnabledV4 == FALSE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -3554,6 +3555,7 @@ INT MPUSB_AggregationAvailable(PMP_ADAPTER pAdapter, BOOLEAN UseSpinLock, ULONG 
    if ((pAdapter->TLPEnabled == FALSE) && (pAdapter->MBIMULEnabled == FALSE) &&
        (pAdapter->QMAPEnabledV1 == FALSE)
           && (pAdapter->MPQuickTx != 0)
+       && (pAdapter->QMAPEnabledV4 == FALSE) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -3589,6 +3591,21 @@ INT MPUSB_AggregationAvailable(PMP_ADAPTER pAdapter, BOOLEAN UseSpinLock, ULONG 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
+     if (pAdapter->QMAPEnabledV4 == TRUE)
+     {
+        if ( (pAdapter->MaxTLPPackets > 0) && (tlpItem->AggregationCount >= pAdapter->MaxTLPPackets))
+        {
+           result = TLP_AGG_SEND;
+        }
+        else if (tlpItem->RemainingCapacity <= (SizeOfPacket + 8 + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM)))
+        {
+           result = TLP_AGG_SEND;
+        }
+        else
+        {
+           result = TLP_AGG_MORE;
+        }
+     }
      if (pAdapter->QMAPEnabledV1 == TRUE)
      {
         if ( (pAdapter->MaxTLPPackets > 0) && (tlpItem->AggregationCount >= pAdapter->MaxTLPPackets))
@@ -4049,6 +4066,18 @@ VOID MPUSB_TLPTxPacket
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
+      if ((pAdapter->QMAPEnabledV4 == TRUE))
+      {
+         if (tlpItem->RemainingCapacity > (sendBytes + 8 + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM)))
+         {
+            usbBuffer = tlpItem->CurrentPtr + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM); // room for length
+         }
+         else
+         {
+            usbBuffer = NULL;
+         }
+      }
+      else
       if (pAdapter->QMAPEnabledV1 == TRUE)
       {
          if (tlpItem->RemainingCapacity > (sendBytes + 8 + sizeof(QMAP_STRUCT)))
@@ -4214,6 +4243,7 @@ VOID MPUSB_TLPTxPacket
    {
    
       if ((pAdapter->QMAPEnabledV1 == TRUE)
+          || (pAdapter->QMAPEnabledV4 == TRUE) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -4236,6 +4266,15 @@ VOID MPUSB_TLPTxPacket
           Qmap->MuxId = pAdapter->MuxId;
           sendBytes += paddingBytes; 
           Qmap->PacketLen = RtlUshortByteSwap(sendBytes);
+          if (pAdapter->QMAPEnabledV4 == TRUE)
+          {
+             PQMAP_UL_CHECKSUM pULCheckSum = (PQMAP_UL_CHECKSUM)((PUCHAR)Qmap + sizeof(QMAP_STRUCT));
+             RtlZeroMemory(pULCheckSum, sizeof(QMAP_UL_CHECKSUM));
+             tlpItem->CurrentPtr += (sendBytes + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM));
+             tlpItem->DataLength += (sendBytes + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM));
+             tlpItem->RemainingCapacity -= (sendBytes + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM)); 
+          }
+          else
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -4351,6 +4390,7 @@ VOID MPUSB_TLPTxPacket
    
    /* TODO: size of checksum offload */
    if ((pAdapter->QMAPEnabledV1== TRUE)
+       || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -4440,6 +4480,7 @@ VOID MPUSB_TLPTxPacket
       if ((pAdapter->TLPEnabled == TRUE)||
             (pAdapter->MBIMULEnabled == TRUE)||
             (pAdapter->QMAPEnabledV1 == TRUE)
+          || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -4744,6 +4785,7 @@ BOOLEAN MPUSB_TLPProcessPendingTxQueue(PMP_ADAPTER pAdapter)
    if ((pAdapter->MPDisableQoS >= 3) &&
        (pAdapter->TLPEnabled == FALSE) && (pAdapter->MBIMULEnabled == FALSE) &&
        (pAdapter->QMAPEnabledV1 == FALSE)
+       && (pAdapter->QMAPEnabledV4 == FALSE)
 #ifdef QCUSB_MUX_PROTOCOL                        
 #error code not present
 #endif
@@ -5127,6 +5169,18 @@ VOID MPUSB_TLPTxPacketEx
             ("<%s> [TLP] TLPTxPacket => (%dB/%dB/%dB)\n", pAdapter->PortName,
               dwPacketLength, sendBytes, tlpItem->RemainingCapacity)
          );
+         if (pAdapter->QMAPEnabledV4 == TRUE)
+         {
+             if (tlpItem->RemainingCapacity > (sendBytes + 8 + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM)))
+             {
+                usbBuffer = tlpItem->CurrentPtr + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM); // room for length
+             }
+             else
+             {
+                usbBuffer = NULL;
+             }
+         }
+         else
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -5289,6 +5343,7 @@ VOID MPUSB_TLPTxPacketEx
       {
              
         if ((pAdapter->QMAPEnabledV1 == TRUE)
+            || (pAdapter->QMAPEnabledV4 == TRUE) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -5311,6 +5366,15 @@ VOID MPUSB_TLPTxPacketEx
               Qmap->MuxId = pAdapter->MuxId; 
               sendBytes += paddingBytes; 
               Qmap->PacketLen = RtlUshortByteSwap(sendBytes);
+              if (pAdapter->QMAPEnabledV4 == TRUE)
+              {
+                 PQMAP_UL_CHECKSUM pULCheckSum = (PQMAP_UL_CHECKSUM)((PUCHAR)Qmap + sizeof(QMAP_STRUCT));
+                 RtlZeroMemory(pULCheckSum, sizeof(QMAP_UL_CHECKSUM));
+                 tlpItem->CurrentPtr += (sendBytes + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM));
+                 tlpItem->DataLength += (sendBytes + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM));
+                 tlpItem->RemainingCapacity -= (sendBytes + sizeof(QMAP_STRUCT) + sizeof(QMAP_UL_CHECKSUM)); 
+              }
+              else
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -5425,6 +5489,7 @@ VOID MPUSB_TLPTxPacketEx
 
    tlpItem->AggregationCount++;
    if ((pAdapter->QMAPEnabledV1 == TRUE)
+       || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -5512,6 +5577,7 @@ VOID MPUSB_TLPTxPacketEx
       if ((pAdapter->TLPEnabled == TRUE)||
           (pAdapter->MBIMULEnabled == TRUE)||
           (pAdapter->QMAPEnabledV1 == TRUE)
+          || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL                        
 #error code not present
 #endif

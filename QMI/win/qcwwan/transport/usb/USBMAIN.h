@@ -692,6 +692,33 @@ typedef struct _QCQMAP_STRUCT
    USHORT PacketLen;
 } QCQMAP_STRUCT, *PQCQMAP_STRUCT;
 
+typedef struct _QCQMAP_UL_CHECKSUM
+{
+   USHORT CksumStartOffset;
+   union {
+         USHORT CksumInsertOffsetCU;
+      struct {
+         USHORT  CksumInsertOffset:14;
+         USHORT  UDPIP4Ind:1;
+         USHORT  CkEnable:1;
+      };
+   };
+} QCQMAP_UL_CHECKSUM, *PQCQMAP_UL_CHECKSUM;
+
+typedef struct _QCQMAP_DL_CHECKSUM
+{
+   union {
+      USHORT RsvdV;
+      struct {
+         USHORT  Reserved:15;
+         USHORT  Valid:1;
+      };
+   };
+   USHORT CksumStartOffset;
+   USHORT CksumLength;
+   USHORT CksumValue;
+} QCQMAP_DL_CHECKSUM, *PQCQMAP_DL_CHECKSUM;
+
 typedef struct _QCQMAP_FLOWCONTROL_STRUCT
 {
    UCHAR CommandName;
@@ -1086,6 +1113,9 @@ typedef struct _DEVICE_EXTENSION
    BOOLEAN  MBIMDLEnabled;   // host-device negotiation
 #endif
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+   BOOLEAN QMAPEnabledV4;
+#endif
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif

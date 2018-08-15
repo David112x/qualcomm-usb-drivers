@@ -740,7 +740,7 @@ VOID MPMAIN_MiniportHaltEx(NDIS_HANDLE MiniportAdapterContext, NDIS_HALT_ACTION 
 #endif
    #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
    if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE) || 
-          (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
+      (pAdapter->QMAPEnabledV4 == TRUE) || (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
    {
 #ifdef NDIS620_MINIPORT
       MPUSB_PurgeTLPQueuesEx(pAdapter, TRUE);
@@ -922,8 +922,8 @@ VOID ResetCompleteTimerDpc
 #error code not present
 #endif
    #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
-   if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE) || 
-          (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
+   if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE) || (pAdapter->QMAPEnabledV4 == TRUE)
+        || (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
          {
 #ifdef NDIS620_MINIPORT
             MPUSB_PurgeTLPQueuesEx(pAdapter, TRUE);
@@ -2513,6 +2513,24 @@ NDIS_STATUS MPMAIN_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
 
    MPQMUX_SetDeviceDataFormat(pAdapter);
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+if ((pAdapter->MPEnableQMAPV4 != 0) && (pAdapter->QMAPEnabledV4 == 0) &&
+#if defined(QCUSB_MUX_PROTOCOL) && defined(QCMP_QMAP_V2_SUPPORT)
+      (pAdapter->MPEnableQMAPV3 != 0)
+#else      
+      (pAdapter->MPEnableQMAPV1 != 0)
+#endif      
+      )
+   {
+       pAdapter->MPEnableQMAPV4 = 0;
+       MPQMUX_SetDeviceDataFormat(pAdapter);
+   }
+   if (pAdapter->QMAPEnabledV4 != 0)
+   {
+      goto exit0;
+   }
+#endif
+
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -2563,6 +2581,7 @@ NDIS_STATUS MPMAIN_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
 exit0:
 
    if ((pAdapter->QMAPEnabledV1 == TRUE)
+       || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif                         
@@ -2851,6 +2870,9 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
 #ifdef QC_IP_MODE
                      pAdapter->IPModeEnabled = returnAdapter->IPModeEnabled;
 #endif
+#if defined(QCMP_QMAP_V1_SUPPORT)
+                     pAdapter->QMAPEnabledV4 = returnAdapter->QMAPEnabledV4;
+#endif
 #ifdef QCUSB_MUX_PROTOCOL                        
 #error code not present
 #endif
@@ -2865,6 +2887,9 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
 #endif
                      pAdapter->MPQuickTx = returnAdapter->MPQuickTx;
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+                     pAdapter->QMAPEnabledV4 = returnAdapter->QMAPEnabledV4;
+#endif
 #ifdef QCUSB_MUX_PROTOCOL                        
 #error code not present
 #endif
@@ -2881,7 +2906,7 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
                      pAdapter->ndpSignature = returnAdapter->ndpSignature;
                      pAdapter->MaxTLPPackets = returnAdapter->MaxTLPPackets;
                      pAdapter->UplinkTLPSize = returnAdapter->UplinkTLPSize;
-                     pAdapter->QMAPDLMinPadding = returnAdapter->QMAPDLMinPadding;		     
+                     pAdapter->QMAPDLMinPadding = returnAdapter->QMAPDLMinPadding;             
 #endif
                      USBIF_SetAggregationMode(pAdapter->USBDo);
                   }                
@@ -2933,8 +2958,8 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
 #error code not present
 #endif
 #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
-               if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-                   (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
+               if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)||(pAdapter->QMAPEnabledV4 == TRUE)
+                   || (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
                    
                {
                   MPUSB_InitializeTLP(pAdapter);
@@ -3019,6 +3044,14 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
       pAdapter->IPModeEnabled = TRUE; // FALSE;
       pAdapter->MPQuickTx = 0;
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+   if (pAdapter->MPEnableQMAPV4 != 0)
+   {
+      pAdapter->QMAPEnabledV4 = 1;
+      pAdapter->MPQuickTx = 1;
+   }
+else
+#endif    
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -3048,6 +3081,14 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
    }
 #endif
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
+   if (pAdapter->MPEnableQMAPV4 != 0)
+   {
+      pAdapter->QMAPEnabledV4 = 1;
+      pAdapter->MPQuickTx = 1;
+   }
+else
+#endif    
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -3065,14 +3106,14 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
        pAdapter->MBIMDLEnabled = 1;
        pAdapter->MPQuickTx = 1;
     }
-	else
+    else
 #endif
 #if defined(QCMP_DL_TLP)
     if (pAdapter->MPEnableDLTLP != 0)
-	{
-		pAdapter->TLPDLEnabled = 1;
+    {
+        pAdapter->TLPDLEnabled = 1;
         pAdapter->MPQuickTx = 1;
-	}
+    }
 #endif
 
       USBIF_SetAggregationMode(pAdapter->USBDo);
@@ -3091,8 +3132,8 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
 #error code not present
 #endif
 #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
-      if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-         (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
+      if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| (pAdapter->QMAPEnabledV4 == TRUE)
+          || (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0))
                           
       {
          MPUSB_InitializeTLP(pAdapter);
@@ -3484,8 +3525,8 @@ VOID MPMAIN_MPThread(PVOID Context)
 #error code not present
 #endif
 #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
-                if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-                    (pAdapter->QMAPEnabledV1 == TRUE)    || (pAdapter->MPQuickTx != 0))
+                if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| (pAdapter->QMAPEnabledV4 == TRUE)
+                    || (pAdapter->QMAPEnabledV1 == TRUE)    || (pAdapter->MPQuickTx != 0))
                {
                   MPUSB_TLPProcessPendingTxQueue(pAdapter);
                }
@@ -3978,8 +4019,8 @@ VOID MPMAIN_MPThread(PVOID Context)
 #error code not present
 #endif
 #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
-    if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-            (pAdapter->QMAPEnabledV1 == TRUE)    || (pAdapter->MPQuickTx != 0))
+    if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)||(pAdapter->QMAPEnabledV4 == TRUE) 
+          || (pAdapter->QMAPEnabledV1 == TRUE)    || (pAdapter->MPQuickTx != 0))
     {
        MPUSB_TLPProcessPendingTxQueue(pAdapter);
     }

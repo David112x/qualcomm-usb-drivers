@@ -443,4 +443,6 @@ BOOLEAN QCPWR_IsSameDevicePowerRequested
 
 VOID QCPWR_PurgeDevicePowerQueue(PDEVICE_EXTENSION  pDevExt);
 
+VOID QCPWR_ResetPowerState(PDEVICE_EXTENSION  pDevExt, UCHAR Cookie);
+
 #endif // QCPWR_H

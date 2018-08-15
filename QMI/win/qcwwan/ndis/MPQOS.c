@@ -703,8 +703,8 @@ VOID MPQOS_DispatchThread(PVOID Context)
 #error code not present
 #endif
 #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT) || defined(QCMP_QMAP_V1_SUPPORT)
-            if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-                (pAdapter->QMAPEnabledV1 == TRUE)    || (pAdapter->MPQuickTx != 0))
+            if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| (pAdapter->QMAPEnabledV4 == TRUE)
+                || (pAdapter->QMAPEnabledV1 == TRUE)    || (pAdapter->MPQuickTx != 0))
             {
                MPQOS_TLPTransmitPackets(pAdapter);
             }
@@ -1290,7 +1290,7 @@ VOID MPQOS_CategorizePacketsEx(IN PMP_ADAPTER pAdapter)
       pList = RemoveHeadList(&pAdapter->TxPendingList);
 
          if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-             (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+             (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) ||(pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -1336,7 +1336,7 @@ VOID MPQOS_CategorizePacketsEx(IN PMP_ADAPTER pAdapter)
             
             kicker = TRUE;
              if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-                 (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+                 (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) || (pAdapter->QMAPEnabledV4 == TRUE)
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -1375,7 +1375,7 @@ VOID MPQOS_CategorizePacketsEx(IN PMP_ADAPTER pAdapter)
 
          kicker = TRUE;
           if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-              (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+              (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) || (pAdapter->QMAPEnabledV4 == TRUE) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -2853,7 +2853,7 @@ VOID MPQOS_PurgeQueues(PMP_ADAPTER  pAdapter)
                PMPUSB_TX_CONTEXT_NBL qcNbl;
 
                if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-                   (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+                   (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) || (pAdapter->QMAPEnabledV4 == TRUE) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
@@ -3728,7 +3728,7 @@ PLIST_ENTRY MPQOS_TLPDequeuePacket
          PMPUSB_TX_CONTEXT_NBL qcNbl;
 
             if ((pAdapter->TLPEnabled == TRUE) || (pAdapter->MBIMULEnabled == TRUE)|| 
-                (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0)
+                (pAdapter->QMAPEnabledV1 == TRUE)  || (pAdapter->MPQuickTx != 0) || (pAdapter->QMAPEnabledV4 == TRUE) 
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif

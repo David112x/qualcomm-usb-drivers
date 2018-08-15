@@ -1597,6 +1597,7 @@ VOID MPQCTL_HandleGetVersionRsp
        (pAdapter->QMUXVersion[QMUX_TYPE_WDS_ADMIN].Minor < 11))
    {
       pAdapter->MPEnableQMAPV1 = 0;
+      pAdapter->MPEnableQMAPV4 = 0;
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif      

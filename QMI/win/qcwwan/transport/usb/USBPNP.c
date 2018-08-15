@@ -3209,6 +3209,7 @@ BOOLEAN USBPNP_ValidateConfigDescriptor
       return FALSE;
    }
 
+#if 0
    if (ConfigDesc->bConfigurationValue != 1)
    {
       QCUSB_DbgPrint
@@ -3220,7 +3221,7 @@ BOOLEAN USBPNP_ValidateConfigDescriptor
       );
       return FALSE;
    }
-
+#endif
    return TRUE;
 
 }  // USBPNP_ValidateConfigDescriptor

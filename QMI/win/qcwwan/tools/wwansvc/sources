@@ -1,0 +1,31 @@
+TARGETNAME=qcmtusvc
+TARGETTYPE=PROGRAM
+
+# UMENTRY=tmain
+
+# UMBASE=0x01000000
+
+TARGETPATH=obj
+
+#INCLUDE = $(INCLUDE);$(DDK_INC_PATH);..\inc
+#INCLUDE = $(INCLUDE);$(DDK_INC_PATH);..\sys\
+# C_DEFINES   = $(C_DEFINES) /D"_UNICODE" /D"UNICODE"
+# C_DEFINES=$(C_DEFINES) -DMY_UNIT_TEST
+C_DEFINES=$(C_DEFINES) -DNTSTRSAFE_NO_DEPRECATE
+C_DEFINES=$(C_DEFINES) -DQC_SERVICE
+
+LINKLIBS=$(DDK_LIB_PATH)\..\..\crt\i386\libcmt.lib $(DDK_LIB_PATH)\Advapi32.lib $(DDK_LIB_PATH)\ws2_32.lib $(DDK_LIB_PATH)\user32.lib $(DDK_LIB_PATH)\gdi32.lib
+
+SOURCES= main.c \
+         devmon.c \
+         qmicl.c \
+         api.c \
+         reg.c \
+         utils.c
+
+TARGETLIBS=$(SDK_LIB_PATH)\setupapi.lib 
+
+UMTYPE=console
+USE_MSVCRT=1
+
+_NT_TARGET_VERSION=$(_NT_TARGET_VERSION_WINXP)
