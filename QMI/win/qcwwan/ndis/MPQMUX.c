@@ -25398,6 +25398,30 @@ else
        bufPtr += dlpadTlp->TLVLength;
     }
 #endif      
+
+    // UL params
+    if (pAdapter->WdsEnableUlParams == TRUE)
+    {
+       PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV ulAggPkts, ulAggSize;
+
+       // ul_data_aggregation_max_datagrams
+       pWdsAdminSetDataFormat->Length += sizeof(QMIWDS_ADMIN_SET_DATA_FORMAT_TLV);
+       ulAggPkts = (PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV)bufPtr;
+       ulAggPkts->TLVType = 0x1B;
+       ulAggPkts->TLVLength = 4;
+       ulAggPkts->Value = pAdapter->MaxTLPPackets;
+       bufPtr = (PUCHAR)&(ulAggPkts->Value);
+       bufPtr += ulAggPkts->TLVLength;
+
+       // ul_data_aggregation_max_size
+       pWdsAdminSetDataFormat->Length += sizeof(QMIWDS_ADMIN_SET_DATA_FORMAT_TLV);
+       ulAggSize = (PQMIWDS_ADMIN_SET_DATA_FORMAT_TLV)bufPtr;
+       ulAggSize->TLVType = 0x1C;
+       ulAggSize->TLVLength = 4;
+       ulAggSize->Value = pAdapter->UplinkTLPSize;
+       bufPtr = (PUCHAR)&(ulAggSize->Value);
+       bufPtr += ulAggSize->TLVLength;
+    }
     
     qmiLength += pWdsAdminSetDataFormat->Length;
     MPQMI_QMUXtoQMI

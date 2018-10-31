@@ -14,6 +14,26 @@ GENERAL DESCRIPTION
 
 #include <ndis.h>
 
+#define XFER_10K 10*1024
+#define XFER_20K 20*1024
+#define XFER_30K 30*1024
+
+#pragma pack(push, 4)
+
+typedef struct _QC_XFER_STATISTICS
+{
+   ULONG RxPktsLessThan10k;
+   ULONG RxPkts10kTo20k;
+   ULONG RxPkts20kTo30k;
+   ULONG RxPktsMoreThan30k;
+   ULONG TxPktsLessThan10k;
+   ULONG TxPkts10kTo20k;
+   ULONG TxPkts20kTo30k;
+   ULONG TxPktsMoreThan30k;
+} QC_XFER_STATISTICS, *PQC_XFER_STATISTICS;
+
+#pragma pack(pop)
+
 typedef struct _QCUSB_ENTRY_POINTS
 {
     PDRIVER_DISPATCH MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];

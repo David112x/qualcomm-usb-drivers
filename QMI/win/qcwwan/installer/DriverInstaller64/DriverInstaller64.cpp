@@ -339,8 +339,13 @@ BOOL CDriverInstaller64App::InitInstance()
    cDeviceManager dm( (LPCWSTR)oemName, dmLog );
 
    if (cmdInfo.IsInstall() == true)
-   {
-      bool bInstall = dm.InstallDrivers( cmdInfo.CommandInstallPath(), true,cmdInfo.IsWin7(),cmdInfo.IsLegacyEthernetDriver());
+   {	  
+#ifdef _WIN64
+	   bool bInstall = dm.InstallDrivers(cmdInfo.CommandInstallPath(), true, cmdInfo.IsWin7(), cmdInfo.IsLegacyEthernetDriver());
+#else
+	   bool bInstall = dm.InstallDrivers(cmdInfo.CommandInstallPath(), false, cmdInfo.IsWin7(), cmdInfo.IsLegacyEthernetDriver());
+#endif
+      
       if (bInstall == true)
       {
          // Scan for devices our newly installed drivers can be attached to
@@ -352,8 +357,12 @@ BOOL CDriverInstaller64App::InitInstance()
    else if (cmdInfo.IsUninstall() == true)
    {
       dm.RemoveDevices();
-
-      bool bUninstall = dm.UninstallDrivers( cmdInfo.CommandInstallPath(), true,cmdInfo.IsWin7());
+#ifdef _WIN64
+	  bool bUninstall = dm.UninstallDrivers(cmdInfo.CommandInstallPath(), true, cmdInfo.IsWin7());
+#else
+	  bool bUninstall = dm.UninstallDrivers(cmdInfo.CommandInstallPath(), false, cmdInfo.IsWin7());
+#endif
+      
       if (bUninstall == true)
       {
          mRC = RETURN_SUCCESS;

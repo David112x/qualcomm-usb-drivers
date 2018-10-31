@@ -468,8 +468,8 @@ VOID MPTX_MiniportCancelSend
        (
           MP_DBG_MASK_CONTROL,
           MP_DBG_LEVEL_TRACE,
-          ("<%s> -->CancelSendNetBufferLists: %d/%d\n",
-            pAdapter->PortName, (int)CancelId, (int)MaxNetBufferListInfo)
+          ("<%s> -->CancelSendNetBufferLists: 0x%p/%d\n",
+            pAdapter->PortName, CancelId, (int)MaxNetBufferListInfo)
        );
 
        InitializeListHead(&cancelQueue);
@@ -545,8 +545,8 @@ VOID MPTX_MiniportCancelSend
        (
           MP_DBG_MASK_CONTROL,
           MP_DBG_LEVEL_TRACE,
-          ("<%s> <--CancelSendNetBufferLists: %d/%d(%d)\n",
-            pAdapter->PortName, (int)CancelId, (int)MaxNetBufferListInfo, numCancelled)
+          ("<%s> <--CancelSendNetBufferLists: 0x%p/%d(%d)\n",
+            pAdapter->PortName, CancelId, (int)MaxNetBufferListInfo, numCancelled)
        );   
    }
    else
@@ -555,8 +555,8 @@ VOID MPTX_MiniportCancelSend
        (
           MP_DBG_MASK_CONTROL,
           MP_DBG_LEVEL_TRACE,
-          ("<%s> -->CancelSendNetBufferLists: %d/%d\n",
-            pAdapter->PortName, (int)CancelId, (int)MaxNetBufferListInfo)
+          ("<%s> -->CancelSendNetBufferLists: 0x%p/%d\n",
+            pAdapter->PortName, CancelId, (int)MaxNetBufferListInfo)
        );
 
        InitializeListHead(&cancelQueue);
@@ -619,8 +619,8 @@ VOID MPTX_MiniportCancelSend
        (
           MP_DBG_MASK_CONTROL,
           MP_DBG_LEVEL_TRACE,
-          ("<%s> <--CancelSendNetBufferLists: %d/%d(%d)\n",
-            pAdapter->PortName, (int)CancelId, (int)MaxNetBufferListInfo, numCancelled)
+          ("<%s> <--CancelSendNetBufferLists: 0x%p/%d(%d)\n",
+            pAdapter->PortName, CancelId, (int)MaxNetBufferListInfo, numCancelled)
        );
    }
 }  // MPTX_MiniportCancelSend

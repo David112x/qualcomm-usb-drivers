@@ -431,9 +431,14 @@ NTSTATUS USBRD_Enqueue(PDEVICE_EXTENSION pDevExt, PIRP pIrp, UCHAR cookie)
    {
       bQueueWasEmpty = TRUE;
    }
+   InterlockedIncrement(&pDevExt->NumberOfQueuedReadIRPs);
    InsertTailList(&pDevExt->ReadDataQueue, &pIrp->Tail.Overlay.ListEntry);
-
-   // DbgPrint("<qnetxxx> RDQ: enQed, empty %d/%d\n", bQueueWasEmpty, IsListEmpty(&pDevExt->ReadDataQueue));
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_RIRP,
+      QCUSB_DBG_LEVEL_ERROR,
+      ("<%s> RIRP EnQ 0x%p cnt %d\n", pDevExt->PortName, pIrp, pDevExt->NumberOfQueuedReadIRPs)
+   );
 
    if (bQueueWasEmpty == TRUE)
    {
@@ -2086,9 +2091,19 @@ NTSTATUS USBRD_InitializeL2Buffers(PDEVICE_EXTENSION pDevExt)
    // customize for USB 3.0 super speed
    if (pDevExt->wMaxPktSize >= QC_SS_BLK_PKT_SZ)
    {
-      if (pDevExt->NumberOfL2Buffers < QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS)
+      if (pDevExt->EnableData5G == 0)
       {
-         pDevExt->NumberOfL2Buffers = QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS;
+         if (pDevExt->NumberOfL2Buffers < QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS)
+         {
+            pDevExt->NumberOfL2Buffers = QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS;
+         }
+      }
+      else
+      {
+         if (pDevExt->NumberOfL2Buffers < QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS_5G)
+         {
+            pDevExt->NumberOfL2Buffers = QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS_5G;
+         }
       }
    }
 

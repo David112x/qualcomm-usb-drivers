@@ -2006,7 +2006,7 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<col def="S72">ISComponentSubFolder_</col>
 		<row><td>difxapi.dll</td><td>DIFxAPI.dll</td><td>DIFxAPI.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\Shared\DIFxAPI\amd64\DIFxAPI.dll</td><td>1</td><td/></row>
 		<row><td>difxapi.dll1</td><td>DIFxAPI.dll1</td><td>DIFxAPI.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\Shared\DIFxAPI\x86\DIFxAPI.dll</td><td>1</td><td/></row>
-		<row><td>driverinstaller64.exe</td><td>DriverInstaller64.exe</td><td>DRIVER~1.EXE|DriverInstaller64.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\DriverInstaller64\Release\DriverInstaller64.exe</td><td>1</td><td/></row>
+		<row><td>driverinstaller64.exe</td><td>DriverInstaller64.exe</td><td>DRIVER~1.EXE|DriverInstaller64.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\DriverInstaller64\x64\Release\DriverInstaller64.exe</td><td>1</td><td/></row>
 		<row><td>driversinstallerca.dll</td><td>DriversInstallerCA.dll</td><td>DRIVER~1.DLL|DriversInstallerCA.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\CustomActions\Release\DriversInstallerCA.dll</td><td>1</td><td/></row>
 		<row><td>logreader.exe</td><td>logReader.exe</td><td>LOGREA~1.EXE|logReader.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\Tools\x86\logReader.exe</td><td>1</td><td/></row>
 		<row><td>qcfilter.cat</td><td>AllOtherFiles4</td><td>qcfilter.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcfilter.cat</td><td>1</td><td/></row>
@@ -4753,7 +4753,7 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>ProductID</td><td>none</td><td/></row>
 		<row><td>ProductLanguage</td><td>1033</td><td/></row>
 		<row><td>ProductName</td><td>Qualcomm USB Drivers For Windows</td><td/></row>
-		<row><td>ProductVersion</td><td>1.00.53</td><td/></row>
+		<row><td>ProductVersion</td><td>1.00.55</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>

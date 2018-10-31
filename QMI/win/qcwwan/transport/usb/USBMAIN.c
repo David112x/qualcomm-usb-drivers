@@ -991,3 +991,52 @@ NTSTATUS USBMAIN_StopDataThreads(PDEVICE_EXTENSION pDevExt, BOOLEAN CancelWaitWa
 
 }  // USBMAIN_StopDataThreads
 
+VOID USBMAIN_UpdateXferStats(PDEVICE_EXTENSION pDevExt, ULONG PktLen, BOOLEAN IsRx)
+{
+   // init stats
+   if (PktLen == 0xFFFFFFFF)
+   {
+      RtlZeroMemory((PVOID)&(pDevExt->QcXferStats), sizeof(QC_XFER_STATISTICS));
+      return;
+   }
+
+   if (IsRx == TRUE)
+   {
+      if (PktLen >= XFER_30K)
+      {
+         (pDevExt->QcXferStats.RxPktsMoreThan30k)++;
+      }
+      else if (PktLen >= XFER_20K)
+      {
+         (pDevExt->QcXferStats.RxPkts20kTo30k)++;
+      }
+      else if (PktLen >= XFER_10K)
+      {
+         (pDevExt->QcXferStats.RxPkts10kTo20k)++;
+      }
+      else
+      {
+         (pDevExt->QcXferStats.RxPktsLessThan10k)++;
+      }
+   }
+   else
+   {
+      if (PktLen >= XFER_30K)
+      {
+         (pDevExt->QcXferStats.TxPktsMoreThan30k)++;
+      }
+      else if (PktLen >= XFER_20K)
+      {
+         (pDevExt->QcXferStats.TxPkts20kTo30k)++;
+      }
+      else if (PktLen >= XFER_10K)
+      {
+         (pDevExt->QcXferStats.TxPkts10kTo20k)++;
+      }
+      else
+      {
+         (pDevExt->QcXferStats.TxPktsLessThan10k)++;
+      }
+   }
+}  // USBMAIN_UpdateXferStats
+

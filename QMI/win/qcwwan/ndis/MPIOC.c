@@ -1375,6 +1375,86 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 break;
              }
 
+             case IOCTL_QCDEV_GET_NET_STATISTICS:
+             {
+                NDIS_STATISTICS_INFO StatisticsInfo;
+                QC_XFER_STATISTICS   usbXferStats;
+                PDEVICE_EXTENSION    pDevExt;
+                PCHAR p;
+
+                pDevExt = (PDEVICE_EXTENSION)pAdapter->USBDo->DeviceExtension;                
+                p = (PCHAR)buffer;
+
+                if ((buffer == NULL) || (inlen < sizeof(LONG)))
+                {
+                   pAdapter->DropDataTest = 0;
+                }
+                else
+                {
+                   pAdapter->DropDataTest = *((PULONG)buffer);
+                }
+
+                QCNET_DbgPrint
+                (
+                   MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
+                   ("<%s> MPIOC: IOCTL_QCDEV_GET_NET_STATISTICS: DropDataTest %ld\n", pAdapter->PortName, pAdapter->DropDataTest)
+                );
+                if ((buffer == NULL) || (outlen == 0) || (outlen < (sizeof(NDIS_STATISTICS_INFO)+sizeof(QC_XFER_STATISTICS))))
+                {
+                   QCNET_DbgPrint
+                   (
+                      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_ERROR,
+                      ("<%s> MPIOC: insufficient input for IOCTL_QCDEV_GET_NET_STATISTICS\n", pAdapter->PortName)
+                   );
+                   status = STATUS_UNSUCCESSFUL;
+                }
+                else
+                {
+                   NdisZeroMemory(&StatisticsInfo, NDIS_SIZEOF_STATISTICS_INFO_REVISION_1);
+                   StatisticsInfo.ifHCInUcastPkts =  pAdapter->GoodReceives;
+                   StatisticsInfo.ifHCInMulticastPkts =  pAdapter->GoodReceives;
+                   StatisticsInfo.ifHCInBroadcastPkts =  pAdapter->GoodReceives;
+                   StatisticsInfo.ifHCInOctets  = pAdapter->RxBytesGood;
+                   StatisticsInfo.ifInDiscards  = pAdapter->BadReceives + pAdapter->DroppedReceives;
+                   StatisticsInfo.ifInErrors    = pAdapter->BadReceives;
+                   StatisticsInfo.ifHCOutUcastPkts = pAdapter->GoodTransmits;
+                   StatisticsInfo.ifHCOutMulticastPkts = pAdapter->GoodTransmits;
+                   StatisticsInfo.ifHCOutBroadcastPkts = pAdapter->GoodTransmits;
+                   StatisticsInfo.ifHCOutOctets = pAdapter->TxBytesGood;
+                   StatisticsInfo.ifOutErrors   = pAdapter->TxFramesFailed;
+                   StatisticsInfo.ifOutDiscards = pAdapter->TxFramesDropped;
+                   StatisticsInfo.ifHCInUcastOctets = pAdapter->RxBytesGood;
+                   StatisticsInfo.ifHCInMulticastOctets = pAdapter->RxBytesGood;
+                   StatisticsInfo.ifHCInBroadcastOctets = pAdapter->RxBytesGood;
+                   StatisticsInfo.ifHCOutUcastOctets = pAdapter->TxBytesGood;
+                   StatisticsInfo.ifHCOutMulticastOctets = pAdapter->TxBytesGood;
+                   StatisticsInfo.ifHCOutBroadcastOctets = pAdapter->TxBytesGood;
+
+                   usbXferStats = pDevExt->QcXferStats;
+
+                   NdisMoveMemory(buffer, (PVOID)&StatisticsInfo, sizeof(NDIS_STATISTICS_INFO));
+                   p += sizeof(NDIS_STATISTICS_INFO);
+
+                   NdisMoveMemory((PVOID)p, (PVOID)&usbXferStats, sizeof(QC_XFER_STATISTICS));
+
+                   Irp->IoStatus.Information = sizeof(NDIS_STATISTICS_INFO) + sizeof(QC_XFER_STATISTICS);
+                   status = STATUS_SUCCESS;
+
+                   QCNET_DbgPrint
+                   (
+                      MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_FORCE,
+                      ("<%s> _GET_NET_STATISTICS: (%d/%d) TX10K: %lu TX10K20K: %lu TX20K30K: %lu TX30K %lu\n", pAdapter->PortName,
+                        sizeof(NDIS_STATISTICS_INFO), sizeof(QC_XFER_STATISTICS),
+                        usbXferStats.TxPktsLessThan10k,
+                        usbXferStats.TxPkts10kTo20k,
+                        usbXferStats.TxPkts20kTo30k,
+                        usbXferStats.TxPktsMoreThan30k)
+                   );
+                }
+
+                break;
+             }
+
              default:
              {
                 QCNET_DbgPrint

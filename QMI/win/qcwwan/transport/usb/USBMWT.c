@@ -1068,6 +1068,11 @@ wait_for_completion:
 
             ntStatus = pIrp->IoStatus.Status;
 
+            if (ntStatus == STATUS_SUCCESS)
+            {
+               USBMAIN_UpdateXferStats(pDevExt, pUrb->UrbBulkOrInterruptTransfer.TransferBufferLength, FALSE);
+            }
+
             #ifdef QCUSB_MUX_PROTOCOL
             #error code not present
 #endif

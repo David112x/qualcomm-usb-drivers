@@ -130,6 +130,8 @@ PDEVICE_OBJECT USBIF_InitializeUSB
       #ifdef NDIS_WDM
       pDevExt->NdisConfigurationContext = WrapperConfigurationContext;
       #endif
+      pDevExt->EnableData5G = pAdapter->EnableData5G;
+
       ntStatus = USBPNP_StartDevice(pUsbDO, 1);
       if (!NT_SUCCESS(ntStatus))
       {
@@ -516,6 +518,9 @@ NTSTATUS USBIF_Open(PDEVICE_OBJECT pDeviceObject)
       0
    );
    }
+
+   // reset statistics
+   USBMAIN_UpdateXferStats(pDevExt, 0xFFFFFFFF, TRUE);
 
    pDevExt->bInService = TRUE;
    ntStatus = USBRD_Enqueue(pDevExt, NULL, 0);  // start read threads

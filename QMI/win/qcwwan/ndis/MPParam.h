@@ -12,8 +12,6 @@ GENERAL DESCRIPTION
 #ifndef _MPPARAM_H
 #define _MPPARAM_H
 
-#include "MPMain.h"
-
 // These parameters are used if present in the registry
 #define PARAM_MaxDataSends              "MaxDataSends"
 #define PARAM_MaxDataSends_DEFAULT      5
@@ -22,8 +20,9 @@ GENERAL DESCRIPTION
 
 #define PARAM_MaxDataReceives           "MaxDataReceives"
 #define PARAM_MaxDataReceives_DEFAULT   200
+#define PARAM_MaxDataReceives_5G_DEFAULT 2000
 #define PARAM_MaxDataReceives_MIN       1
-#define PARAM_MaxDataReceives_MAX       2000
+#define PARAM_MaxDataReceives_MAX       20000
 
 #define PARAM_MaxCtrlSends              "MaxCtrlSends"
 #define PARAM_MaxCtrlSends_DEFAULT      20
@@ -126,7 +125,7 @@ GENERAL DESCRIPTION
 #define PARAM_MPEnableTLP_MAX          1
 
 #define PARAM_TLPMaxPackets            "QCDriverTLPMaxPackets"
-#define PARAM_TLPMaxPackets_DEFAULT    15
+#define PARAM_TLPMaxPackets_DEFAULT    21
 #define PARAM_TLPMaxPackets_MIN        0
 #define PARAM_TLPMaxPackets_MAX        1024
 #endif // QCMP_UL_TLP
@@ -283,6 +282,22 @@ GENERAL DESCRIPTION
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
+
+#define PARAM_EnableData5G          "QCMPEnableData5G"
+#define PARAM_EnableData5G_DEFAULT  0
+#define PARAM_EnableData5G_MIN      0
+#define PARAM_EnableData5G_MAX      1
+
+#define PARAM_MPRxIndClusterSize            "QCMPRxIndClusterSize"
+#define PARAM_MPRxIndClusterSize_DEFAULT    64
+#define PARAM_MPRxIndClusterSize_5G_DEFAULT 3*64
+#define PARAM_MPRxIndClusterSize_MIN        32
+#define PARAM_MPRxIndClusterSize_MAX        2000
+
+#define PARAM_MPRxStreams          "QCMPRxStreams"
+#define PARAM_MPRxStreams_DEFAULT  4
+#define PARAM_MPRxStreams_MIN      2
+#define PARAM_MPRxStreams_MAX      8
 
 NDIS_STATUS MPParam_GetConfigValues
 (

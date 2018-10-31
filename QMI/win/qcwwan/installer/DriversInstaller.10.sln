@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DriversInstallerCA", "Custo
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DriverInstaller64", "DriverInstaller64\DriverInstaller64.vcxproj", "{48F73747-F79B-4D03-9A1F-11C4BC40A4B8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QiKInstaller", "QiKInstaller\QiKInstaller.vcxproj", "{708D10AD-909E-4591-82F1-44B2790968B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|arm = Debug|arm
@@ -64,6 +66,28 @@ Global
 		{48F73747-F79B-4D03-9A1F-11C4BC40A4B8}.releaseARM|Win32.Build.0 = releaseARM|Win32
 		{48F73747-F79B-4D03-9A1F-11C4BC40A4B8}.releaseARM|x64.ActiveCfg = releaseARM|x64
 		{48F73747-F79B-4D03-9A1F-11C4BC40A4B8}.releaseARM|x64.Build.0 = releaseARM|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Debug|arm.ActiveCfg = Debug|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Debug|Win32.Build.0 = Debug|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Debug|x64.ActiveCfg = Debug|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Debug|x64.Build.0 = Debug|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Release|arm.ActiveCfg = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Release|Win32.ActiveCfg = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Release|Win32.Build.0 = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Release|x64.ActiveCfg = Release|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.Release|x64.Build.0 = Release|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|arm.ActiveCfg = Release|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|arm.Build.0 = Release|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|Mixed Platforms.ActiveCfg = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|Mixed Platforms.Build.0 = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|Win32.ActiveCfg = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|Win32.Build.0 = Release|Win32
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|x64.ActiveCfg = Release|x64
+		{708D10AD-909E-4591-82F1-44B2790968B1}.releaseARM|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

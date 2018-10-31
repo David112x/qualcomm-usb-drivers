@@ -29,6 +29,16 @@ VOID MPRX_MiniportReturnNetBufferLists
    IN ULONG             ReturnFlags
 );
 
+NTSTATUS MPRX_StartRxThread(PMP_ADAPTER pAdapter, INT Index);
+
+NTSTATUS MPRX_CancelRxThread(PMP_ADAPTER pAdapter, INT Index);
+
+VOID MPRX_RxThread(PVOID Context);
+
+VOID MPRX_RxChainCleanup(PMP_ADAPTER pAdapter, INT Index);
+
+VOID MPRX_ProcessRxChain(PMP_ADAPTER pAdapter, INT Index);
+
 #endif // NDIS60_MINIPORT
 
 #endif // MPRX_H

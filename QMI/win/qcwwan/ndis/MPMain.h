@@ -69,7 +69,7 @@ typedef enum _RECONF_TIMER_STATE
 } RECONF_TIMER_STATE;
 
 #define     QC_DATA_MTU_DEFAULT        1500
-#define     QC_DATA_MTU_MAX            4*1024
+#define     QC_DATA_MTU_MAX            10*1024
 #ifndef ETH_HEADER_SIZE
 #define     ETH_HEADER_SIZE            14
 #endif
@@ -508,9 +508,20 @@ typedef struct LLHeaderTag
 #define WORK_PROCESS_EVENT_INDEX 1
 #define WORK_THREAD_EVENT_COUNT  2
 
+#define RX_CANCEL_EVENT_INDEX  0
+#define RX_PROCESS_EVENT_INDEX 1
+#define RX_THREAD_EVENT_COUNT  2
+#define RX_THREAD_COUNT        PARAM_MPRxStreams_MAX
+
 #define WDSIP_CANCEL_EVENT_INDEX 0
 #define WDSIP_READ_EVENT_INDEX   1
 #define WDSIP_THREAD_EVENT_COUNT 2
+
+typedef struct _RX_THREAD_CONTEXT
+{
+   PVOID AdapterContext;
+   INT   Index;
+} RX_THREAD_CONTEXT, *PRX_THREAD_CONTEXT;
 
 typedef enum _QOS_FLOW_QUEUE_TYPE
 {
@@ -1081,6 +1092,7 @@ typedef struct _MP_ADAPTER
    LONG                    nRxHeldByNdis;
    LONG                    nRxPendingInUsb;
    LONG                    nRxFreeInMP;
+   LONG                    nRxInNblChain;
 
    LIST_ENTRY              RxFreeList;
    LIST_ENTRY              RxPendingList;
@@ -1089,7 +1101,9 @@ typedef struct _MP_ADAPTER
    NDIS_HANDLE             RxBufferPool;
 #ifdef NDIS60_MINIPORT
    PMPUSB_RX_NBL           RxBufferMem;  // for NDIS6
+   LIST_ENTRY              RxNblChain[RX_THREAD_COUNT];   // RX chain for protocol layer
 #endif 
+   LONG                    DropDataTest; 
 
    //
    // Variables used to track resources for control read operatons
@@ -1156,6 +1170,9 @@ typedef struct _MP_ADAPTER
    ULONG64                 RxBytesGood;
    ULONG64                 RxBytesBad;
    ULONG64                 RxBytesDropped;
+
+   // QC transport statistics
+   QC_XFER_STATISTICS      QcXferStats;
 
    // These values may be in the Registry
    // They are initialized to a default then
@@ -1288,6 +1305,21 @@ typedef struct _MP_ADAPTER
    PKEVENT  WorkThreadEvent[WORK_THREAD_EVENT_COUNT];
    ULONG    WorkThreadCancelStarted;
 
+   // RxThread
+   PKTHREAD pRxThread[RX_THREAD_COUNT];
+   HANDLE   hRxThreadHandle[RX_THREAD_COUNT];
+   KEVENT   RxThreadStartedEvent[RX_THREAD_COUNT];
+   KEVENT   RxThreadClosedEvent[RX_THREAD_COUNT];
+   KEVENT   RxThreadCancelEvent[RX_THREAD_COUNT];
+   KEVENT   RxThreadProcessEvent[RX_THREAD_COUNT];
+   PKEVENT  RxThreadEvent[RX_THREAD_COUNT][RX_THREAD_EVENT_COUNT];
+   ULONG    RxThreadCancelStarted;
+   RX_THREAD_CONTEXT RxThreadContext[RX_THREAD_COUNT];
+   NDIS_SPIN_LOCK RxIndLock[RX_THREAD_COUNT];
+   ULONG    EnableData5G;
+   ULONG    RxIndClusterSize;
+   ULONG    RxStreams;
+
 #ifdef QC_IP_MODE
    // Link Protocol
    LONG     MPDisableIPMode;   
@@ -1363,6 +1395,8 @@ typedef struct _MP_ADAPTER
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif
+
+   BOOLEAN WdsEnableUlParams;
 
    #if defined(QCMP_QMAP_V1_SUPPORT)
    LONG MPEnableQMAPV4;

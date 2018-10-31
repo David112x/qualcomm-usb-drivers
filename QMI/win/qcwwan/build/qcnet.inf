@@ -11,7 +11,7 @@ Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider    = %QCOM%
-DriverVer   = 07/19/2017,4.0.5.3
+DriverVer   = 10/10/2018,4.0.5.5
 Catalogfile = qcnet.cat
 
 [ControlFlags]

@@ -1555,6 +1555,17 @@ VOID cleanupQueues(PMP_ADAPTER pAdapter)
    }
 
    CleanupTxQueues(pAdapter);
+   #ifdef NDIS60_MINIPORT
+   if (1)
+   {
+      INT i;
+
+      for (i = 0; i < pAdapter->RxStreams; i++)
+      {
+         MPRX_RxChainCleanup(pAdapter, i);
+      }
+   }
+   #endif
 
    if ( pAdapter->nBusyRCtrl > 0)
    {
@@ -3352,6 +3363,17 @@ NTSTATUS MPMAIN_CancelMPThread(PMP_ADAPTER pAdapter)
    }
 
    MPWork_CancelWorkThread(pAdapter);
+   #ifdef NDIS60_MINIPORT
+   if (1)
+   {
+      INT i;
+
+      for (i = 0; i < pAdapter->RxStreams; i++)
+      {
+         MPRX_CancelRxThread(pAdapter, i);
+      }
+   }
+   #endif
    InterlockedDecrement(&pAdapter->MPMainThreadInCancellation);
 
    return ntStatus;
@@ -3415,6 +3437,19 @@ VOID MPMAIN_MPThread(PVOID Context)
       KeSetEvent(&pAdapter->MPThreadStartedEvent, IO_NO_INCREMENT,FALSE);
       PsTerminateSystemThread(STATUS_UNSUCCESSFUL);
    }
+
+   #ifdef NDIS60_MINIPORT
+   // Start RX thread
+   if (1)
+   {
+      INT i;
+
+      for (i = 0; i < pAdapter->RxStreams; i++)
+      {
+         MPRX_StartRxThread(pAdapter, i);
+      }
+   }
+   #endif
 
    KeClearEvent(&pAdapter->MPThreadCancelEvent);
    KeClearEvent(&pAdapter->MPThreadClosedEvent);

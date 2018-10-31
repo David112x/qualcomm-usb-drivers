@@ -244,6 +244,11 @@ GENERAL DESCRIPTION
                                        METHOD_BUFFERED, \
                                        FILE_ANY_ACCESS)
 
+#define IOCTL_QCDEV_GET_NET_STATISTICS CTL_CODE(FILE_DEVICE_UNKNOWN, \
+                                       QCDEV_IOCTL_INDEX+55, \
+                                       METHOD_BUFFERED, \
+                                       FILE_ANY_ACCESS)
+
 NTSTATUS USBIOC_CacheNotificationIrp
 (
    PDEVICE_OBJECT DeviceObject,

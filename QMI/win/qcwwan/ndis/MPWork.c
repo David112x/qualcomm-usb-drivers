@@ -929,6 +929,8 @@ VOID MPWork_WorkThread(PVOID Context)
       PsTerminateSystemThread(STATUS_NO_MEMORY);
    }
 
+   KeSetPriorityThread(KeGetCurrentThread(), 27);
+
    // 3/13/2018: remove following, potential race condition
    // KeClearEvent(&pAdapter->WorkThreadCancelEvent);
    // KeClearEvent(&pAdapter->WorkThreadClosedEvent);

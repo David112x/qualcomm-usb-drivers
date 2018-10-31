@@ -10,6 +10,7 @@ GENERAL DESCRIPTION
 
 *====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
 #include <ndis.h>
+#include "MPMain.h"
 #include "MPParam.h"
 #include "USBUTL.h"
 
@@ -129,7 +130,9 @@ typedef enum _MP_REG_INDEX
 
    MP_ENABLE_MBIM,
 
+#if defined(QCMP_QMAP_V1_SUPPORT)
    MP_DL_QMAP_MIN_PADDING,
+#endif
 
    MP_BIND_IF_ID,
 
@@ -141,9 +144,15 @@ typedef enum _MP_REG_INDEX
    
    MP_ENABLE_SS_DISCONNECT_TIMER,
 
-   MP_FAKE_IMSI,
+#ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#endif
 
-   MP_FAKE_ICCID,
+   MP_ENABLE_DATA5G,
+
+   MP_RX_IND_CLUSTER_SZ,
+
+   MP_RX_STREAMS,
 
    MP_REG_INDEX_MAX
 } MP_REG_INDEX;
@@ -263,14 +272,15 @@ NDIS_STRING MPRegString[] =
 
    NDIS_STRING_CONST("QCMPMaxPendingQMIReqs"),
 
-   NDIS_STRING_CONST("QCMPMaxPendingQMIReqs"),
+   NDIS_STRING_CONST("QCMPEnableSigStrDisconnectTimer"),
 
 #ifdef QCUSB_MUX_PROTOCOL
    #error code not present
-#else
-   NDIS_STRING_CONST("QCMPEnableSigStrDisconnectTimer")
 #endif
 
+   NDIS_STRING_CONST("QCMPEnableData5G"),
+   NDIS_STRING_CONST("QCMPRxIndClusterSize"),
+   NDIS_STRING_CONST("QCMPRxStreams")
 };
 
 
@@ -887,6 +897,47 @@ NDIS_STATUS MPParam_GetConfigValues
                MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_ERROR,
                ("<%s> ERROR: failed to construct DnsRegPathV4 0x%x\n", gDeviceName, ntStatus)
             );
+         }
+      }
+
+      MPPARAM_ConfigurationGetValue
+      (
+         configurationHandle,
+         (UCHAR)MP_ENABLE_DATA5G,
+         &pAdapter->EnableData5G,
+         PARAM_EnableData5G_DEFAULT, PARAM_EnableData5G_MIN, PARAM_EnableData5G_MAX,
+         MP_ENABLE_DATA5G
+      );
+
+      MPPARAM_ConfigurationGetValue
+      (
+         configurationHandle,
+         (UCHAR)MP_RX_IND_CLUSTER_SZ,
+         &pAdapter->RxIndClusterSize,
+         PARAM_MPRxIndClusterSize_DEFAULT, PARAM_MPRxIndClusterSize_MIN, PARAM_MPRxIndClusterSize_MAX,
+         MP_RX_IND_CLUSTER_SZ
+      );
+
+      MPPARAM_ConfigurationGetValue
+      (
+         configurationHandle,
+         (UCHAR)MP_RX_STREAMS,
+         &pAdapter->RxStreams,
+         PARAM_MPRxStreams_DEFAULT, PARAM_MPRxStreams_MIN, PARAM_MPRxStreams_MAX,
+         MP_RX_STREAMS
+      );
+
+      if (pAdapter->EnableData5G != 0)
+      {
+         if (pAdapter->MaxDataReceives < 400) // min for 5G
+         {
+            // allow adjustment between 400 and PARAM_MaxDataReceives_MAX
+            pAdapter->MaxDataReceives = PARAM_MaxDataReceives_5G_DEFAULT;
+         }
+         if (pAdapter->RxIndClusterSize < 128) // min for 5G
+         {
+            // allow adjustment between 128 and PARAM_MPRxIndClusterSize_MAX
+            pAdapter->RxIndClusterSize = PARAM_MPRxIndClusterSize_5G_DEFAULT;
          }
       }
 

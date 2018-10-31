@@ -61,9 +61,10 @@ GENERAL DESCRIPTION
 #define QCDEV_DATA_HEADER_LENGTH     0
 #define QCUSB_RECEIVE_BUFFER_SIZE    QCUSB_MAX_PKT  // max ethernet pkt size 1514
 #define QCUSB_MRECEIVE_BUFFER_SIZE   QCUSB_MAX_PKT  // for Tin-layer-protocol (TLP)
-#define QCUSB_MRECEIVE_MAX_BUFFER_SIZE (1024*64)  // for TLP
+#define QCUSB_MRECEIVE_MAX_BUFFER_SIZE (1024*32)  // for TLP
 #define QCUSB_NUM_OF_LEVEL2_BUF      8
 #define QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS 64
+#define QCUSB_NUM_OF_LEVEL2_BUF_FOR_SS_5G 800
 #define QCUSB_DRIVER_GUID_DATA_STR "{87E5A6EA-D48B-4883-8440-81D8A22508D7}:DATA"
 #define QCUSB_DRIVER_GUID_DIAG_STR "{87E5A6EA-D48B-4883-8440-81D8A22508D7}:DIAG"
 #define QCUSB_DRIVER_GUID_UNKN_STR "{87E5A6EA-D48B-4883-8440-81D8A22508D7}:UNKNOWN"
@@ -483,7 +484,7 @@ typedef struct _USBMRD_L2BUFFER
 
    // for multi-reads
    PVOID       DeviceExtension;
-   UCHAR       Index;  // for debugging purpose
+   int         Index;  // for debugging purpose
    PIRP        Irp;
    URB         Urb;
    L2BUF_STATE State;
@@ -1051,11 +1052,14 @@ typedef struct _DEVICE_EXTENSION
 
    // pending Read IRPs
    LONG    NumberOfPendingReadIRPs;
+   LONG    NumberOfQueuedReadIRPs;
 
    ULONG   DebugMask;
    UCHAR   DebugLevel;
 
    QC_STATS Sts;
+   QC_XFER_STATISTICS QcXferStats;
+
    QCUSB_ENTRY_POINTS EntryPoints;  // for direct MJ function calls
 
    #ifdef NDIS_WDM
@@ -1152,6 +1156,8 @@ typedef struct _DEVICE_EXTENSION
    #ifdef QCUSB_MUX_PROTOCOL
    #error code not present
 #endif // QCUSB_MUX_PROTOCOL
+
+   ULONG EnableData5G;
 }  DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 // device states
@@ -1247,5 +1253,7 @@ VOID USBMAIN_ResetRspAvailableCount
    UCHAR cookie
 );
 NTSTATUS USBMAIN_StopDataThreads(PDEVICE_EXTENSION pDevExt, BOOLEAN CancelWaitWake);
+
+VOID USBMAIN_UpdateXferStats(PDEVICE_EXTENSION pDevExt, ULONG PktLen, BOOLEAN IsRx);
 
 #endif // USBMAIN_H

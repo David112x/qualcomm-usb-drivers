@@ -307,6 +307,18 @@ NDIS_STATUS MPINI_MiniportInitialize
 #ifdef QCUSB_MUX_PROTOCOL
       #error code not present
 #endif
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_DETAIL,
+         ("<%s> IndClusterSize : %lu\n", pAdapter->PortName, pAdapter->RxIndClusterSize)
+      );
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_DETAIL,
+         ("<%s> RxStreams : %lu\n", pAdapter->PortName, pAdapter->RxStreams)
+      );
       // We can't call alloc buffers until after the parse registry because some of
       // the buffer counts are setup from registry values.
       Status = MPINI_AllocAdapterBuffers(pAdapter);
@@ -679,6 +691,7 @@ NDIS_STATUS MPINI_MiniportInitializeEx
                ("<%s> MPEnableQMAPV4 : %d\n", pAdapter->PortName, pAdapter->MPEnableQMAPV4)
             );
 #endif
+
       QCNET_DbgPrint
       (
          MP_DBG_MASK_CONTROL,
@@ -718,6 +731,19 @@ NDIS_STATUS MPINI_MiniportInitializeEx
 #ifdef QCUSB_MUX_PROTOCOL
       #error code not present
 #endif
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_DETAIL,
+         ("<%s> IndClusterSize : %lu\n", pAdapter->PortName, pAdapter->RxIndClusterSize)
+      );
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_CONTROL,
+         MP_DBG_LEVEL_DETAIL,
+         ("<%s> RxStreams : %lu\n", pAdapter->PortName, pAdapter->RxStreams)
+      );
+
       // We can't call alloc buffers until after the parse registry because some of
       // the buffer counts are setup from registry values.
       Status = MPINI_AllocAdapterBuffers(pAdapter);
@@ -1152,6 +1178,7 @@ NDIS_STATUS MPINI_AllocAdapter(PMP_ADAPTER *pAdapter)
     Adapter->IPV6Address             = 0;
     KeInitializeEvent(&Adapter->QMIWDSIPAddrReceivedEvent, NotificationEvent, FALSE);
     #endif // QC_IP_MODE
+    Adapter->WdsEnableUlParams       = FALSE;
 
     Adapter->IsWdsAdminPresent = FALSE;
 
@@ -1232,6 +1259,28 @@ NDIS_STATUS MPINI_AllocAdapter(PMP_ADAPTER *pAdapter)
     KeInitializeEvent(&Adapter->WorkThreadProcessEvent, NotificationEvent, FALSE);
     Adapter->WorkThreadEvent[WORK_CANCEL_EVENT_INDEX] = &Adapter->WorkThreadCancelEvent;
     Adapter->WorkThreadEvent[WORK_PROCESS_EVENT_INDEX] = &Adapter->WorkThreadProcessEvent;
+
+    // RX Thread
+    if (1)
+    {
+       int i;
+
+       for (i = 0; i < RX_THREAD_COUNT; i++)
+       {
+          #ifdef NDIS60_MINIPORT
+          NdisInitializeListHead(&(Adapter->RxNblChain[i]));
+          #endif
+          KeInitializeEvent(&Adapter->RxThreadStartedEvent[i], NotificationEvent, FALSE);
+          KeInitializeEvent(&Adapter->RxThreadClosedEvent[i], NotificationEvent, FALSE);
+          KeInitializeEvent(&Adapter->RxThreadCancelEvent[i], NotificationEvent, FALSE);
+          KeInitializeEvent(&Adapter->RxThreadProcessEvent[i], NotificationEvent, FALSE);
+          Adapter->RxThreadEvent[i][RX_CANCEL_EVENT_INDEX] = &Adapter->RxThreadCancelEvent[i];
+          Adapter->RxThreadEvent[i][RX_PROCESS_EVENT_INDEX] = &Adapter->RxThreadProcessEvent[i];
+          Adapter->RxThreadContext[i].AdapterContext = (PVOID)Adapter;
+          Adapter->RxThreadContext[i].Index = i;
+          NdisAllocateSpinLock(&Adapter->RxIndLock[i]);  
+       }
+    }
 
     // WDS IP thread
     KeInitializeEvent(&Adapter->WdsIpThreadStartedEvent, NotificationEvent, FALSE);
@@ -1602,6 +1651,15 @@ VOID MPINI_FreeAdapter(PMP_ADAPTER pAdapter)
     }
     ASSERT(IsListEmpty(&pAdapter->RxFreeList));                  
     NdisFreeSpinLock( &pAdapter->RxLock );
+    if (1)
+    {
+       INT i;
+
+       for (i = 0; i < RX_THREAD_COUNT; i++)
+       {
+          NdisFreeSpinLock(&pAdapter->RxIndLock[i]);
+       }
+    }
 
     // Free the memory alloced for the control reads
     if( pAdapter->CtrlReadBufMem )
@@ -1972,7 +2030,6 @@ NDIS_STATUS MPINI_SetNdisAttributes
 
 
    GeneralAttributes.Header.Type = NDIS_OBJECT_TYPE_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES;
-   
    GeneralAttributes.Header.Revision = NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES_REVISION_1;
    GeneralAttributes.Header.Size = NDIS_SIZEOF_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES_REVISION_1;
 

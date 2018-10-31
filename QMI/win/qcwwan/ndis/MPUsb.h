@@ -158,6 +158,8 @@ VOID MPUSB_SetIPType
    PVOID  NetBufferList
 );
 
+INT MPUSB_GetRxStreamIndex(PMP_ADAPTER pAdapter, PUCHAR Packet, ULONG Length);
+
 #endif  // NDIS60_MINIPORT
 
 #if defined(QCMP_UL_TLP) || defined(QCMP_MBIM_UL_SUPPORT)

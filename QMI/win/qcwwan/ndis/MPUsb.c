@@ -2104,6 +2104,9 @@ NTSTATUS MP_RxIRPCompletionEx(PDEVICE_OBJECT pDO, PIRP pIrp, PVOID pContext)
    PNET_BUFFER      nb = NULL;
    BOOLEAN          bPause;
    PMDL             mdl;
+   ULONG            rxFlags;
+   KIRQL            irql    = KeGetCurrentIrql();
+   BOOLEAN          bIndChain = TRUE;
 
    QCNET_DbgPrint
    (
@@ -2185,8 +2188,31 @@ NTSTATUS MP_RxIRPCompletionEx(PDEVICE_OBJECT pDO, PIRP pIrp, PVOID pContext)
         pAdapter->nRxHeldByNdis, pAdapter->nRxFreeInMP, pAdapter->nRxPendingInUsb)
    );
 
+   #ifdef QCUSB_MUX_PROTOCOL
+   #error code not present
+#endif // QCUSB_MUX_PROTOCOL
+
    NdisReleaseSpinLock( &pAdapter->RxLock );
 
+   if ((indicate == TRUE) && (pAdapter->nRxHeldByNdis > pAdapter->RxIndClusterSize))  // throttling SS mode
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_READ,
+         MP_DBG_LEVEL_FORCE,
+         ("<%s> RxIRPCompletionEx: IRQL-%d YIELD (N%d F%d U%d)\n", pAdapter->PortName,
+           irql, pAdapter->nRxHeldByNdis, pAdapter->nRxFreeInMP, pAdapter->nRxPendingInUsb)
+      );
+      if (irql == PASSIVE_LEVEL)
+      {
+         LARGE_INTEGER delayValue;
+
+         delayValue.QuadPart = -(5 * 100L);
+
+         // MPMAIN_Wait(-(1 * 1000L)); // 0.1ms
+         KeDelayExecutionThread(KernelMode, FALSE, &delayValue);  // 50us
+      }
+   }
    if (indicate == TRUE)
    {
        if ((pAdapter->DebugMask & MP_DBG_MASK_READ) != 0)
@@ -2217,7 +2243,7 @@ NTSTATUS MP_RxIRPCompletionEx(PDEVICE_OBJECT pDO, PIRP pIrp, PVOID pContext)
        (
           MP_DBG_MASK_READ,
           MP_DBG_LEVEL_DETAIL,
-          ("<%s> MP_RxIRPCompletionRoutine: 0x%p indicated PacketLen: %dB[%I64u]\n",
+          ("<%s> MP_RxIRPCompletionEx: 0x%p indicated PacketLen: %dB[%I64u]\n",
             pAdapter->PortName, pIrp, pIrp->IoStatus.Information, pAdapter->GoodReceives)
        );
 
@@ -2260,29 +2286,65 @@ NTSTATUS MP_RxIRPCompletionEx(PDEVICE_OBJECT pDO, PIRP pIrp, PVOID pContext)
        #endif //QC_IP_MODE
        #endif // NDIS620_MINIPORT
 
-       InterlockedIncrement(&(pAdapter->nRxHeldByNdis));
+       if (bIndChain == TRUE)
+       {
+          INT idx;
 
-       NdisMIndicateReceiveNetBufferLists
-       (
-          pAdapter->AdapterHandle,
-          nbl,
-          NDIS_DEFAULT_PORT_NUMBER,
-          1,  // NumberOfNetBufferLists 
-          0   // flags
-       );
+          idx = MPUSB_GetRxStreamIndex(pAdapter, pIrp->AssociatedIrp.SystemBuffer, pIrp->IoStatus.Information); // odd or even port
+
+          // add to RX NBL chain
+          NdisAcquireSpinLock(&pAdapter->RxIndLock[idx]);
+          InsertTailList(&pAdapter->RxNblChain[idx], &pRxNBL->List);
+          InterlockedIncrement(&(pAdapter->nRxInNblChain));
+          KeSetEvent(&pAdapter->RxThreadProcessEvent[idx], IO_NO_INCREMENT, FALSE);
+          NdisReleaseSpinLock( &pAdapter->RxIndLock[idx]);
+       }
+       else
+       {
+          rxFlags = NDIS_RECEIVE_FLAGS_RESOURCES;  // 0
+
+          InterlockedIncrement(&(pAdapter->nRxHeldByNdis));
+
+          NdisMIndicateReceiveNetBufferLists
+          (
+             pAdapter->AdapterHandle,
+             nbl,
+             NDIS_DEFAULT_PORT_NUMBER,
+             1,  // NumberOfNetBufferLists 
+             rxFlags   // flags
+          );
+
+          if ((rxFlags | NDIS_RECEIVE_FLAGS_RESOURCES) != 0)
+          {
+             // reclaim RX IRP
+ 
+             NdisAcquireSpinLock(&pAdapter->RxLock);
+             InsertTailList( &pAdapter->RxFreeList, &pRxNBL->List );
+             NdisReleaseSpinLock(&pAdapter->RxLock);
+             InterlockedDecrement(&(pAdapter->nBusyRx));
+             InterlockedIncrement(&(pAdapter->nRxFreeInMP));
+             InterlockedDecrement(&(pAdapter->nRxHeldByNdis));
+
+             QCNET_DbgPrint
+             (
+                MP_DBG_MASK_READ,
+                MP_DBG_LEVEL_FORCE,
+                ("<%s> RxIRPCompletionEx: reclaim RX NBL nBusyRx: %d\n", pAdapter->PortName, pAdapter->nBusyRx)
+             );
+             MPWork_ScheduleWorkItem(pAdapter);
+          }  // not chain
+       }
    }
 
    QCNET_DbgPrint
    (
       MP_DBG_MASK_READ,
-      MP_DBG_LEVEL_TRACE,
-      ("<%s> <--MP_RxIRPCompletionRoutine (nBusyRx %d N%d F%d U%d)\n", pAdapter->PortName,
-        pAdapter->nBusyRx, pAdapter->nRxHeldByNdis, pAdapter->nRxFreeInMP, pAdapter->nRxPendingInUsb)
+      MP_DBG_LEVEL_ERROR,  // MP_DBG_LEVEL_FORCE
+      ("<%s> <--MP_RxIRPCompletionEx (nBusyRx %d N%d F%d U%d CH%d)\n", pAdapter->PortName,
+        pAdapter->nBusyRx, pAdapter->nRxHeldByNdis, pAdapter->nRxFreeInMP, pAdapter->nRxPendingInUsb,
+        pAdapter->nRxInNblChain)
    );
 
-   DbgPrint("<%s> MP_RxIRPCompletionRoutine(N%d F%d U%d)\n", pAdapter->PortName,
-        pAdapter->nRxHeldByNdis, pAdapter->nRxFreeInMP, pAdapter->nRxPendingInUsb);
-   
    return STATUS_MORE_PROCESSING_REQUIRED;
 }  // MP_RxIRPCompletionEx
 
@@ -3302,6 +3364,37 @@ VOID MPUSB_SetIPType
       NET_BUFFER_LIST_INFO(nbl, NetBufferListFrameType) = (PVOID)ntohs(ETH_TYPE_IPV6);
    }
 }  // MPUSB_SetIPType
+
+INT MPUSB_GetRxStreamIndex(PMP_ADAPTER pAdapter, PUCHAR Packet, ULONG  Length)
+{
+   INT           idx = 0;  // default
+   UCHAR         ipVer = 0;
+   REF_IPV4_HDR  ipv4Hdr;
+   REF_IPV6_HDR  ipv6Hdr;
+
+   if (Length > 20)  // min hdr size
+   {
+      ipVer = (*Packet & 0xF0) >> 4;
+   }
+   else
+   {
+      return idx;
+   }
+
+   if (ipVer == 4)
+   {
+      MPQOS_GetIPHeaderV4(pAdapter, Packet, &ipv4Hdr);
+      idx = ipv4Hdr.DestPort % pAdapter->RxStreams;
+   }
+   if (ipVer == 6)
+   {
+      QCQOS_GetIPHeaderV6(pAdapter, Packet, &ipv6Hdr);
+      idx = ipv6Hdr.DestPort % pAdapter->RxStreams;
+   }
+
+   return idx;
+
+}  // MPUSB_GetRxStreamIndex
    
 #endif // NDIS60_MINIPORT
 
@@ -4255,6 +4348,7 @@ VOID MPUSB_TLPTxPacket
           RtlZeroMemory(Qmap, sizeof(QMAP_STRUCT));
           Qmap->PadCD = 0x00; //TODO: check the order
           // Padding //TODO: check the order
+          if (pAdapter->QMAPEnabledV4 != TRUE)
           {
             if ((sendBytes%4) > 0)
             {
@@ -5047,7 +5141,7 @@ VOID MPUSB_TLPTxPacketEx
    (
       MP_DBG_MASK_WRITE,
       MP_DBG_LEVEL_TRACE,
-      ("<%s> --->[TLP] TLPTxPacket 0x%p\n", pAdapter->PortName, pList)
+      ("<%s> --->[TLP] TLPTxPacketEx 0x%p\n", pAdapter->PortName, pList)
    );
 
    // obtain TLP item
@@ -5074,7 +5168,7 @@ VOID MPUSB_TLPTxPacketEx
    (
       MP_DBG_MASK_WRITE,
       MP_DBG_LEVEL_TRACE,
-      ("<%s> MP_USBTxPacketEx: NBL 0x%p QNBL 0x%p\n", pAdapter->PortName,
+      ("<%s> TLPTxPacketEx: NBL 0x%p QNBL 0x%p\n", pAdapter->PortName,
         netBufferList, txContext)
    );
 
@@ -5095,7 +5189,7 @@ VOID MPUSB_TLPTxPacketEx
       (
          MP_DBG_MASK_WRITE,
          MP_DBG_LEVEL_ERROR,
-         ("<%s> MP_USBTxPacketEx: AbortFlag set for QNBL 0x%p\n",
+         ("<%s> TLPTxPacketEx: AbortFlag set for QNBL 0x%p\n",
           pAdapter->PortName, txContext)
       );
       nbContext->Completed = 1;
@@ -5113,7 +5207,7 @@ VOID MPUSB_TLPTxPacketEx
       (
          MP_DBG_MASK_WRITE,
          MP_DBG_LEVEL_ERROR,
-         ("<%s> MP_USBTxPacketEx: failed to get pkt for QNBL 0x%p\n",
+         ("<%s> TLPTxPacketEx: failed to get pkt for QNBL 0x%p\n",
          pAdapter->PortName, txContext)
       );
       nbContext->Completed = 1;
@@ -5127,7 +5221,7 @@ VOID MPUSB_TLPTxPacketEx
       (
          MP_DBG_MASK_WRITE,
          MP_DBG_LEVEL_DETAIL,
-         ("<%s> TxPacketEx: =>NB 0x%p (%dB)\n", pAdapter->PortName, netBuffer, dwPacketLength)
+         ("<%s> TLPTxPacketEx: =>NB 0x%p (%dB)\n", pAdapter->PortName, netBuffer, dwPacketLength)
       );
       nbContext->DataLength = dwPacketLength;
 
@@ -5157,7 +5251,7 @@ VOID MPUSB_TLPTxPacketEx
          (
             MP_DBG_MASK_WRITE,
             MP_DBG_LEVEL_DETAIL,
-            ("<%s> [TLP] TLPTxPacket: no more TLP buffer \n", pAdapter->PortName)
+            ("<%s> [TLP] TLPTxPacketEx: no more TLP buffer \n", pAdapter->PortName)
          );
       }
       else
@@ -5166,7 +5260,7 @@ VOID MPUSB_TLPTxPacketEx
          (
             MP_DBG_MASK_WRITE,
             MP_DBG_LEVEL_DETAIL,
-            ("<%s> [TLP] TLPTxPacket => (%dB/%dB/%dB)\n", pAdapter->PortName,
+            ("<%s> [TLP] TLPTxPacketEx => (%dB/%dB/%dB)\n", pAdapter->PortName,
               dwPacketLength, sendBytes, tlpItem->RemainingCapacity)
          );
          if (pAdapter->QMAPEnabledV4 == TRUE)
@@ -5256,7 +5350,7 @@ VOID MPUSB_TLPTxPacketEx
           (
              MP_DBG_MASK_WRITE,
              MP_DBG_LEVEL_ERROR,
-             ("<%s> MPUSB_TLPTxPacket failed to obtain buffer\n", pAdapter->PortName)
+             ("<%s> TLPTxPacketEx failed to obtain buffer\n", pAdapter->PortName)
           );
           kicker = TRUE;
           goto Tx_Exit;
@@ -5270,7 +5364,7 @@ VOID MPUSB_TLPTxPacketEx
          (
             MP_DBG_MASK_WRITE,
             MP_DBG_LEVEL_ERROR,
-            ("<%s> MP_USBTxPacketEx: failed to get pkt for QNBL 0x%p\n",
+            ("<%s> TLPTxPacketEx: failed to get pkt for QNBL 0x%p\n",
               pAdapter->PortName, txContext)
          );
          nbContext->Completed = 1;
@@ -5284,7 +5378,7 @@ VOID MPUSB_TLPTxPacketEx
       (
          MP_DBG_MASK_WRITE,
          MP_DBG_LEVEL_DETAIL,
-         ("<%s> TxPacketEx: =>NBL 0x%p (%dB)\n", pAdapter->PortName, netBuffer, dwPacketLength)
+         ("<%s> TLPTxPacketEx: =>NBL 0x%p (%dB)\n", pAdapter->PortName, netBuffer, dwPacketLength)
       );
 
       nbContext->DataLength = dwPacketLength;
@@ -5355,6 +5449,7 @@ VOID MPUSB_TLPTxPacketEx
               RtlZeroMemory(Qmap, sizeof(QMAP_STRUCT));
               Qmap->PadCD = 0x00; //TODO: check the order
               // Padding //TODO: check the order
+              if (pAdapter->QMAPEnabledV4 != TRUE)
               {
                 if ((sendBytes%4) > 0)
                 {
@@ -5500,7 +5595,7 @@ VOID MPUSB_TLPTxPacketEx
     (
        MP_DBG_MASK_WRITE,
        MP_DBG_LEVEL_DETAIL,
-       ("<%s> MPUSB_TLPTxPacket: stay for aggregation, restore item [%d] %dB(%d)\n",
+       ("<%s> TLPTxPacketEx: stay for aggregation, restore item [%d] %dB(%d)\n",
          pAdapter->PortName, tlpItem->Index, tlpItem->DataLength, tlpItem->AggregationCount)
     );
     NdisAcquireSpinLock(&pAdapter->TxLock);
@@ -5525,7 +5620,7 @@ VOID MPUSB_TLPTxPacketEx
        (
           MP_DBG_MASK_WRITE,
           MP_DBG_LEVEL_DETAIL,
-          ("<%s> MPUSB_TLPTxPacket: stay for aggregation, restore item [%d] %dB(%d)\n",
+          ("<%s> TLPTxPacketEx: stay for aggregation, restore item [%d] %dB(%d)\n",
             pAdapter->PortName, tlpItem->Index, tlpItem->DataLength, tlpItem->AggregationCount)
        );
        NdisAcquireSpinLock(&pAdapter->TxLock);
@@ -5549,7 +5644,7 @@ VOID MPUSB_TLPTxPacketEx
       (
          MP_DBG_MASK_WRITE,
          MP_DBG_LEVEL_DETAIL,
-         ("<%s> MPUSB_TLPTxPacket: stay for aggregation, restore item [%d] %dB(%d)\n",
+         ("<%s> TLPTxPacketEx: stay for aggregation, restore item [%d] %dB(%d)\n",
            pAdapter->PortName, tlpItem->Index, tlpItem->DataLength, tlpItem->AggregationCount)
       );
       NdisAcquireSpinLock(&pAdapter->TxLock);
@@ -5586,7 +5681,7 @@ VOID MPUSB_TLPTxPacketEx
           QCNET_DbgPrint
           (
              MP_DBG_MASK_WRITE, MP_DBG_LEVEL_DETAIL,
-             ("<%s> ---> Flush due to Buffer Full %d\n", pAdapter->PortName, pAdapter->FlushBufferBufferFull++)
+             ("<%s> ---> TLPTxPacketEx: Flush due to Buffer Full %d\n", pAdapter->PortName, pAdapter->FlushBufferBufferFull++)
           );
              CancelTransmitTimer( pAdapter );
       }
@@ -5600,7 +5695,7 @@ PrepareIrp:
        (
           MP_DBG_MASK_WRITE,
           MP_DBG_LEVEL_ERROR,
-          ("<%s> MPUSB_TLPTxPacket: nothing to send\n", pAdapter->PortName)
+          ("<%s> TLPTxPacketEx: nothing to send\n", pAdapter->PortName)
        );
        kicker = TRUE;
        goto Tx_Exit;
@@ -5612,7 +5707,7 @@ PrepareIrp:
        (
           MP_DBG_MASK_WRITE,
           MP_DBG_LEVEL_DETAIL,
-          ("<%s> MPUSB_TLPTxPacket: 0 TX data, extra flush\n", pAdapter->PortName)
+          ("<%s> TLPTxPacketEx: 0 TX data, extra flush\n", pAdapter->PortName)
        );
        kicker = TRUE;
        goto Tx_Exit;
@@ -5651,7 +5746,7 @@ PrepareIrp:
    (
       MP_DBG_MASK_WRITE,
       MP_DBG_LEVEL_VERBOSE,
-      ("<%s> [TLP] TLPTxPacket: sending [%d] %dB/%dB\n", pAdapter->PortName, 
+      ("<%s> [TLP] TLPTxPacketEx: sending [%d] %dB/%dB\n", pAdapter->PortName, 
        tlpItem->Index, tlpItem->DataLength, tlpItem->RemainingCapacity)
    );
    if (pAdapter->IPModeEnabled == TRUE)
@@ -5708,7 +5803,7 @@ Tx_Exit:
          (
             MP_DBG_MASK_WRITE,
             MP_DBG_LEVEL_TRACE,
-            ("<%s> IPO: _TLPTxPacketEx: complete (0x%x)\n", pAdapter->PortName,
+            ("<%s> IPO: TLPTxPacketEx: complete (0x%x)\n", pAdapter->PortName,
               ndisSt)
          );
       }
@@ -5749,7 +5844,7 @@ Tx_Exit:
    (
       MP_DBG_MASK_WRITE,
       MP_DBG_LEVEL_TRACE,
-      ("<%s> <--MPUSB_TLPTxPacket (nBusyTx: %d/%dP/%dP) %d\n", pAdapter->PortName,
+      ("<%s> <--TLPTxPacketEx (nBusyTx: %d/%dP/%dP) %d\n", pAdapter->PortName,
         pAdapter->nBusyTx, pAdapter->QosPendingPackets, pAdapter->MPPendingPackets, kicker)
    );
    return;

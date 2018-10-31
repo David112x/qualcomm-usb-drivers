@@ -647,12 +647,18 @@ NTSTATUS MultiReadCompletionRoutine
    (
       QCUSB_DBG_MASK_READ,
       QCUSB_DBG_LEVEL_TRACE,
-      ("<%s> ML2 COMPL: Irp[%u]=0x%p(0x%x)\n", pDevExt->PortName,
-        pL2Ctx->Index, Irp, Irp->IoStatus.Status)
+      ("<%s> ML2 COMPL (IRQL-%d): Irp[%u]=0x%p(0x%x)\n", pDevExt->PortName,
+        Irql, pL2Ctx->Index, Irp, Irp->IoStatus.Status)
    );
 
    if (InterlockedDecrement(&(pDevExt->NumberOfPendingReadIRPs)) <= 0)
    {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_READ,
+         QCUSB_DBG_LEVEL_FORCE,
+         ("<%s> ML2 COMPL: RIRP pending %d\n", pDevExt->PortName, pDevExt->NumberOfPendingReadIRPs)
+      );
       InterlockedIncrement(&(pDevExt->FlowControlEnabledCount));
    }
    InsertTailList(&pDevExt->L2CompletionQueue, &pL2Ctx->List);
@@ -818,18 +824,6 @@ void USBMRD_L2MultiReadThread(PDEVICE_EXTENSION pDevExt)
                NULL
             )
 
-            InterlockedIncrement(&(pDevExt->NumberOfPendingReadIRPs));
-
-            if ( pDevExt->NumberOfPendingReadIRPs < 10)
-            {
-            QCUSB_DbgPrint
-            (
-               QCUSB_DBG_MASK_READ,
-                  QCUSB_DBG_LEVEL_FORCE,
-               ("<%s> ML2: IoCallDriver-IRP[%u]=0x%p, Pending %d\n", pDevExt->PortName,
-                pDevExt->L2IrpEndIdx, pIrp, pDevExt->NumberOfPendingReadIRPs)
-            );
-            }
             pDevExt->pL2ReadBuffer[pDevExt->L2IrpEndIdx].State = L2BUF_STATE_PENDING;
 
             //PendingQueue
@@ -847,6 +841,18 @@ void USBMRD_L2MultiReadThread(PDEVICE_EXTENSION pDevExt)
             InsertTailList(&pDevExt->L2PendingQueue, &(pDevExt->pL2ReadBuffer[pDevExt->L2IrpEndIdx].PendingList));
             
             QcReleaseSpinLock(&pDevExt->L2Lock, levelOrHandle);
+
+            InterlockedIncrement(&(pDevExt->NumberOfPendingReadIRPs));
+            if ( pDevExt->NumberOfPendingReadIRPs < 5)
+            {
+               QCUSB_DbgPrint
+               (
+                  QCUSB_DBG_MASK_READ,
+                     QCUSB_DBG_LEVEL_FORCE,
+                  ("<%s> ML2: IoCallDriver-IRP[%u]=0x%p, L1Q/Bus %d/%d\n", pDevExt->PortName,
+                   pDevExt->L2IrpEndIdx, pIrp, pDevExt->NumberOfQueuedReadIRPs, pDevExt->NumberOfPendingReadIRPs)
+               );
+            }
 
             pDevExt->bL2ReadActive = TRUE;
             ntStatus = IoCallDriver(pDevExt->StackDeviceObject,pIrp);
@@ -1204,6 +1210,11 @@ wait_for_completion:
             pUrb = &(pDevExt->pL2ReadBuffer[l2BufIdx].Urb);
 
             ntStatus = pIrp->IoStatus.Status;
+
+            if (ntStatus == STATUS_SUCCESS)
+            {
+               USBMAIN_UpdateXferStats(pDevExt, pUrb->UrbBulkOrInterruptTransfer.TransferBufferLength, TRUE);
+            }
 
             #ifdef ENABLE_LOGGING
             if (ntStatus == STATUS_SUCCESS)
@@ -1741,12 +1752,26 @@ VOID USBMRD_FillReadRequest(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
    );
    QcReleaseSpinLock(&pDevExt->ReadSpinLock, levelOrHandle);
 
-   if (ntStatus == STATUS_WAIT_63)  // used this custom STATUS_WAIT_63 for this specific scheduling purpose
+   // STATUS_WAIT_63 for this specific scheduling purpose
+   if (pDevExt->EnableData5G != 0)
    {
-      DbgPrint("<%s> NDIS COUNT ZERO SO DELAY for 1 MS\n", pDevExt->PortName);
+      if ((pDevExt->NumberOfQueuedReadIRPs < 200) || (ntStatus == STATUS_WAIT_63))
+      {
+         // LARGE_INTEGER delayValue;
+
+         // delayValue.QuadPart = -(5 * 100L);
+
+         DbgPrint("<%s> NDIS COUNT LOW/ZERO - Bus %ld L1Q %ld DROP %ld\n", pDevExt->PortName,
+                   pDevExt->NumberOfPendingReadIRPs, pDevExt->NumberOfQueuedReadIRPs, pDevExt->FrameDropCount);
       
-      //Sleep for 1ms
-      USBUTL_Wait(pDevExt, -(10 * 1000));  // 1ms
+         // KeDelayExecutionThread(KernelMode, FALSE, &delayValue);  // 50us
+      }
+   }
+   else if (ntStatus == STATUS_WAIT_63)
+   {
+      DbgPrint("<%s> NDIS COUNT ZERO - Bus %ld L1Q %ld DROP %ld\n", pDevExt->PortName,
+                pDevExt->NumberOfPendingReadIRPs, pDevExt->NumberOfQueuedReadIRPs, pDevExt->FrameDropCount);
+      
    }
 
    return;
@@ -1834,6 +1859,7 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
    BOOLEAN      bCompleteIrp = FALSE;
    LONG         currentFillIdx = pDevExt->L2FillIdx;
    PDEVICE_EXTENSION pReturnDevExt = NULL;
+   BOOLEAN      bDirectCompletion = TRUE;
 
    if (NT_SUCCESS(ntStatus) || (ntStatus == STATUS_CANCELLED))
    {
@@ -1890,7 +1916,7 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
       )
    );
 
-   DbgPrint("<%s> FRAME DROPPED Count : %ld and Total Size : 0x%ldB FC : %ld\n", pDevExt->PortName, pDevExt->FrameDropCount, pDevExt->FrameDropBytes, pDevExt->FlowControlEnabledCount);
+   // DbgPrint("<%s> FRAME DROPPED Count : %ld and Total Size : 0x%ldB FC : %ld\n", pDevExt->PortName, pDevExt->FrameDropCount, pDevExt->FrameDropBytes, pDevExt->FlowControlEnabledCount);
 
    if (pIrp != NULL)
    {
@@ -2236,7 +2262,7 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
                               (
                                  QCUSB_DBG_MASK_RIRP,
                                  QCUSB_DBG_LEVEL_ERROR,
-                                 ("<%s> MRIC - error: pIrp 3 - is NULL\n", pDevExt->PortName)
+                                 ("<%s> MRIC - error: pIrp 3 - is NULL - pending %ld Q %ld\n", pDevExt->PortName, pDevExt->NumberOfPendingReadIRPs, pDevExt->NumberOfQueuedReadIRPs)
                               );
                               ntStatus = STATUS_WAIT_63;
                               if ((ReadQueueEmpty == FALSE) || ((pktLen == 0) || ((pktLen - padBytes) > ulL2Length)))
@@ -2244,7 +2270,7 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
                                  DbgPrint("<%s> FRAME DROPPED : %ldB\n", pDevExt->PortName, ulL2Length);
                               pDevExt->TLPCount = 0;
                               USBMRD_RecycleL2FillBuffer(pDevExt, currentFillIdx, 7);
-                                 DbgPrint("<%s> FRAME DROPPED Count : %ld and Total Size : 0x%ldB\n", pDevExt->PortName, ++(pDevExt->FrameDropCount), (pDevExt->FrameDropBytes+= ulL2Length));
+                              // DbgPrint("<%s> FRAME DROPPED Count : %ld and Total Size : 0x%ldB\n", pDevExt->PortName, ++(pDevExt->FrameDropCount), (pDevExt->FrameDropBytes+= ulL2Length));
                               ntStatus = STATUS_UNSUCCESSFUL;
                               }
                               if ((qmap->PadCD&0x80))
@@ -2971,13 +2997,29 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
 
          if ( (pReturnDevExt != NULL) && (pDevExt != pReturnDevExt))
          {
-            InsertTailList(&pReturnDevExt->RdCompletionQueue, &pIrp->Tail.Overlay.ListEntry);
-            KeSetEvent(&pReturnDevExt->InterruptEmptyRdQueueEvent, IO_NO_INCREMENT, FALSE);
+            if (bDirectCompletion == FALSE)
+            {
+               InsertTailList(&pReturnDevExt->RdCompletionQueue, &pIrp->Tail.Overlay.ListEntry);
+               KeSetEvent(&pReturnDevExt->InterruptEmptyRdQueueEvent, IO_NO_INCREMENT, FALSE);
+            }
+            else
+            {
+               QcIoReleaseRemoveLock(pReturnDevExt->pRemoveLock, pIrp, QCUSB_IRP_TYPE_RIRP);
+               QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
+            }
          }
          else
          {
-            InsertTailList(&pDevExt->RdCompletionQueue, &pIrp->Tail.Overlay.ListEntry);
-            KeSetEvent(&pDevExt->InterruptEmptyRdQueueEvent, IO_NO_INCREMENT, FALSE);
+            if (bDirectCompletion == FALSE)
+            {
+               InsertTailList(&pDevExt->RdCompletionQueue, &pIrp->Tail.Overlay.ListEntry);
+               KeSetEvent(&pDevExt->InterruptEmptyRdQueueEvent, IO_NO_INCREMENT, FALSE);
+            }
+            else
+            {
+               QcIoReleaseRemoveLock(pDevExt->pRemoveLock, pIrp, QCUSB_IRP_TYPE_RIRP);
+               QCIoCompleteRequest(pIrp, IO_NO_INCREMENT);
+            }
          }
       }  // if (bCompleteIrp == TRUE)
          if ( (pReturnDevExt != NULL) && (pDevExt != pReturnDevExt))
@@ -3203,11 +3245,11 @@ NTSTATUS QCMRD_FillIrpData
       QCUSB_DbgPrint
       (
          QCUSB_DBG_MASK_READ,
-         QCUSB_DBG_LEVEL_DETAIL,
-         ("<%s> RECEIVED PACKET : seq num (%02X %02X)\n", pDevExt->PortName,
-         (UCHAR)DataBuffer[4], (UCHAR)DataBuffer[5])
+         QCUSB_DBG_LEVEL_ERROR,
+         ("<%s> RECEIVED PACKET : seq num (%02X %02X) pending %ld Q %ld\n", pDevExt->PortName,
+         (UCHAR)DataBuffer[4], (UCHAR)DataBuffer[5], pDevExt->NumberOfPendingReadIRPs, pDevExt->NumberOfQueuedReadIRPs)
       );
-      DbgPrint("<%s> RECEIVED PACKET : seq num (%02X %02X)\n", pDevExt->PortName, (UCHAR)DataBuffer[4], (UCHAR)DataBuffer[5]);
+      // DbgPrint("<%s> RECEIVED PACKET : seq num (%02X %02X)\n", pDevExt->PortName, (UCHAR)DataBuffer[4], (UCHAR)DataBuffer[5]);
    }
    else
    {
@@ -3216,8 +3258,8 @@ NTSTATUS QCMRD_FillIrpData
       (
          QCUSB_DBG_MASK_READ,
          QCUSB_DBG_LEVEL_DETAIL,
-         ("<%s> RECEIVED PACKET : seq num (%02X %02X)\n", pDevExt->PortName,
-         (UCHAR)DataBuffer[18], (UCHAR)DataBuffer[19])
+         ("<%s> RECEIVED PACKET : seq num (%02X %02X) pending %ld Q %ld\n", pDevExt->PortName,
+         (UCHAR)DataBuffer[18], (UCHAR)DataBuffer[19], pDevExt->NumberOfPendingReadIRPs, pDevExt->NumberOfQueuedReadIRPs)
       );
 #ifdef QC_IP_MODE
    }
@@ -3236,5 +3278,8 @@ NTSTATUS QCMRD_FillIrpData
       USBUTL_SetEtherType(pPktStart);
    }
 #endif // QC_IP_MODE
+ 
+
+   InterlockedDecrement(&(pDevExt->NumberOfQueuedReadIRPs));
    return STATUS_SUCCESS;
 }  // QCMRD_FillIrpData

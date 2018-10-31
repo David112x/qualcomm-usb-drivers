@@ -1602,6 +1602,11 @@ VOID MPQCTL_HandleGetVersionRsp
 #error code not present
 #endif      
    }
+   if ((pAdapter->QMUXVersion[QMUX_TYPE_WDS_ADMIN].Major >= 1) &&
+       (pAdapter->QMUXVersion[QMUX_TYPE_WDS_ADMIN].Minor >= 19))
+   {
+      pAdapter->WdsEnableUlParams = TRUE;
+   }
 
    if ((pAdapter->QMUXVersion[QMUX_TYPE_NAS].Major >= 1) &&
        (pAdapter->QMUXVersion[QMUX_TYPE_NAS].Minor >= 8))

@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.53
-07/05/2018
+Qualcomm USB Host Drivers Version 1.00.55
+10/10/2018
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,7 +20,31 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.53) 07/05/2018
+This Release (Qualcomm USB Host Drivers Version 1.00.55) 10/10/2018
+USB Driver updates:
+   Serial driver 2.1.3.3
+      a. Modified PID 90E2 support for UDE enumeration.
+   Filter driver 1.0.5.5
+      a. Modified PID 90E2 support for UDE enumeration.
+   QDSS/DPL driver 1.0.1.7
+      a. Modified PID 90E2 support for UDE enumeration.
+   Network driver 4.0.5.5
+      a. Removed padding bytes for QMAPv4 aggreation.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.54) 08/17/2018
+USB Driver updates:
+   Network driver 4.0.5.4
+      a. DL/RX throughput optimization with multiple RX streams interfacing NDIS layer
+      b. RX optimization with "cluster" indication
+      c. Support UL aggregation configuration with new TLVs
+      d. Added enhanced network statistics to provide real-time status through custom IOCTL
+      e. Support MTU up to 10K
+      f. Consolidated settings for 5G throughput with single registry entry (QCMPEnableData5G)
+      g. Updated driver config tool (qdcfg) to support QCMPEnableData5G.
+      h. Defined default settings for 5G throughput
+      i. Changed default number of aggregated UL packets from 15 to 21 (1500 * 21 is around 31K)
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.53) 07/05/2018
 USB Driver updates:
    Serial driver 2.1.3.2
       a. Added PID 90E2 support for UDE enumeration.
