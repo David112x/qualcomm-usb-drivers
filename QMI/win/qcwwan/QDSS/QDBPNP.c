@@ -298,6 +298,7 @@ VOID QDBPNP_EvtDeviceCleanupCallback(WDFOBJECT Object)
       pDevContext->SymbolicLink.Length = 0;
    }
    QDBPNP_SetStamp(pDevContext->PhysicalDeviceObject, 0, 0);
+   QDBPNP_SetFunctionProtocol(wdfDevice, 0);
 
    QDBPNP_WaitForDrainToStop(pDevContext);
    QDBRD_FreeIoBuffer(pDevContext);

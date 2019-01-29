@@ -1279,6 +1279,7 @@ NDIS_STATUS MPINI_AllocAdapter(PMP_ADAPTER *pAdapter)
           Adapter->RxThreadContext[i].AdapterContext = (PVOID)Adapter;
           Adapter->RxThreadContext[i].Index = i;
           NdisAllocateSpinLock(&Adapter->RxIndLock[i]);  
+          NdisAllocateSpinLock(&Adapter->RxProtocolLock[i]);  
        }
     }
 
@@ -1658,6 +1659,7 @@ VOID MPINI_FreeAdapter(PMP_ADAPTER pAdapter)
        for (i = 0; i < RX_THREAD_COUNT; i++)
        {
           NdisFreeSpinLock(&pAdapter->RxIndLock[i]);
+          NdisFreeSpinLock(&pAdapter->RxProtocolLock[i]);
        }
     }
 

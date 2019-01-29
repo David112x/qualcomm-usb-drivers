@@ -1102,6 +1102,7 @@ typedef struct _MP_ADAPTER
 #ifdef NDIS60_MINIPORT
    PMPUSB_RX_NBL           RxBufferMem;  // for NDIS6
    LIST_ENTRY              RxNblChain[RX_THREAD_COUNT];   // RX chain for protocol layer
+   UCHAR                   ActiveRxSlot[RX_THREAD_COUNT];
 #endif 
    LONG                    DropDataTest; 
 
@@ -1316,6 +1317,7 @@ typedef struct _MP_ADAPTER
    ULONG    RxThreadCancelStarted;
    RX_THREAD_CONTEXT RxThreadContext[RX_THREAD_COUNT];
    NDIS_SPIN_LOCK RxIndLock[RX_THREAD_COUNT];
+   NDIS_SPIN_LOCK RxProtocolLock[RX_THREAD_COUNT];
    ULONG    EnableData5G;
    ULONG    RxIndClusterSize;
    ULONG    RxStreams;
@@ -1507,7 +1509,7 @@ typedef struct _MP_ADAPTER
    ULONG DisableQMAPFC;
    
    BOOLEAN  IsNASSysInfoPresent;
-   USHORT IndexGWPri;
+   UCHAR AppType;
    ULONG UIMICCID;
    ULONG EnableSSDisconnectTimer;
 

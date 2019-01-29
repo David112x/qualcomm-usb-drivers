@@ -962,7 +962,7 @@ NTSTATUS USBIF_NdisVendorRegistryProcess
 
    if (ntStatus != STATUS_SUCCESS)
    {
-      gVendorConfig.ThreadPriority = 26;
+      gVendorConfig.ThreadPriority = HIGH_PRIORITY;  // set for 5G data
    }
    else
    {

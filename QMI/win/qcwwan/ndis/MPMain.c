@@ -2526,11 +2526,11 @@ NDIS_STATUS MPMAIN_SetDeviceDataFormat(PMP_ADAPTER pAdapter)
 
 #if defined(QCMP_QMAP_V1_SUPPORT)
 if ((pAdapter->MPEnableQMAPV4 != 0) && (pAdapter->QMAPEnabledV4 == 0) &&
-#if defined(QCUSB_MUX_PROTOCOL) && defined(QCMP_QMAP_V2_SUPPORT)
-      (pAdapter->MPEnableQMAPV3 != 0)
-#else      
+#ifdef QCUSB_MUX_PROTOCOL
+#error code not present
+#else
       (pAdapter->MPEnableQMAPV1 != 0)
-#endif      
+#endif
       )
    {
        pAdapter->MPEnableQMAPV4 = 0;

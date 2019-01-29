@@ -25902,7 +25902,7 @@ USHORT MPQMUX_ComposeUimReadTransparentIMSIReqSend
    path[1] = 0x3F;
    path[2] = 0xFF;
    path[3] = 0x7F;
-   if (pAdapter->IndexGWPri == 0x02)
+   if (pAdapter->AppType == UIM_APP_TYPE_SIM)
    {
       path[2] = 0x20;
    }
@@ -27133,7 +27133,7 @@ BOOLEAN ParseUIMCardState
             *PIN2State = pPINState->PIN2State;
             *PIN2Retries = pPINState->PIN2Retries;
             *PUK2Retries = pPINState->PUK2Retries;
-            pAdapter->IndexGWPri = pCardStatus->IndexGWPri;
+            pAdapter->AppType = pCardStatus->AppType;
                    break;
                 }                    
                      }

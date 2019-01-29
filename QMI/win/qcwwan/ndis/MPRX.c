@@ -458,7 +458,7 @@ VOID MPRX_RxThread(PVOID Context)
       PsTerminateSystemThread(STATUS_NO_MEMORY);
    }
 
-   KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
+   KeSetPriorityThread(KeGetCurrentThread(), (HIGH_PRIORITY-2));
 
    while (bKeepRunning == TRUE)
    {
@@ -631,14 +631,16 @@ VOID MPRX_ProcessRxChain(PMP_ADAPTER pAdapter, INT Index)
    {
       NET_BUFFER_LIST_NEXT_NBL(nblTail) = NULL;
 
+      NdisAcquireSpinLock(&pAdapter->RxProtocolLock[Index]);
       NdisMIndicateReceiveNetBufferLists
       (
          pAdapter->AdapterHandle,
          nblHead,
          NDIS_DEFAULT_PORT_NUMBER,
          numOfNBLs,
-         0 // NDIS_RECEIVE_FLAGS_DISPATCH_LEVEL
+         NDIS_RECEIVE_FLAGS_DISPATCH_LEVEL
       );
+      NdisReleaseSpinLock(&pAdapter->RxProtocolLock[Index]);
    }
    QCNET_DbgPrint
    (

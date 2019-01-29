@@ -11,7 +11,7 @@ Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider    = %QCOM%
-DriverVer   = 10/10/2018,4.0.5.5
+DriverVer   = 12/17/2018,4.0.5.7
 Catalogfile = qcnet.cat
 
 [ControlFlags]
@@ -220,6 +220,11 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90E56%    = qcwwan.ndi1, USB\VID_05C6&PID_90E5&MI_06
 %qcwwan.DeviceDesc90EA0%    = qcwwan.ndi, USB\VID_05C6&PID_90EA&MI_00
 %qcwwan.DeviceDesc90EB0%    = qcwwan.ndi, USB\VID_05C6&PID_90EB&MI_00
+%qcwwan.DeviceDesc90ED2%    = qcwwan.ndi, USB\VID_05C6&PID_90ED&MI_02
+%qcwwan.DeviceDesc90EE2%    = qcwwan.ndi, USB\VID_05C6&PID_90EE&MI_02
+%qcwwan.DeviceDesc90EF2%    = qcwwan.ndi, USB\VID_05C6&PID_90EF&MI_02
+%qcwwan.DeviceDesc90F02%    = qcwwan.ndi, USB\VID_05C6&PID_90F0&MI_02
+%qcwwan.DeviceDesc90F12%    = qcwwan.ndi, USB\VID_05C6&PID_90F1&MI_02
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 %qcwwan.DeviceDesc920D5%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_05
 
@@ -418,6 +423,11 @@ ExcludeFromSelect = *
 %qcwwan.DeviceDesc90E56%    = qcwwan.ndi1, USB\VID_05C6&PID_90E5&MI_06
 %qcwwan.DeviceDesc90EA0%    = qcwwan.ndi, USB\VID_05C6&PID_90EA&MI_00
 %qcwwan.DeviceDesc90EB0%    = qcwwan.ndi, USB\VID_05C6&PID_90EB&MI_00
+%qcwwan.DeviceDesc90ED2%    = qcwwan.ndi, USB\VID_05C6&PID_90ED&MI_02
+%qcwwan.DeviceDesc90EE2%    = qcwwan.ndi, USB\VID_05C6&PID_90EE&MI_02
+%qcwwan.DeviceDesc90EF2%    = qcwwan.ndi, USB\VID_05C6&PID_90EF&MI_02
+%qcwwan.DeviceDesc90F02%    = qcwwan.ndi, USB\VID_05C6&PID_90F0&MI_02
+%qcwwan.DeviceDesc90F12%    = qcwwan.ndi, USB\VID_05C6&PID_90F1&MI_02
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 %qcwwan.DeviceDesc920D5%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_05
 
@@ -775,6 +785,11 @@ qcwwan.DeviceDesc90E46      = "Qualcomm Wireless HS-USB Ethernet Adapter 90E4"
 qcwwan.DeviceDesc90E56      = "Qualcomm Wireless HS-USB Ethernet Adapter 90E5"
 qcwwan.DeviceDesc90EA0      = "Qualcomm Wireless HS-USB Ethernet Adapter 90EA"
 qcwwan.DeviceDesc90EB0      = "Qualcomm Wireless HS-USB Ethernet Adapter 90EB"
+qcwwan.DeviceDesc90ED2      = "Qualcomm Wireless HS-USB Ethernet Adapter 90ED"
+qcwwan.DeviceDesc90EE2      = "Qualcomm Wireless HS-USB Ethernet Adapter 90EE"
+qcwwan.DeviceDesc90EF2      = "Qualcomm Wireless HS-USB Ethernet Adapter 90EF"
+qcwwan.DeviceDesc90F02      = "Qualcomm Wireless HS-USB Ethernet Adapter 90F0"
+qcwwan.DeviceDesc90F12      = "Qualcomm Wireless HS-USB Ethernet Adapter 90F1"
 qcwwan.DeviceDesc920D0      = "Qualcomm Gobi 3000 Wireless HS-USB Ethernet Adapter 920D"
 qcwwan.DeviceDesc920D5      = "Qualcomm Gobi 3000 Wireless HS-USB Ethernet Adapter 920D"
 qcwwan.Service.DispName     = "Qualcomm USB-NDIS miniport"

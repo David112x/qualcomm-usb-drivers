@@ -1090,7 +1090,7 @@ NTSTATUS QCUSB_VendorRegistryProcess
 
    if (ntStatus != STATUS_SUCCESS)
    {
-      gVendorConfig.ThreadPriority = 26;
+      gVendorConfig.ThreadPriority = HIGH_PRIORITY;  // set for 5G data
    }
    
    if ( gVendorConfig.ThreadPriority < 10)
@@ -2226,7 +2226,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.5.4");
+             DbgPrint("Driver Version %s\n", "4.0.5.7");
              DbgPrint("   |============================|\n");
              #endif // QCNET_WHQL
           }
@@ -2247,7 +2247,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.5.4");
+             DbgPrint("Driver Version %s\n", "4.0.5.7");
              DbgPrint("   |===============================|\n");
              #endif // QCNET_WHQL
           }
@@ -3050,7 +3050,7 @@ NTSTATUS USBPNP_InitDevExt
    pDevExt->IoBusyMask        = 0;
    pDevExt->SelectiveSuspendIdleTime = 5;  // chage it to 5 by default
    pDevExt->SelectiveSuspendInMili = FALSE;   
-   pDevExt->InServiceSelectiveSuspension = TRUE;   
+   pDevExt->InServiceSelectiveSuspension = FALSE;  // disable for 5G data for now -- TODO 
    pDevExt->bRemoteWakeupEnabled = FALSE;  // hardcode for now
    pDevExt->bDeviceSelfPowered = FALSE;
    pDevExt->PowerManagementEnabled = TRUE;

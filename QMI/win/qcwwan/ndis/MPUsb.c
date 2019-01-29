@@ -3392,6 +3392,8 @@ INT MPUSB_GetRxStreamIndex(PMP_ADAPTER pAdapter, PUCHAR Packet, ULONG  Length)
       idx = ipv6Hdr.DestPort % pAdapter->RxStreams;
    }
 
+   pAdapter->ActiveRxSlot[idx] = 1; // for debugging
+
    return idx;
 
 }  // MPUSB_GetRxStreamIndex

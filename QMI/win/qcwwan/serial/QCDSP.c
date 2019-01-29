@@ -2718,6 +2718,7 @@ NTSTATUS QCDSP_Dispatch
                setDevState(DEVICE_STATE_SURPRISE_REMOVED);
 
                // Remove device startup stamp
+               QCPNP_SetFunctionProtocol(pDevExt, 0);
                QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, FALSE);
 
                // Disable registered interfaces
@@ -2751,6 +2752,7 @@ NTSTATUS QCDSP_Dispatch
                break;
             }
             case IRP_MN_REMOVE_DEVICE:  // PASSIVE_LEVEL
+               QCPNP_SetFunctionProtocol(pDevExt, 0);
                QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, FALSE);
                if (pDevExt->RefCount <= 1)
                {

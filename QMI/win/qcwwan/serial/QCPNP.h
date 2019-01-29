@@ -121,4 +121,6 @@ VOID QCPNP_SaveParentDeviceNameToRegistry
    ULONG NameLength
 );
 
+NTSTATUS QCPNP_SetFunctionProtocol(PDEVICE_EXTENSION pDevExt, ULONG ProtocolCode);
+
 #endif // QCPNP_H

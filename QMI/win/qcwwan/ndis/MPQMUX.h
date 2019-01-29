@@ -3145,6 +3145,9 @@ typedef struct _QMINAS_INITIATE_ATTACH_RESP_MSG
 #define QMIUIM_GET_CARD_STATUS_RESP      0x002F
 #define QMIUIM_STATUS_CHANGE_IND         0x0032
 
+#define UIM_APP_TYPE_SIM                 0x01
+#define UIM_APP_TYPE_USIM                0x02
+
 
 typedef struct _QMIUIM_GET_CARD_STATUS_RESP_MSG
 {

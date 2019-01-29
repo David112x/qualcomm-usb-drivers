@@ -2131,6 +2131,7 @@ NTSTATUS USBDSP_Dispatch
                QcReleaseDspPass(&pDevExt->DSPSyncEvent);
 
                QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
+               QCPNP_SetFunctionProtocol(pDevExt, 0);
 
                #ifdef NDIS_WDM
                Irp->IoStatus.Status = ntStatus;
@@ -2149,6 +2150,7 @@ NTSTATUS USBDSP_Dispatch
                QcReleaseSpinLock(&pDevExt->ControlSpinLock, levelOrHandle);
 
                QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
+               QCPNP_SetFunctionProtocol(pDevExt, 0);
                USBENC_PurgeQueue(pDevExt, &pDevExt->EncapsulatedDataQueue, FALSE, 5);
                USBPWR_StopExWdmDeviceMonitor(pDevExt);
                // USBIF_Close(DeviceObject);
@@ -2181,6 +2183,7 @@ NTSTATUS USBDSP_Dispatch
                clearDevState(DEVICE_STATE_PRESENT_AND_STARTED);
                setDevState(DEVICE_STATE_DEVICE_REMOVED0);
                QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
+               QCPNP_SetFunctionProtocol(pDevExt, 0);
                pDevExt->bDeviceRemoved = TRUE;
                pDevExt->bDeviceSurpriseRemoved = TRUE;
 

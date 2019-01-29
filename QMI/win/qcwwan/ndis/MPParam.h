@@ -284,7 +284,7 @@ GENERAL DESCRIPTION
 #endif
 
 #define PARAM_EnableData5G          "QCMPEnableData5G"
-#define PARAM_EnableData5G_DEFAULT  0
+#define PARAM_EnableData5G_DEFAULT  1
 #define PARAM_EnableData5G_MIN      0
 #define PARAM_EnableData5G_MAX      1
 
@@ -295,9 +295,9 @@ GENERAL DESCRIPTION
 #define PARAM_MPRxIndClusterSize_MAX        2000
 
 #define PARAM_MPRxStreams          "QCMPRxStreams"
-#define PARAM_MPRxStreams_DEFAULT  4
+#define PARAM_MPRxStreams_DEFAULT  17
 #define PARAM_MPRxStreams_MIN      2
-#define PARAM_MPRxStreams_MAX      8
+#define PARAM_MPRxStreams_MAX      19
 
 NDIS_STATUS MPParam_GetConfigValues
 (

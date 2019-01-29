@@ -1911,8 +1911,9 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
    (
       (QCUSB_DBG_MASK_RIRP | QCUSB_DBG_MASK_READ),
       QCUSB_DBG_LEVEL_DETAIL,
-      ("<%s> MRIC RIRP=0x%p (L2: %ldB) st 0x%x <%d>\n",
-        pDevExt->PortName, pIrp, ulL2Length, ntStatus, Cookie
+      ("<%s> MRIC RIRP=0x%p (L2:[%d] %id/%ldB) st 0x%x bus %d <%d>\n",
+        pDevExt->PortName, pIrp, pDevExt->L2FillIdx, pDevExt->TlpFrameBuffer.PktLength, ulL2Length,
+        ntStatus, pDevExt->NumberOfPendingReadIRPs, Cookie
       )
    );
 
@@ -2604,7 +2605,6 @@ NTSTATUS USBMRD_ReadIrpCompletion(PDEVICE_EXTENSION pDevExt, UCHAR Cookie)
                         {
                            dataPtr += sizeof(QCQMAP_DL_CHECKSUM);
                         }
-                        else
 #ifdef QCUSB_MUX_PROTOCOL
 #error code not present
 #endif                         

@@ -1399,7 +1399,7 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                    MP_DBG_MASK_CONTROL, MP_DBG_LEVEL_DETAIL,
                    ("<%s> MPIOC: IOCTL_QCDEV_GET_NET_STATISTICS: DropDataTest %ld\n", pAdapter->PortName, pAdapter->DropDataTest)
                 );
-                if ((buffer == NULL) || (outlen == 0) || (outlen < (sizeof(NDIS_STATISTICS_INFO)+sizeof(QC_XFER_STATISTICS))))
+                if ((buffer == NULL) || (outlen == 0) || (outlen < (RX_THREAD_COUNT+sizeof(NDIS_STATISTICS_INFO)+sizeof(QC_XFER_STATISTICS))))
                 {
                    QCNET_DbgPrint
                    (
@@ -1436,8 +1436,19 @@ NTSTATUS MPIOC_IRPDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                    p += sizeof(NDIS_STATISTICS_INFO);
 
                    NdisMoveMemory((PVOID)p, (PVOID)&usbXferStats, sizeof(QC_XFER_STATISTICS));
+                   p += sizeof(QC_XFER_STATISTICS);
+
+                   #ifdef NDIS60_MINIPORT
+
+                   NdisMoveMemory((PVOID)p, (PVOID)pAdapter->ActiveRxSlot, RX_THREAD_COUNT);
+                   NdisZeroMemory((PVOID)pAdapter->ActiveRxSlot, RX_THREAD_COUNT);  // reset
+                   Irp->IoStatus.Information = sizeof(NDIS_STATISTICS_INFO) + sizeof(QC_XFER_STATISTICS) + RX_THREAD_COUNT;
+
+                   #else
 
                    Irp->IoStatus.Information = sizeof(NDIS_STATISTICS_INFO) + sizeof(QC_XFER_STATISTICS);
+
+                   #endif // #ifdef NDIS60_MINIPORT
                    status = STATUS_SUCCESS;
 
                    QCNET_DbgPrint

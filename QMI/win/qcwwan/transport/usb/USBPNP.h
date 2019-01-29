@@ -106,4 +106,6 @@ NTSTATUS QCPNP_GetStringDescriptor
    BOOLEAN        MatchPrefix
 );
 
+NTSTATUS QCPNP_SetFunctionProtocol(PDEVICE_EXTENSION pDevExt, ULONG ProtocolCode);
+
 #endif // USBPNP_H
