@@ -1444,6 +1444,11 @@ VOID QCMRD_L2MultiReadThread(PDEVICE_EXTENSION pDevExt)
          PIRP pIrp = pDevExt->pL2ReadBuffer[pDevExt->L2IrpEndIdx].Irp;
          PURB pUrb = &(pDevExt->pL2ReadBuffer[pDevExt->L2IrpEndIdx].Urb);
 
+         if (pDevExt->DeviceFunction == QCUSB_DEV_FUNC_LPC)
+         {
+            pDevExt->bL2Stopped = !(pDevExt->FunctionLpcStarted);
+         }
+
          if (pDevExt->bL2Stopped == FALSE)
          {
             IoReuseIrp(pIrp, STATUS_SUCCESS);
@@ -1506,6 +1511,17 @@ VOID QCMRD_L2MultiReadThread(PDEVICE_EXTENSION pDevExt)
             else
             {
                ulReadSize = pDevExt->MaxPipeXferSize;
+            }
+
+            if (pDevExt->DeviceFunction == QCUSB_DEV_FUNC_LPC)
+            {
+               ulReadSize = 1024;
+               QCSER_DbgPrint
+               (
+                  QCSER_DBG_MASK_READ,
+                  QCSER_DBG_LEVEL_DETAIL,
+                  ("<%s> ML2: read size for LPC %uB\n", pDevExt->PortName, ulReadSize)
+               );
             }
 
             // setup the URB  for this request

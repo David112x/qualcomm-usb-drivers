@@ -12,7 +12,7 @@ Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider    = %QCOM%
-DriverVer   = 12/17/2018,4.0.5.7
+DriverVer   = 03/01/2019,4.0.5.8
 Catalogfile = qcwwan.cat
 
 [ControlFlags]
@@ -314,7 +314,11 @@ qcusbwwan.sys  = 1,,
 %qcwwan.DeviceDesc90EE2%    = qcwwan.ndi, USB\VID_05C6&PID_90EE&MI_02
 %qcwwan.DeviceDesc90EF2%    = qcwwan.ndi, USB\VID_05C6&PID_90EF&MI_02
 %qcwwan.DeviceDesc90F02%    = qcwwan.ndi, USB\VID_05C6&PID_90F0&MI_02
-%qcwwan.DeviceDesc90F12%    = qcwwan.ndi, USB\VID_05C6&PID_90F1&MI_02
+%qcwwan.DeviceDesc90F12%    = qcwwan.ndi1, USB\VID_05C6&PID_90F1&MI_02
+%qcwwan.DeviceDesc90F31%    = qcwwan.ndi, USB\VID_05C6&PID_90F3&MI_01
+%qcwwan.DeviceDesc90F67%    = qcwwan.ndi, USB\VID_05C6&PID_90F6&MI_07
+%qcwwan.DeviceDesc90F77%    = qcwwan.ndi, USB\VID_05C6&PID_90F7&MI_07
+%qcwwan.DeviceDesc90FA3%    = qcwwan.ndi, USB\VID_05C6&PID_90FA&MI_03
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [QCOM.NTamd64.6.1]
@@ -597,7 +601,11 @@ qcusbwwan.sys  = 1,,
 %qcwwan.DeviceDesc90EE2%    = qcwwan.ndi, USB\VID_05C6&PID_90EE&MI_02
 %qcwwan.DeviceDesc90EF2%    = qcwwan.ndi, USB\VID_05C6&PID_90EF&MI_02
 %qcwwan.DeviceDesc90F02%    = qcwwan.ndi, USB\VID_05C6&PID_90F0&MI_02
-%qcwwan.DeviceDesc90F12%    = qcwwan.ndi, USB\VID_05C6&PID_90F1&MI_02
+%qcwwan.DeviceDesc90F12%    = qcwwan.ndi1, USB\VID_05C6&PID_90F1&MI_02
+%qcwwan.DeviceDesc90F31%    = qcwwan.ndi, USB\VID_05C6&PID_90F3&MI_01
+%qcwwan.DeviceDesc90F67%    = qcwwan.ndi, USB\VID_05C6&PID_90F6&MI_07
+%qcwwan.DeviceDesc90F77%    = qcwwan.ndi, USB\VID_05C6&PID_90F7&MI_07
+%qcwwan.DeviceDesc90FA3%    = qcwwan.ndi, USB\VID_05C6&PID_90FA&MI_03
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [QCOM.NTx86.10.0]
@@ -874,6 +882,17 @@ qcusbwwan.sys  = 1,,
 %qcwwan.DeviceDesc90E35%    = qcwwan.ndi, USB\VID_05C6&PID_90E3&MI_05
 %qcwwan.DeviceDesc90E46%    = qcwwan.ndi, USB\VID_05C6&PID_90E4&MI_06
 %qcwwan.DeviceDesc90E56%    = qcwwan.ndi1, USB\VID_05C6&PID_90E5&MI_06
+%qcwwan.DeviceDesc90EA0%    = qcwwan.ndi, USB\VID_05C6&PID_90EA&MI_00
+%qcwwan.DeviceDesc90EB0%    = qcwwan.ndi, USB\VID_05C6&PID_90EB&MI_00
+%qcwwan.DeviceDesc90ED2%    = qcwwan.ndi, USB\VID_05C6&PID_90ED&MI_02
+%qcwwan.DeviceDesc90EE2%    = qcwwan.ndi, USB\VID_05C6&PID_90EE&MI_02
+%qcwwan.DeviceDesc90EF2%    = qcwwan.ndi, USB\VID_05C6&PID_90EF&MI_02
+%qcwwan.DeviceDesc90F02%    = qcwwan.ndi, USB\VID_05C6&PID_90F0&MI_02
+%qcwwan.DeviceDesc90F12%    = qcwwan.ndi1, USB\VID_05C6&PID_90F1&MI_02
+%qcwwan.DeviceDesc90F31%    = qcwwan.ndi, USB\VID_05C6&PID_90F3&MI_01
+%qcwwan.DeviceDesc90F67%    = qcwwan.ndi, USB\VID_05C6&PID_90F6&MI_07
+%qcwwan.DeviceDesc90F77%    = qcwwan.ndi, USB\VID_05C6&PID_90F7&MI_07
+%qcwwan.DeviceDesc90FA3%    = qcwwan.ndi, USB\VID_05C6&PID_90FA&MI_03
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [QCOM.NTamd64.10.0]
@@ -1150,6 +1169,17 @@ qcusbwwan.sys  = 1,,
 %qcwwan.DeviceDesc90E35%    = qcwwan.ndi, USB\VID_05C6&PID_90E3&MI_05
 %qcwwan.DeviceDesc90E46%    = qcwwan.ndi, USB\VID_05C6&PID_90E4&MI_06
 %qcwwan.DeviceDesc90E56%    = qcwwan.ndi1, USB\VID_05C6&PID_90E5&MI_06
+%qcwwan.DeviceDesc90EA0%    = qcwwan.ndi, USB\VID_05C6&PID_90EA&MI_00
+%qcwwan.DeviceDesc90EB0%    = qcwwan.ndi, USB\VID_05C6&PID_90EB&MI_00
+%qcwwan.DeviceDesc90ED2%    = qcwwan.ndi, USB\VID_05C6&PID_90ED&MI_02
+%qcwwan.DeviceDesc90EE2%    = qcwwan.ndi, USB\VID_05C6&PID_90EE&MI_02
+%qcwwan.DeviceDesc90EF2%    = qcwwan.ndi, USB\VID_05C6&PID_90EF&MI_02
+%qcwwan.DeviceDesc90F02%    = qcwwan.ndi, USB\VID_05C6&PID_90F0&MI_02
+%qcwwan.DeviceDesc90F12%    = qcwwan.ndi1, USB\VID_05C6&PID_90F1&MI_02
+%qcwwan.DeviceDesc90F31%    = qcwwan.ndi, USB\VID_05C6&PID_90F3&MI_01
+%qcwwan.DeviceDesc90F67%    = qcwwan.ndi, USB\VID_05C6&PID_90F6&MI_07
+%qcwwan.DeviceDesc90F77%    = qcwwan.ndi, USB\VID_05C6&PID_90F7&MI_07
+%qcwwan.DeviceDesc90FA3%    = qcwwan.ndi, USB\VID_05C6&PID_90FA&MI_03
 %qcwwan.DeviceDesc920D0%    = qcwwan.ndi, USB\VID_05C6&PID_920D&MI_00
 
 [qcwwan.ndi]
@@ -1602,6 +1632,10 @@ qcwwan.DeviceDesc90EE2      = "Qualcomm HS-USB WWAN Adapter 90EE"
 qcwwan.DeviceDesc90EF2      = "Qualcomm HS-USB WWAN Adapter 90EF"
 qcwwan.DeviceDesc90F02      = "Qualcomm HS-USB WWAN Adapter 90F0"
 qcwwan.DeviceDesc90F12      = "Qualcomm HS-USB WWAN Adapter 90F1"
+qcwwan.DeviceDesc90F31      = "Qualcomm HS-USB WWAN Adapter 90F3"
+qcwwan.DeviceDesc90F67      = "Qualcomm HS-USB WWAN Adapter 90F6"
+qcwwan.DeviceDesc90F77      = "Qualcomm HS-USB WWAN Adapter 90F7"
+qcwwan.DeviceDesc90FA3      = "Qualcomm HS-USB WWAN Adapter 90FA"
 qcwwan.DeviceDesc920D0      = "Qualcomm Gobi 3000 HS-USB Mobile Broadband Adapter 920D"
 qcwwan.Service.DispName     = "Qualcomm USB-NDIS WWAN miniport"
 DiskId1 = "Qualcomm USB-NDIS Miniport Device Installation Disk #1"

@@ -225,6 +225,7 @@ NTSTATUS QCPNP_AddDevice
    portDoExt->bDeviceRemoved = FALSE;
    portDoExt->bDeviceSurpriseRemoved = FALSE;
    portDoExt->bmDevState = DEVICE_STATE_ZERO;
+   portDoExt->FunctionLpcStarted = FALSE;
 
    QCPNP_GetDeviceCapabilities(portDoExt, TRUE); // store info in portExt
 
@@ -1986,6 +1987,8 @@ NTSTATUS QCPNP_SelectInterfaces
    UCHAR *pDescEnd;
    GUID *featureGuid;
    BOOLEAN bObexModel = FALSE;
+   BOOLEAN bDoneWithCustomInterface = FALSE;
+
    /*****
       typedef struct {
           unsigned long  Data1;
@@ -2242,12 +2245,21 @@ NTSTATUS QCPNP_SelectInterfaces
             {
                // For HS-USB vendor-specific descriptors with alter_settings
                // Overwrite the previous one
-               InterfaceList[--x].InterfaceDescriptor = pIntdesc;
+               if ((x > 0) && (bDoneWithCustomInterface == FALSE))
+               {
+                  InterfaceList[--x].InterfaceDescriptor = pIntdesc;
+               }
                pDevExt->HighSpeedUsbOk |= QC_HSUSB_ALT_SETTING_OK;
             }
             else
             {
                InterfaceList[x++].InterfaceDescriptor = pIntdesc;
+
+               // if EP(s) found in alt-setting 0, we are done
+               if (pIntdesc->bNumEndpoints != 0)
+               {
+                  bDoneWithCustomInterface = TRUE;
+               }
             }
             pDevExt->IfProtocol = (ULONG)pIntdesc->bInterfaceProtocol        |
                                   ((ULONG)pIntdesc->bInterfaceClass)   << 8  |
@@ -2275,6 +2287,11 @@ NTSTATUS QCPNP_SelectInterfaces
             return STATUS_UNSUCCESSFUL;
          }
          pStartPosition = (PVOID)((PCHAR)pIntdesc + pIntdesc->bLength);
+      }
+
+      if (bDoneWithCustomInterface == TRUE)
+      {
+         break;
       }
    } // while, for
 
@@ -2528,7 +2545,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.3.5");
+             DbgPrint("Driver Version %s\n", "2.1.3.6");
              DbgPrint("   |============================|\n");
           }
           else
@@ -2551,7 +2568,7 @@ NTSTATUS QCPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk);
-             DbgPrint("Driver Version %s\n", "2.1.3.5");
+             DbgPrint("Driver Version %s\n", "2.1.3.6");
              DbgPrint("   |===============================|\n");
           }
           QCSER_DbgPrint
@@ -2595,7 +2612,7 @@ NTSTATUS QCPNP_SelectInterfaces
          DbgPrint("   |   IF: CT%02d-CC%02d-DA%02d          |\n", pDevExt->ControlInterface,
                    pDevExt->usCommClassInterface, pDevExt->DataInterface);
          DbgPrint("   |   HS 0x%x       |\n", pDevExt->HighSpeedUsbOk);
-         DbgPrint("Driver Version 2.1.3.5\n");
+         DbgPrint("Driver Version 2.1.3.6\n");
          DbgPrint("   |===============================|\n\n");
       }
       else

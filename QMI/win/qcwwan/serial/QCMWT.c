@@ -229,25 +229,27 @@ VOID QCMWT_WriteThread(PVOID pContext)
          QcAcquireSpinLock(&pDevExt->WriteSpinLock, &levelOrHandle);
 
          // When all current data is sent, we check if a 0-len pkt is needed
-         if (IsListEmpty(&pDevExt->MWritePendingQueue)    && // no pending tx
-             IsListEmpty(&pDevExt->MWriteCompletionQueue) && // processed all returned
-             (pDevExt->pWriteHead == NULL))                  // no further writes
+         if (pDevExt->DeviceFunction != QCUSB_DEV_FUNC_LPC)
          {
-            if ((bytesSent > 0) && (bytesSent % pDevExt->wMaxPktSize == 0))
+            if (IsListEmpty(&pDevExt->MWritePendingQueue)    && // no pending tx
+                IsListEmpty(&pDevExt->MWriteCompletionQueue) && // processed all returned
+                (pDevExt->pWriteHead == NULL))                  // no further writes
             {
-			   if (( pDevExt->AggregationEnabled == 0 ) ||
-			   	   ((pDevExt->pWriteHead == NULL) && (pDevExt->WriteAggBuffer.CurrentCount == 0)))
-			   {
-            
-	              bSendZeroLength = TRUE;
-	              QCSER_DbgPrint
-	              (
-	                 QCSER_DBG_MASK_WRITE,
-	                 QCSER_DBG_LEVEL_DETAIL,
-	                 ("<%s> MWT: sent %uB, add 0-len", pDevExt->PortName, bytesSent)
-	              );
-	              bytesSent = 0;
-			   }
+               if ((bytesSent > 0) && (bytesSent % pDevExt->wMaxPktSize == 0))
+               {
+                  if (( pDevExt->AggregationEnabled == 0 ) ||
+                      ((pDevExt->pWriteHead == NULL) && (pDevExt->WriteAggBuffer.CurrentCount == 0)))
+                  {
+                     bSendZeroLength = TRUE;
+                     QCSER_DbgPrint
+                     (
+                        QCSER_DBG_MASK_WRITE,
+                        QCSER_DBG_LEVEL_DETAIL,
+                        ("<%s> MWT: sent %uB, add 0-len", pDevExt->PortName, bytesSent)
+                     );
+                     bytesSent = 0;
+                 }
+               }
             }
          }
 
@@ -1449,14 +1451,17 @@ process_event:
                // need to handle here
                if (!NT_SUCCESS(ntStatus))
                {
-                  // failure sending 0-len, flag it and resend
-                  bSendZeroLength = TRUE;
-                  QCSER_DbgPrint
-                  (
-                     QCSER_DBG_MASK_WRITE,
-                     QCSER_DBG_LEVEL_ERROR,
-                     ("<%s> MWT: error[%d] 0-len send failure\n", pDevExt->PortName, idx)
-                  );
+                  if (pDevExt->DeviceFunction != QCUSB_DEV_FUNC_LPC)
+                  {
+                     // failure sending 0-len, flag it and resend
+                     bSendZeroLength = TRUE;
+                     QCSER_DbgPrint
+                     (
+                        QCSER_DBG_MASK_WRITE,
+                        QCSER_DBG_LEVEL_ERROR,
+                        ("<%s> MWT: error[%d] 0-len send failure\n", pDevExt->PortName, idx)
+                     );
+                  }
                }
                else
                {
@@ -1479,6 +1484,15 @@ process_event:
 				pCurrIOBlock->ulActiveBytes -= ulTransferBytes;
             }
             pDevExt->pPerfstats->TransmittedCount += ulTransferBytes;
+
+            if ((pDevExt->DeviceFunction == QCUSB_DEV_FUNC_LPC) && (pDevExt->FunctionLpcStarted == FALSE))
+            {
+               if ((ntStatus == STATUS_SUCCESS) && (ulTransferBytes >= 1024))
+               {
+                  pDevExt->FunctionLpcStarted = TRUE;
+                  KeSetEvent(&pDevExt->L2KickReadEvent, IO_NO_INCREMENT, FALSE);
+               }
+            }
 
             if (ntStatus == STATUS_SUCCESS)
             {
@@ -1585,7 +1599,10 @@ process_event:
                         if (IsListEmpty(&pDevExt->MWritePendingQueue) &&
                             (pDevExt->pWriteHead == NULL))
                         {
-                           bSendZeroLength = TRUE;
+                           if (pDevExt->DeviceFunction != QCUSB_DEV_FUNC_LPC)
+                           {
+                              bSendZeroLength = TRUE;
+                           }
                         }
                         else
                         {

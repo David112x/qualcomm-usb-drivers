@@ -1,5 +1,5 @@
-Qualcomm USB Host Drivers Version 1.00.57
-12/17/2018
+Qualcomm USB Host Drivers Version 1.00.58
+02/08/2019
 
 This readme covers important information concerning Qualcomm USB Host drivers
 
@@ -20,7 +20,20 @@ Qualcomm USB Host Drivers are built for Windows XP, Windows Vista, Windows 7, an
 
 2. WHAT'S NEW
 
-This Release (Qualcomm USB Host Drivers Version 1.00.57) 12/17/2018
+This Release (Qualcomm USB Host Drivers Version 1.00.58) 02/08/2019
+USB Driver updates:
+   Serial driver 2.1.3.6:
+      a. Added PIDs 90F3, 90F6, 90F7, 90F8, 90F9, 90FA and 90FB support.
+   QDSS/DPL driver 1.0.2.0:
+      a. Added PIDs 90F6, 90F7, 90F8 and 90F9 support.
+   Network driver 4.0.5.8:
+      a. Added QMAPV4 support for PID 90F1.
+      b. Updated PID 90EA to PID 90F2 support for Win10.
+      c. Added PIDs 90F6, 90F7, 90F8 and 90F9, 90FA and 90FB support.
+   Filter driver 1.0.5.8
+      a. Added PIDs 90F6, 90F7, 90F8 and 90F9, 90FA and 90FB support.
+
+Prior Release (Qualcomm USB Host Drivers Version 1.00.57) 12/17/2018
 USB Driver updates:
    Serial driver 2.1.3.5:
       a. update to cleanup device protocol code

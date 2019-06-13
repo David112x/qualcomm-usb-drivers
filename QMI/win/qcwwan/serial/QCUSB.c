@@ -635,6 +635,11 @@ NTSTATUS QCUSB_ResetInput(IN PDEVICE_OBJECT pDevObj, IN QCUSB_RESET_SCOPE Scope)
       return STATUS_SUCCESS;
    }
 
+   if (pDevExt->DeviceFunction == QCUSB_DEV_FUNC_LPC)
+   {
+      return STATUS_SUCCESS;
+   }
+
    if (!inDevState(DEVICE_STATE_PRESENT_AND_INIT))
    {
       QCSER_DbgPrint
@@ -977,6 +982,11 @@ NTSTATUS QCUSB_ResetOutput(IN PDEVICE_OBJECT pDevObj, IN QCUSB_RESET_SCOPE Scope
       return STATUS_SUCCESS;
    }
 
+   if (pDevExt->DeviceFunction == QCUSB_DEV_FUNC_LPC)
+   {
+      return STATUS_SUCCESS;
+   }
+
    if (!inDevState(DEVICE_STATE_PRESENT_AND_INIT))
    {
       QCSER_DbgPrint
@@ -1308,6 +1318,11 @@ NTSTATUS QCUSB_SetRemoteWakeup(IN PDEVICE_OBJECT pDevObj)
     PURB urb;
     ULONG size = sizeof( struct _URB_CONTROL_FEATURE_REQUEST );
 
+    if (pDevExt->DeviceFunction == QCUSB_DEV_FUNC_LPC)
+    {
+       return STATUS_SUCCESS;
+    }
+
     urb = ExAllocatePool( NonPagedPool, size );
     if (urb == NULL)
     {
@@ -1347,6 +1362,11 @@ NTSTATUS QCUSB_ClearRemoteWakeup(IN PDEVICE_OBJECT pDevObj)
     PDEVICE_EXTENSION pDevExt = (PDEVICE_EXTENSION) pDevObj->DeviceExtension;
     PURB urb;
     ULONG size = sizeof( struct _URB_CONTROL_FEATURE_REQUEST );
+
+    if (pDevExt->DeviceFunction == QCUSB_DEV_FUNC_LPC)
+    {
+       return STATUS_SUCCESS;
+    }
 
     urb = ExAllocatePool( NonPagedPool, size );
     if (urb == NULL)
