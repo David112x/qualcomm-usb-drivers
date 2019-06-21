@@ -24,6 +24,25 @@ GENERAL DESCRIPTION
 #endif
 #include <vector>
 
+#define QC_INF_PATH L"C:\\Windows\\Inf"
+#define OEM_INF "\\oem*.inf"
+#define INF_SIZE_MAX (1024*1024)
+
+
+#define MATCH_VID    "VID_05C6"
+#define MATCH_DRIVER_STR1 "Qualcomm USB Composite Device"
+#define MATCH_DRIVER_STR2 "Qualcomm HS-USB Modem"
+#define MATCH_DRIVER_STR3 "Qualcomm Wireless HS-USB Ethernet Adapter"
+#define MATCH_DRIVER_STR4 "Qualcomm HS-USB Diagnostics"
+#define MATCH_DRIVER_STR5 "Qualcomm HS-USB WWAN Adapter"
+#define MATCH_DRIVER_STR6 "QDSS Data"
+#define MATCH_DRIVER_STR7 "QDSS Control"
+
+static PUCHAR gPnpUtilFileDataRaw;
+
+VOID PnpUtilScanInfFiles(LPCTSTR InfPath);
+BOOL PnpUtilMatchingInf(PCTSTR InfFullPath, PCTSTR InfFileName, ULONG DataSize);
+
 //---------------------------------------------------------------------------
 // Definitions
 //---------------------------------------------------------------------------
@@ -61,8 +80,485 @@ LPCWSTR DEVICE_OEM_PANASONIC = L"panasonic";
 LPCWSTR DEVICE_OEM_OPTION    = L"option";
 LPCWSTR DEVICE_OEM_QUALCOMM    = L"qualcomm";
 
+void PnpUtilInstallDrivers(CString installPath);
+void PnpUtilUnInstallDrivers(CString installPath);
+
+typedef BOOL(WINAPI *PFUNCPTR)(PVOID *);
+typedef BOOL(WINAPI *PFUNCPTR1)(PVOID);
+
+int QCRemoveMatchingDevice(HDEVINFO QCDevice,
+	PSP_DEVINFO_DATA QCDeviceInformation,
+	DWORD QCIndex,
+	LPVOID QCContext);
 
 std::set <CString> FilterList;
+
+
+void QdClrUninstall()
+{
+	UINT mRC = 0;
+	CString CmdrmDir = L"";
+	PVOID tempVal = NULL;
+	SYSTEM_INFO SystemInfo;
+
+	PFUNCPTR pFuncPtr;
+	pFuncPtr = (PFUNCPTR)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64DisableWow64FsRedirection");
+	if (pFuncPtr != NULL)
+	{
+		pFuncPtr(&tempVal);
+	}
+
+	GetNativeSystemInfo(&SystemInfo);
+	switch (SystemInfo.wProcessorArchitecture)
+	{
+	   case PROCESSOR_ARCHITECTURE_AMD64:
+	   {
+		   CmdrmDir.Format(L"Qdclr64.exe");
+#if DBG_ERROR_MESSAGE_BOX   
+		   MessageBox(NULL, L"PROCESSOR_ARCHITECTURE_AMD64", NULL, MB_YESNO);
+#endif
+		   break;
+	   }
+	   case PROCESSOR_ARCHITECTURE_ARM:
+	   {
+		   CmdrmDir.Format(L"Qdclrarm.exe");
+#if DBG_ERROR_MESSAGE_BOX   
+		   MessageBox(NULL, L"PROCESSOR_ARCHITECTURE_ARM", NULL, MB_YESNO);
+#endif
+		   break;
+	   }
+	   case PROCESSOR_ARCHITECTURE_ARM64:
+	   {
+		   CmdrmDir.Format(L"Qdclrarm64.exe");
+#if DBG_ERROR_MESSAGE_BOX   
+		   MessageBox(NULL, L"PROCESSOR_ARCHITECTURE_ARM64", NULL, MB_YESNO);
+#endif
+		   break;
+	   }
+	   case PROCESSOR_ARCHITECTURE_INTEL:
+	   {
+		   CmdrmDir.Format(L"Qdclr32.exe");
+#if DBG_ERROR_MESSAGE_BOX   
+		   MessageBox(NULL, L"PROCESSOR_ARCHITECTURE_INTEL", NULL, MB_YESNO);
+#endif
+		   break;
+	   }
+	   default:
+	   {
+		   CmdrmDir.Format(L"Qdclr32.exe");
+#if DBG_ERROR_MESSAGE_BOX   
+		   MessageBox(NULL, L"DEFAULT", NULL, MB_YESNO);
+#endif
+		   break;
+	   }
+	}
+
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	::ZeroMemory((LPVOID)&si, (SIZE_T)sizeof(si));
+	::ZeroMemory((LPVOID)&pi, (SIZE_T)sizeof(pi));
+	si.cb = sizeof(si);
+
+#if DBG_ERROR_MESSAGE_BOX   
+	MessageBox(NULL, CmdrmDir, NULL, MB_YESNO);
+#endif
+
+	BOOL bCP = ::CreateProcess(NULL,
+		(LPTSTR)(LPCWSTR)CmdrmDir,
+		0,
+		0,
+		FALSE,
+		0,
+		0,
+		0,
+		&si,
+		&pi);
+
+	if (bCP == FALSE)
+	{
+		// Unable to create MSIExec process
+		mRC = (int)::GetLastError();
+	}
+
+	// Wait until MSIExec process exits
+	::WaitForSingleObject(pi.hProcess, INFINITE);
+
+	// Get process exit code
+	DWORD procExitCode = NO_ERROR;
+	BOOL bEC = ::GetExitCodeProcess(pi.hProcess, &procExitCode);
+
+	// Close process and thread handles
+	::CloseHandle(pi.hProcess);
+	::CloseHandle(pi.hThread);
+
+	if (bEC == FALSE)
+	{
+		// Unable to obtain MSIExec process exit code
+		mRC = (int)::GetLastError();
+	}
+
+	if (procExitCode != NO_ERROR)
+	{
+		// MSIExec exited with an error
+		mRC = (int)procExitCode;
+	}
+
+	PFUNCPTR1 pFuncPtr1;
+	pFuncPtr1 = (PFUNCPTR1)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64RevertWow64FsRedirection");
+	if (pFuncPtr1 != NULL)
+	{
+		pFuncPtr1(tempVal);
+	}
+
+}
+
+void PnpUtilInstallDrivers(CString installPath)
+{
+	UINT mRC = 0;
+	CString CmdrmDir = L"";
+	PFUNCPTR pFuncPtr;
+	PVOID tempVal = NULL;
+
+	pFuncPtr = (PFUNCPTR)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64DisableWow64FsRedirection");
+
+	if (pFuncPtr != NULL)
+	{
+		pFuncPtr(&tempVal);
+	}
+
+	CmdrmDir.Format(L"c:\\windows\\system32\\cmd.exe /C pnputil -i -a \"%s\"", installPath);
+
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	::ZeroMemory((LPVOID)&si, (SIZE_T)sizeof(si));
+	::ZeroMemory((LPVOID)&pi, (SIZE_T)sizeof(pi));
+	si.cb = sizeof(si);
+	
+#if DBG_ERROR_MESSAGE_BOX   
+	MessageBox(NULL, CmdrmDir, NULL, MB_YESNO);
+#endif
+
+	BOOL bCP = ::CreateProcess(NULL,
+		(LPTSTR)(LPCWSTR)CmdrmDir,
+		0,
+		0,
+		FALSE,
+		0,
+		0,
+		0,
+		&si,
+		&pi);
+
+	if (bCP == FALSE)
+	{
+		// Unable to create MSIExec process
+		mRC = (int)::GetLastError();
+	}
+
+	// Wait until MSIExec process exits
+	::WaitForSingleObject(pi.hProcess, INFINITE);
+
+	// Get process exit code
+	DWORD procExitCode = NO_ERROR;
+	BOOL bEC = ::GetExitCodeProcess(pi.hProcess, &procExitCode);
+
+	// Close process and thread handles
+	::CloseHandle(pi.hProcess);
+	::CloseHandle(pi.hThread);
+
+	if (bEC == FALSE)
+	{
+		// Unable to obtain MSIExec process exit code
+		mRC = (int)::GetLastError();
+	}
+
+	if (procExitCode != NO_ERROR)
+	{
+		// MSIExec exited with an error
+		mRC = (int)procExitCode;
+	}
+
+	PFUNCPTR1 pFuncPtr1;
+	pFuncPtr1 = (PFUNCPTR1)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64RevertWow64FsRedirection");
+	if (pFuncPtr1 != NULL)
+	{
+		pFuncPtr1(tempVal);
+	}
+}
+
+void PnpUtilUnInstallDrivers(CString installPath)
+{
+	UINT mRC = 0;
+	CString CmdrmDir = L"";
+	CmdrmDir.Format(L"c:\\windows\\system32\\cmd.exe /C pnputil -f -d \"%s\"", installPath);
+
+#if DBG_ERROR_MESSAGE_BOX   
+	CString txt;
+	txt.Format(L"CDriverInstaller64App::PnpUtilScanInfFiles %s", CmdrmDir);
+	MessageBox(NULL, (LPCWSTR)txt, NULL, MB_YESNO);
+#endif 
+
+	PFUNCPTR pFuncPtr;
+	PVOID tempVal = NULL;
+
+	pFuncPtr = (PFUNCPTR)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64DisableWow64FsRedirection");
+
+	if (pFuncPtr != NULL)
+	{
+		pFuncPtr(&tempVal);
+	}
+
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	::ZeroMemory((LPVOID)&si, (SIZE_T)sizeof(si));
+	::ZeroMemory((LPVOID)&pi, (SIZE_T)sizeof(pi));
+	si.cb = sizeof(si);
+
+	BOOL bCP = ::CreateProcess(NULL,
+		(LPTSTR)(LPCWSTR)CmdrmDir,
+		0,
+		0,
+		FALSE,
+		0,
+		0,
+		0,
+		&si,
+		&pi);
+
+	if (bCP == FALSE)
+	{
+		// Unable to create MSIExec process
+		mRC = (int)::GetLastError();
+	}
+
+	// Wait until MSIExec process exits
+	::WaitForSingleObject(pi.hProcess, INFINITE);
+
+	// Get process exit code
+	DWORD procExitCode = NO_ERROR;
+	BOOL bEC = ::GetExitCodeProcess(pi.hProcess, &procExitCode);
+
+	// Close process and thread handles
+	::CloseHandle(pi.hProcess);
+	::CloseHandle(pi.hThread);
+
+	if (bEC == FALSE)
+	{
+		// Unable to obtain MSIExec process exit code
+		mRC = (int)::GetLastError();
+	}
+
+	if (procExitCode != NO_ERROR)
+	{
+		// MSIExec exited with an error
+		mRC = (int)procExitCode;
+	}
+	PFUNCPTR1 pFuncPtr1;
+	pFuncPtr1 = (PFUNCPTR1)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "Wow64RevertWow64FsRedirection");
+	if (pFuncPtr1 != NULL)
+	{
+		pFuncPtr1(tempVal);
+	}
+}
+
+VOID PnpUtilScanInfFiles(LPCTSTR InfPath)
+{
+	WIN32_FIND_DATA fileData;
+	HANDLE          fileHandle;
+	BOOL            notDone = TRUE;
+	UINT            idx = 0;
+	WCHAR           fullPath[MAX_PATH];
+	WCHAR           searchPath[MAX_PATH];
+	WCHAR           currentDir[MAX_PATH];
+	BOOL            dirSet = FALSE;
+	LARGE_INTEGER   infSize;
+	ULONG           dataSize;
+
+    StringCchCopy(searchPath, MAX_PATH, InfPath);
+	StringCchCat(searchPath, MAX_PATH, TEXT(OEM_INF));
+
+	printf("\n   INF Scan Path: <%ws>\n", InfPath);
+
+	fileHandle = FindFirstFile(searchPath, &fileData);
+	if (fileHandle == INVALID_HANDLE_VALUE)
+	{
+		printf("FindFirstFile failure\n");
+		return;
+	}
+#if DBG_ERROR_MESSAGE_BOX   
+	CString txt;
+	txt.Format(L"CDriverInstaller64App::PnpUtilScanInfFiles %s", InfPath);
+	MessageBox(NULL, (LPCWSTR)txt, NULL, MB_YESNO);
+#endif 
+
+	while (notDone == TRUE)
+	{
+		if ((fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+		{
+			// got a file
+			idx++;
+			if (dirSet == FALSE)
+			{
+				StringCchCopy(fullPath, MAX_PATH, InfPath);
+				StringCchCat(fullPath, MAX_PATH, TEXT("\\"));
+			}
+			else
+			{
+				StringCchCopy(fullPath, MAX_PATH, TEXT(".\\"));
+			}
+			infSize.LowPart = fileData.nFileSizeLow;
+			infSize.HighPart = fileData.nFileSizeHigh;
+			StringCchCat(fullPath, MAX_PATH, fileData.cFileName);
+
+			// printf("   full path <%ws>\n", fullPath);
+			if (infSize.QuadPart > (INF_SIZE_MAX - 2))
+			{
+				PnpUtilMatchingInf(fullPath, fileData.cFileName, (INF_SIZE_MAX - 2));
+			}
+			else
+			{
+				dataSize = (ULONG)infSize.QuadPart;
+				PnpUtilMatchingInf(fullPath, fileData.cFileName, dataSize);
+			}
+		}
+		notDone = FindNextFile(fileHandle, &fileData);
+	}  // while 
+
+	FindClose(fileHandle);
+}  // PnpUtilScanInfFiles
+
+BOOL PnpUtilMatchingInf(PCTSTR InfFullPath, PCTSTR InfFileName, ULONG DataSize)
+{
+	UINT errLine = 0;
+	HINF myHandle;
+	INFCONTEXT infCtxt;
+	BOOL bResult = TRUE, bResult1;
+	DWORD requiredSize = 0;
+	UINT finalSection = 0;
+	UINT lineCount = 0;
+	BOOL matchFound = FALSE;
+	DWORD bytesRead;
+	BOOL notAscii = TRUE;
+	HRESULT res;
+	PCHAR matchType = "A";
+
+	myHandle = CreateFile
+	(
+		InfFullPath,
+		GENERIC_READ,
+		FILE_SHARE_READ,
+		NULL,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+	if (myHandle == INVALID_HANDLE_VALUE)
+	{
+		printf("Error: SetupOpenInfFile <%ws> 0x%X\n", InfFullPath, GetLastError());
+		return FALSE;
+	}
+
+	ZeroMemory(gPnpUtilFileDataRaw, INF_SIZE_MAX);
+
+	bResult = ReadFile
+	(
+		myHandle,
+		(PVOID)gPnpUtilFileDataRaw,
+		DataSize,
+		&bytesRead,
+		NULL
+	);
+	if (bResult == TRUE)
+	{
+		// printf("Read <%ws> %u bytes\n", InfFullPath, bytesRead, DataSize);
+	}
+	else
+	{
+		printf("Error: Failed to read <%ws>\n", InfFullPath);
+		return FALSE;
+	}
+
+	if (bytesRead < 8)
+	{
+		// printf("Error: <%ws> insufficient data\n", InfFullPath);
+	}
+
+	gPnpUtilFileDataRaw[bytesRead + 1] = 0;
+	gPnpUtilFileDataRaw[bytesRead + 2] = 0;
+
+	// simple detection of encoding format
+	if (gPnpUtilFileDataRaw[0] == 0xEF || gPnpUtilFileDataRaw[0] == 0xFE || gPnpUtilFileDataRaw[0] == 0xFF ||
+		gPnpUtilFileDataRaw[0] == 0x00)
+	{
+		notAscii = TRUE;
+	}
+	if (gPnpUtilFileDataRaw[0] < 0x80 && gPnpUtilFileDataRaw[1] < 0x80)
+	{
+		notAscii = FALSE;
+	}
+
+	// printf("[%ws] (%uB) 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X NotASCII %d\n", InfFullPath, bytesRead,
+	//         gPnpUtilFileDataRaw[0], gPnpUtilFileDataRaw[1], gPnpUtilFileDataRaw[2], gPnpUtilFileDataRaw[3], gPnpUtilFileDataRaw[4], notAscii);
+
+	// Filter based on VID/PID to avoid removal of commercial GOBI devices
+	// For more aggressive removal based on VID only, comment out the PID lines
+	if (notAscii == FALSE)
+	{
+		// traditional ASCII file
+		if ( (StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_VID) != NULL) &&
+			 ((StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_DRIVER_STR1) != NULL) ||
+			  (StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_DRIVER_STR2) != NULL) || 
+			  (StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_DRIVER_STR3) != NULL) ||
+			  (StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_DRIVER_STR4) != NULL) ||
+		      (StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_DRIVER_STR5) != NULL) ||
+			  (StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_DRIVER_STR6) != NULL) ||
+			  (StrStrIA((PCSTR)gPnpUtilFileDataRaw, MATCH_DRIVER_STR7) != NULL)))
+		{
+		   matchType = "A";
+		   matchFound = TRUE;
+		}
+		else
+		{
+			printf("(A) Candidate but not to be removed: <%ws>\n", InfFullPath);
+		}
+	}
+	else
+	{
+		if ((StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_VID)) != NULL) &&
+			((StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_DRIVER_STR1)) != NULL) ||
+			 (StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_DRIVER_STR2)) != NULL) ||
+			 (StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_DRIVER_STR3)) != NULL) ||
+			 (StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_DRIVER_STR4)) != NULL) ||
+			 (StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_DRIVER_STR5)) != NULL) ||
+			 (StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_DRIVER_STR6)) != NULL) ||
+			 (StrStrIW((PTSTR)gPnpUtilFileDataRaw, TEXT(MATCH_DRIVER_STR7)) != NULL)))
+		{
+			matchType = "W";
+			matchFound = TRUE;
+		}
+		else
+		{
+			printf("(W) Candidate but not to be removed: <%ws>\n", InfFullPath);
+		}
+	}
+
+	CloseHandle(myHandle);
+
+	if (matchFound == TRUE)
+	{
+#if DBG_ERROR_MESSAGE_BOX   
+		CString txt;
+		txt.Format(L"CDriverInstaller64App::PnpUtilScanInfFiles %s and INF file %s", InfFullPath, InfFileName);
+		MessageBox(NULL, (LPCWSTR)txt, NULL, MB_YESNO);
+#endif 
+		PnpUtilUnInstallDrivers(InfFileName);
+	}
+
+	return matchFound;
+} 
 
 /*=========================================================================*/
 // cDeviceManager Methods
@@ -855,6 +1351,8 @@ bool cDeviceManager::SetupDriverEnvironment(
 
    difxPath = pre7Path;
 
+#if 0
+
    if (b64 == false)
    {
       difxPath += L"..\\..\\DifxApi\\i386\\";
@@ -901,6 +1399,7 @@ bool cDeviceManager::SetupDriverEnvironment(
 #endif   
       return bRC;
    }
+#endif
 
    // Set the driver INF paths
    CString serPath = pre7Path;
@@ -1992,6 +2491,8 @@ if(false == b64)
 #endif
 }
 
+   QdClrUninstall();
+
    std::vector <CString> infFiles;
    infFiles.push_back( mQCFilterPath );
    infFiles.push_back( mQCSerialPath );
@@ -2022,6 +2523,12 @@ if(false == b64)
    {
       CString infFile = infFiles[i];
 
+#if DBG_ERROR_MESSAGE_BOX   
+	  MessageBox(NULL, infFile, NULL, MB_YESNO);
+#endif
+
+	  PnpUtilInstallDrivers(infFile);
+#if 0
       DWORD rc = mpFnPreinstall( (LPCWSTR)infFile, flag );
       if (rc != ERROR_SUCCESS && rc != ERROR_ALREADY_EXISTS)
       {
@@ -2039,6 +2546,7 @@ if(false == b64)
 
       BOOL bRebootFlag = FALSE;
 #if DBG_ERROR_MESSAGE_BOX  
+      CString txt;
       txt.Format( L"Install Drivers %d, %s",i,infFile);
       MessageBox(NULL, (LPCWSTR)txt,NULL,MB_YESNO); 
 #endif      
@@ -2057,6 +2565,7 @@ if(false == b64)
       }
 	  txt.Format( L"Install( %s ) = %u, flag = 0x%x", (LPCWSTR)infFile, rc,flag);
 	  mLog.Log( (LPCWSTR)txt );
+#endif
    }
 
    ScanForHardwareChanges();
@@ -2104,6 +2613,8 @@ bool cDeviceManager::UninstallDrivers(
       return bRC;
    }
 
+   QdClrUninstall();
+
    std::vector <CString> infFiles;
    infFiles.push_back( mQCNetPath );
    infFiles.push_back( mQCModemPath );
@@ -2115,11 +2626,23 @@ bool cDeviceManager::UninstallDrivers(
 
    CString txt;
    DWORD flags = DRIVER_PACKAGE_DELETE_FILES | DRIVER_PACKAGE_FORCE;
+
+   gPnpUtilFileDataRaw = (PUCHAR)malloc(INF_SIZE_MAX);
+   if (gPnpUtilFileDataRaw == NULL)
+   {
+	   printf("error: no memory for gPnpUtilFileDataRaw\n");
+	   return false;
+   }
+
    for (ULONG i = 0; i < fileCount; i++)
    {
       CString infFile = infFiles[i];
 
       BOOL bRebootFlag = FALSE;
+	  //PnpUtilUnInstallDrivers(infFile);
+	  PnpUtilScanInfFiles(QC_INF_PATH);
+
+#if 0
       DWORD rc = mpFnUninstall( (LPCWSTR)infFile, flags, 0, &bRebootFlag );
       if ( (rc != ERROR_SUCCESS) 
       &&   (rc != ERROR_DRIVER_PACKAGE_NOT_IN_STORE)
@@ -2130,6 +2653,7 @@ bool cDeviceManager::UninstallDrivers(
 
          /*return bRC;*/
       }
+#endif
    }
 
    CString svcNameSer = L"qcusbser";
@@ -2180,6 +2704,12 @@ bool cDeviceManager::UninstallDrivers(
    DeleteRegValue( (LPCWSTR)key, pName );
 
    ScanForHardwareChanges();
+
+   if (gPnpUtilFileDataRaw)
+   {
+	   free(gPnpUtilFileDataRaw);
+	   gPnpUtilFileDataRaw = NULL;
+   }
 
    bRC = true;
    return bRC;

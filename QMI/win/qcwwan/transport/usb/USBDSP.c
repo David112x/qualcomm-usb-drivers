@@ -1554,6 +1554,16 @@ void USBDSP_GetMUXInterface(PDEVICE_EXTENSION  pDevExt, UCHAR InterfaceNumber)
        ("<%s> <--- USBDSP_GetMUXInterface IRP 0x%p (Status: %d)\n", 
          pDevExt->PortName, pIrp, Status)
     );
+
+    QCUSB_DbgPrint
+    (
+       QCUSB_DBG_MASK_CONTROL,
+       QCUSB_DBG_LEVEL_TRACE,
+       ("<%s> <--- USBDSP_GetMUXInterface MUX_INTERFACE_INFO %d %d %d 0x%p \n", 
+         pDevExt->PortName, pDevExt->MuxInterface.InterfaceNumber,
+         pDevExt->MuxInterface.PhysicalInterfaceNumber, pDevExt->MuxInterface.MuxEnabled, pDevExt->MuxInterface.FilterDeviceObj)
+    );
+    
     if (Status == STATUS_SUCCESS)
     {
        

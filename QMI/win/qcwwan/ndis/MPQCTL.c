@@ -840,6 +840,15 @@ PQMICTL_TRANSACTION_ITEM MPQCTL_FindQMICTLTransactionItem
 
    *pPtrAdapter = pAdapter;
    
+   QCNET_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_TRACE,
+      ("<%s> <--- pDevExt MUX_INTERFACE_INFO %d %d %d 0x%p \n", 
+        pDevExt->PortName, pDevExt->MuxInterface.InterfaceNumber,
+        pDevExt->MuxInterface.PhysicalInterfaceNumber, pDevExt->MuxInterface.MuxEnabled, pDevExt->MuxInterface.FilterDeviceObj)
+   );
+   
    NdisAcquireSpinLock(&GlobalData.Lock);
    if (!IsListEmpty(&GlobalData.AdapterList))
    {
@@ -856,6 +865,16 @@ PQMICTL_TRANSACTION_ITEM MPQCTL_FindQMICTLTransactionItem
          NdisReleaseSpinLock(&GlobalData.Lock);
          
          pTempDevExt = (PDEVICE_EXTENSION)pAdapter->USBDo->DeviceExtension;
+         
+         QCNET_DbgPrint
+         (
+            QCUSB_DBG_MASK_CONTROL,
+            QCUSB_DBG_LEVEL_TRACE,
+            ("<%s> <--- pTempDevExt MUX_INTERFACE_INFO %d %d %d 0x%p \n", 
+              pTempDevExt->PortName, pTempDevExt->MuxInterface.InterfaceNumber,
+              pTempDevExt->MuxInterface.PhysicalInterfaceNumber, pTempDevExt->MuxInterface.MuxEnabled, pTempDevExt->MuxInterface.FilterDeviceObj)
+         );
+         
          if ((pDevExt->MuxInterface.PhysicalInterfaceNumber == pTempDevExt->MuxInterface.PhysicalInterfaceNumber) &&
              (pDevExt->MuxInterface.FilterDeviceObj == pTempDevExt->MuxInterface.FilterDeviceObj))
          {

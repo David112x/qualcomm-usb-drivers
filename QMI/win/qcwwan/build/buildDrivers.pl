@@ -37,7 +37,7 @@ use strict;
 # Only serial driver is compiled for arm builds
 
 my @DriversList = ("serial","ndisnet","ndismbb","filter","qdss");
-my @BuildArchList = ("Win32","x64");
+my @BuildArchList = ("Win32","x64","arm","arm64");
 my @OSList = ("Win7", "Win10");
 my $Rebuild = 'Rebuild'; 
 my $Checked = "Checked";
@@ -108,7 +108,9 @@ my %InstallDrivers = (
 
 my %ArchDir = (
    Win32   => ["x86","i386"],
-   x64     => ["x64","amd64"]
+   x64     => ["x64","amd64"],
+   arm     => ["arm","arm"],
+   arm64     => ["arm64","arm64"]
 );
 
 # Build directories
@@ -491,9 +493,9 @@ sub BuildDrivers
          # Build each platform architecture
          foreach $BuildArch (@BuildArchList)
          {
-            if (($BuildArch eq "arm") && ($Driver ne "serial"))
+            if ((($BuildArch eq "arm") || ($BuildArch eq "arm64")) && (($Driver eq "ndisnet") || ($Driver eq "ndismbb")))
             {
-               TRACE "\nARM only supported for serial driver. Skipping build for $Driver on ARM.\n\n";
+               TRACE "\nARM only supported for non net drivers. Skipping build for $Driver on ARM.\n\n";
             }
             else
             { 
@@ -582,7 +584,9 @@ sub BuildDrivers
 sub CreateInstallDirs
 {
    my $BuildType;
-   my $MakeCatOSList = "XP_X86,Server2003_X86,XP_X64,Server2003_X64,Vista_X86,Server2008_X86,Vista_X64,Server2008_X64,7_X86,7_X64,Server2008R2_X64,8_X86,8_X64,Server8_X64";
+   my $MakeCatOSList = "XP_X86,Server2003_X86,XP_X64,Server2003_X64,Vista_X86,Server2008_X86,Vista_X64,Server2008_X64,7_X86,7_X64,Server2008R2_X64,8_X86,8_X64,Server8_X64,6_3_X86,6_3_X64,Server6_3_X64,10_X86,10_X64,Server10_X64,10_AU_X86,10_AU_X64,Server2016_X64,10_RS2_X86,10_RS2_X64,ServerRS2_X64,10_RS3_X86,10_RS3_X64,ServerRS3_X64,10_RS4_X86,10_RS4_X64,ServerRS4_X64";
+
+   my $MakeCatOSListArm = "8_ARM,6_3_ARM,Server10_ARM64,10_RS3_ARM64,10_RS4_ARM64,ServerRS4_ARM64";
 
    # to make it easier for user to install by pointing to same path (vs specific inf) for each device, create a
    # separate OS directory with inf/drivers specific to that OS
@@ -639,6 +643,28 @@ sub CreateInstallDirs
 
          # Signing 
          Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ $OSDir\\ cat));
+
+         #Signing sys file
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\amd64\\ $OSDir\\filter\\amd64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm\\ $OSDir\\filter\\arm\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm64\\ $OSDir\\filter\\arm64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\i386\\ $OSDir\\filter\\i386\\ sys));
+
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\amd64\\ $OSDir\\ndis\\5.1\\amd64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\i386\\ $OSDir\\ndis\\5.1\\i386\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\amd64\\ $OSDir\\ndis\\6.2\\amd64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\i386\\ $OSDir\\ndis\\6.2\\i386\\ sys));
+
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\amd64\\ $OSDir\\qdss\\amd64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm\\ $OSDir\\qdss\\arm\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm64\\ $OSDir\\qdss\\arm64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\i386\\ $OSDir\\qdss\\i386\\ sys));
+
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\amd64\\ $OSDir\\serial\\amd64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm\\ $OSDir\\serial\\arm\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm64\\ $OSDir\\serial\\arm64\\ sys));
+         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\i386\\ $OSDir\\serial\\i386\\ sys));
+
       }
       # remove all .inf, .cat, and driver directories from target since they are in OS dir now
       Run(qq(del *.inf));
@@ -655,7 +681,13 @@ sub CreateInstallDirs
 #----------------------------------------------------------------------------
 sub BuildInstallShield 
 {
-   BuildVSProject1( "$InstallDir\\DriversInstaller.10.sln", "Release");
+   #BuildVSProject1( "$InstallDir\\DriversInstaller.10.sln", "Release");
+   BuildVSProject( "$InstallDir\\CustomActions\\DriversInstallerCA.vcxproj", "", "fre", "Win32");
+   BuildVSProject( "$InstallDir\\DriverInstaller64\\DriverInstaller64.vcxproj", "", "fre", "Win32");
+   BuildVSProject( "$InstallDir\\Qdclr\\Qdclr.vcxproj", "", "fre", "Win32");
+   BuildVSProject( "$InstallDir\\Qdclr\\Qdclr.vcxproj", "", "fre", "x64");
+   BuildVSProject( "$InstallDir\\Qdclr\\Qdclr.vcxproj", "", "fre", "ARM");
+   BuildVSProject( "$InstallDir\\Qdclr\\Qdclr.vcxproj", "", "fre", "ARM64");
    if ($WHQL =~ m/whql/i)
    {
       Run(qq(xcopy /R /F /Y /I /S $TargetDir\\$WHQLDir\\* $InstallDir\\drivers\\Qualcomm\\target\\));
@@ -666,7 +698,7 @@ sub BuildInstallShield
    }
    Run(qq($InstallShieldCmd -p $InstallDir\\QualcommDriverInstall.ism));
    Run(qq(xcopy /R /F /Y /I /S \"$InstallDir\\QualcommDriverInstall\\Default Configuration\\Release\\DiskImages\\DISK1\\*\" $InstallDir\\setup\\));
-   BuildVSProject1( "$InstallDir\\setup\\setup.10.sln", "Release");
+   BuildVSProject( "$InstallDir\\setup\\setup.vcxproj", "", "fre", "Win32");
    Run(qq(perl $DriversDir\\build\\tcLocal.pl $InstallDir\\setup\\Release\\ $InstallDir\\setup\\Release\\ exe));
 
    Run(qq(xcopy /R /F /Y /I /S \"$InstallDir\\setup\\Release\\*.exe\" $TargetDir\\72\\));

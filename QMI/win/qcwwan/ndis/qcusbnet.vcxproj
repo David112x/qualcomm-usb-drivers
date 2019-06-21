@@ -42,7 +42,7 @@
     <Configuration>Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
     <RootNamespace>qcusbnet</RootNamespace>
-    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -173,7 +173,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS60_MINIPORT=1;NDIS_LEGACY_MINIPORT;NDIS620_MINIPORT=1;QC_IP_MODE;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
@@ -187,7 +187,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS60_MINIPORT=1;NDIS_LEGACY_MINIPORT;NDIS620_MINIPORT=1;QC_IP_MODE;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
@@ -201,7 +201,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS60_MINIPORT=1;NDIS_LEGACY_MINIPORT;NDIS620_MINIPORT=1;QC_IP_MODE;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
@@ -215,7 +215,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS60_MINIPORT=1;NDIS_LEGACY_MINIPORT;NDIS620_MINIPORT=1;QC_IP_MODE;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
@@ -229,7 +229,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS51_MINIPORT=1;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
@@ -242,7 +242,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS51_MINIPORT=1;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
@@ -255,7 +255,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS51_MINIPORT=1;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCMP_QMAP_V2_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>
@@ -268,7 +268,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS_MINIPORT_DRIVER=1;NDIS_WDM=1;IOCTL_INTERFACE;BINARY_COMPATIBLE=0;NDIS51_MINIPORT=1;CHECKED_SHIPPABLE;QCQMI_SUPPORT;QCUSB_SHARE_INTERRUPT;QCUSB_PWR;QCSER_SELECTIVE_SUSPEND;MP_QCQOS_ENABLED;QC_IP_MODE;QCQOS_IPV6;QCMP_MBIM_DL_SUPPORT;QCMP_MBIM_UL_SUPPORT;QCMP_UL_TLP;QCMP_DL_TLP;QCMP_QMAP_V1_SUPPORT;QCMP_QMAP_V2_SUPPORT;QCUSB_DBGPRINT;ENABLE_LOGGING;QCUSB_DBGPRINT_BYTES;POOL_NX_OPTIN=1;EVENT_TRACING</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);..\transport\usb;.</AdditionalIncludeDirectories>
       <WppEnabled>true</WppEnabled>
       <WarningLevel>Level2</WarningLevel>
       <WppScanConfigurationData>mpwpp.h</WppScanConfigurationData>

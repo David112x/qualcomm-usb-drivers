@@ -343,57 +343,68 @@
 		<col def="S0">ISDotNetInstallerArgsRollback</col>
 		<row><td>AllOtherFiles</td><td>{1AEEFD7B-BF49-4997-A33C-59F8038AB500}</td><td>DRIVERPACKAGE</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles1</td><td>{37F85144-0FA1-4062-8846-FD4D59568AE3}</td><td>QUALCOMM1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles10</td><td>{30F24197-8986-4EFC-8F79-5C32D49801E7}</td><td>AMD641</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles11</td><td>{5F8774DC-80B7-48DD-8D67-09A6C9A3FE7B}</td><td>I3861</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles12</td><td>{B6D9D385-C636-4ED4-9833-DB10F9F441DA}</td><td>_.2</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles13</td><td>{8EBA5D68-BA2E-4FA6-A6CB-1B9C6A0A4A1C}</td><td>AMD642</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles14</td><td>{CED21961-2D8E-4F24-9655-D38C5B3AD5A5}</td><td>I3862</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles15</td><td>{21806F69-0B48-4FA3-9258-268E89538FCB}</td><td>QDSS</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles16</td><td>{E494F379-FFBF-4D9A-B504-6581EEAAD320}</td><td>AMD643</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles17</td><td>{612235D5-E045-4BEC-892B-677DC667CF84}</td><td>I3863</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles18</td><td>{77A2DCC4-3F01-432C-B6A8-1C4DD00F725E}</td><td>SERIAL</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles19</td><td>{E4FFE20B-5BAE-4FC6-A4A2-7FBDA9DC7917}</td><td>AMD644</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles10</td><td>{93A956AC-997B-4865-9A05-ADE268B41EBD}</td><td>NDIS</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles11</td><td>{23CEDD60-57D8-48E0-B1A5-945508E9BA5C}</td><td>_.1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles12</td><td>{5CE9C1F7-5B61-498A-9B5D-3F6567912BAA}</td><td>AMD641</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles13</td><td>{62E80214-B9D6-4837-B6B9-658F59ECA930}</td><td>I3861</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles14</td><td>{EAC31515-95DD-46C8-834E-932166BECD6C}</td><td>_.2</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles15</td><td>{9E3A5B1B-501F-4B66-9DC3-BEE7A9C934BA}</td><td>AMD642</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles16</td><td>{34A273D3-9ED7-4F26-A40B-FAE7AF498C63}</td><td>I3862</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles17</td><td>{EF1F9333-ECFA-4188-B261-086FBC9E1A33}</td><td>QDSS</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles18</td><td>{0B2BCDAF-48D2-4C1A-A7B6-ABE76698F2D5}</td><td>AMD643</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles19</td><td>{8D516FE2-0C41-458D-81BC-33259CF2E5A3}</td><td>ARM1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles2</td><td>{CAC3EAE5-386C-4176-90E5-EDF6214AF58F}</td><td>FRE</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles20</td><td>{4E86BF59-4C1C-4273-BA71-B969BB11EBE6}</td><td>I3864</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles21</td><td>{21A043F0-6799-43F1-B40F-BFD75C2F1D70}</td><td>WINDOWS7</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles22</td><td>{738C6152-C317-4B33-A4C5-71A227643578}</td><td>FILTER1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles23</td><td>{8E651A9A-9BB1-4971-9776-7AD98052D7C6}</td><td>AMD645</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles24</td><td>{AAA63392-5C97-401E-ABA5-4F0FEBAEFB95}</td><td>I3865</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles25</td><td>{9B0E3983-449E-47C4-90F3-A74C86E18759}</td><td>NDIS1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles26</td><td>{B5813960-4F73-4DE5-B6DB-01AB84D52318}</td><td>_.11</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles27</td><td>{9CA01436-67B8-4AAD-84D6-90F16258DAD1}</td><td>AMD646</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles28</td><td>{EBC5D90D-5920-4EBF-8C87-5F6C8FB7F07C}</td><td>I3866</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles29</td><td>{DA4CBE4A-E691-45D7-81C9-C25B597EC95F}</td><td>_.21</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles20</td><td>{8AB81543-0F04-43C8-ADD6-8D75B94EB322}</td><td>ARM641</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles21</td><td>{4C3A2A1A-22D5-4BE8-9ECA-FFCA3F79BA51}</td><td>I3863</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles22</td><td>{BA5B12F7-77C4-4275-92D3-4089462C33E2}</td><td>SERIAL</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles23</td><td>{B3B4157B-5AD7-47CE-8BD0-375024AAAD61}</td><td>AMD644</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles24</td><td>{0A4237F4-921B-47D8-A5C5-39A06D997840}</td><td>ARM2</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles25</td><td>{BD8A89B6-3E8E-4C54-944C-6D4D562765AC}</td><td>ARM642</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles26</td><td>{8B358537-64BD-4F05-A7BA-76AFC4BB9736}</td><td>I3864</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles27</td><td>{0468A9BC-8941-47E2-AB79-11CE552F9BDD}</td><td>WINDOWS10</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles28</td><td>{23DA82CD-DF6D-4740-9FEE-B9E71D846832}</td><td>FILTER1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles29</td><td>{4C48A14B-FFD3-4C11-ACAE-B0BA55961195}</td><td>AMD645</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles3</td><td>{DE84EE6E-62D3-4F9B-8F73-E75D66FA9ADC}</td><td>TOOLS</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles30</td><td>{78079A29-4069-411E-8FD9-3523F4455199}</td><td>AMD647</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles31</td><td>{D3EF3B78-F990-460D-8243-271022481962}</td><td>I3867</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles32</td><td>{B55DCF11-F517-4E80-9C56-FC2ED4FB4D17}</td><td>QDSS1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles33</td><td>{E02C407C-0A37-450F-9AB9-ED581A092445}</td><td>AMD648</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles34</td><td>{24CAE6FE-B7A8-426D-B93C-980B26BA8544}</td><td>I3868</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles35</td><td>{177391DA-5A10-477F-9978-E6D5D9A022D9}</td><td>SERIAL1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles36</td><td>{433B9BA3-3F4A-4C89-8343-8C2E6C4CD1DF}</td><td>AMD6410</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles37</td><td>{1CDD219C-79ED-4909-82DE-033915A080E7}</td><td>I38610</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles38</td><td>{BA931F74-0E7B-4913-93F5-052FA2C5F6B7}</td><td>DIFXAPI</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles39</td><td>{1B2E2FC8-EB1D-4D67-AA92-7CCB1D0B0103}</td><td>I3869</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles4</td><td>{263A9128-0F5F-4427-B610-1EBA688CAC52}</td><td>WINDOWS10</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles40</td><td>{E9024B39-8CF6-4AA3-BADC-BE5D5258E4F4}</td><td>AMD649</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles5</td><td>{AFDE07DD-4281-4813-BF9B-8BB0258AC8AE}</td><td>FILTER</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles30</td><td>{AD47C995-ADF3-47BE-90EF-970C32C53D7B}</td><td>ARM3</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles31</td><td>{CF754893-C5D4-434D-9B25-ACCE18AC7748}</td><td>ARM643</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles32</td><td>{AB708A24-2857-4063-92AD-CD1775FC2EAB}</td><td>I3865</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles33</td><td>{A7A2754A-7BBC-47C3-A607-A79C76380EFB}</td><td>NDIS1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles34</td><td>{450659A0-3EC7-45F2-B852-58C380060A9F}</td><td>_.11</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles35</td><td>{461C01B8-7707-48BC-80B8-87E07D2C86A7}</td><td>AMD646</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles36</td><td>{1965E3EF-FFBB-466C-8D43-B0A897697955}</td><td>I3866</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles37</td><td>{BDD4ABDC-3D6B-4C0F-88BB-AA15B0DE9C03}</td><td>_.21</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles38</td><td>{A56D9443-50BB-4416-80F1-D892B5B92FD4}</td><td>AMD647</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles39</td><td>{FCC260F2-EDFC-4981-80FE-18E8A55A4362}</td><td>I3867</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles4</td><td>{0424F1A0-BA3F-4038-9D0D-EDC53A7D3AB9}</td><td>WINDOWS7</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles40</td><td>{B3C5C2E9-272F-4C3C-9240-E189827C9EE8}</td><td>QDSS1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles41</td><td>{2FB8E297-0BE6-414A-8791-BB91053BCDD1}</td><td>AMD648</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles42</td><td>{DF05733C-3756-4879-ABD1-725ECE4D6204}</td><td>ARM4</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles43</td><td>{B8A39F1F-6C9C-46F7-8CD0-DC935F12B998}</td><td>ARM644</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles44</td><td>{82048FDD-B3B5-48BF-9610-0AFC09D5A680}</td><td>I3868</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles45</td><td>{8FA33C39-6C9A-4848-9FE0-DD480FF5C4BE}</td><td>SERIAL1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles46</td><td>{15D4EA78-A3E7-4AF1-8876-9D3109E51E01}</td><td>AMD649</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles47</td><td>{7A0A36FD-6298-4C8A-8288-636A4882D467}</td><td>ARM5</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles48</td><td>{9C0D9FE2-F36A-4ABD-9BBB-4CFB06F204CA}</td><td>ARM645</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles49</td><td>{84562E59-1D0A-4C0C-92D2-6D90F001693D}</td><td>I3869</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles5</td><td>{664ABCFF-2985-416F-8554-F0527285F829}</td><td>FILTER</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>AllOtherFiles50</td><td>{F04996AF-EE41-4CFC-88B9-F0D2C51F9558}</td><td>INSTALLDIR</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles6</td><td>{A28B932E-DEA3-4F54-ACBC-61F131608836}</td><td>AMD64</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles7</td><td>{9F1284F2-F4C6-44CF-93CA-58CB86A53252}</td><td>I386</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles8</td><td>{44D33E5D-F64A-4A88-9922-0B8DD84022D1}</td><td>NDIS</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>AllOtherFiles9</td><td>{926F328C-63A5-4EAD-94C7-CD8D6C5738BE}</td><td>_.1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>DIFxAPI.dll</td><td>{7EDC206D-3C0A-474C-B4CA-EAF134653792}</td><td>AMD649</td><td>0</td><td/><td>difxapi.dll</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>DIFxAPI.dll1</td><td>{0852C0BA-32C2-46D4-9B53-7AECDBF327AA}</td><td>I3869</td><td>0</td><td/><td>difxapi.dll1</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>DriverInstaller64.exe</td><td>{D4300DE6-4A0F-4F97-9534-EA7773174B8B}</td><td>QUALCOMM1</td><td>0</td><td/><td>driverinstaller64.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles6</td><td>{EFB5CA94-44BC-4770-8664-D549BB5D4E14}</td><td>AMD64</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles7</td><td>{A7094815-EAAD-4F94-A84B-E4F1B5AC08B4}</td><td>ARM</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles8</td><td>{A729C4D3-98EA-460D-9743-B7964810C1DB}</td><td>ARM64</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>AllOtherFiles9</td><td>{D9E3C5B7-8D2B-4262-9D93-83D613BF2FAD}</td><td>I386</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>DriverInstaller64.exe</td><td>{D4300DE6-4A0F-4F97-9534-EA7773174B8B}</td><td>QUALCOMM1</td><td>0</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>DriverInstaller64.exe1</td><td>{CC98D967-E88F-4D15-B12C-16FE3BE29F5F}</td><td>QUALCOMM1</td><td>8</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>DriverInstaller64.exe2</td><td>{71FF90D6-1C73-4604-99BA-30220E90352C}</td><td>QUALCOMM1</td><td>8</td><td/><td>driverinstaller64.exe1</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>DriversInstallerCA.dll</td><td>{67BDD32F-FD00-469A-9911-5DF4090622A2}</td><td>QUALCOMM1</td><td>0</td><td/><td>driversinstallerca.dll</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>WdfCoInstaller01009.dll</td><td>{721D3EF1-3A37-4977-88ED-F70D60DCAD79}</td><td>AMD643</td><td>8</td><td/><td>wdfcoinstaller01009.dll</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>WdfCoInstaller01009.dll1</td><td>{26519A88-1E72-4FE1-A2DE-F48735318A6A}</td><td>I3863</td><td>8</td><td/><td>wdfcoinstaller01009.dll1</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>WdfCoInstaller01009.dll2</td><td>{6D1A05BE-B04A-4DF0-9425-35B975A17831}</td><td>AMD648</td><td>8</td><td/><td>wdfcoinstaller01009.dll2</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>WdfCoInstaller01009.dll3</td><td>{BCE2A1AA-738F-44BF-B3EF-1B57EDF9440C}</td><td>I3868</td><td>8</td><td/><td>wdfcoinstaller01009.dll3</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
-		<row><td>logReader.exe</td><td>{88EE11BE-47F9-4875-BC75-85F23A779AE5}</td><td>TOOLS</td><td>0</td><td/><td>logreader.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>WdfCoInstaller01009.dll</td><td>{559F1A2E-5E2F-40CA-B0F8-ED7573ECDB83}</td><td>AMD643</td><td>8</td><td/><td>wdfcoinstaller01009.dll</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>WdfCoInstaller01009.dll1</td><td>{5AF00CEF-D2EC-43F0-A5BC-88F16746F809}</td><td>I3863</td><td>8</td><td/><td>wdfcoinstaller01009.dll1</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>logReader.exe</td><td>{88EE11BE-47F9-4875-BC75-85F23A779AE5}</td><td>TOOLS</td><td>0</td><td/><td/><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>qcmtusvc.exe</td><td>{9F9CF47A-4CDB-45A0-B32E-EAC3A54D2E2B}</td><td>TOOLS</td><td>0</td><td/><td>qcmtusvc.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 		<row><td>qdcfg.exe</td><td>{382BE2C9-B746-4EA4-AEEE-4426E3DC9588}</td><td>TOOLS</td><td>0</td><td/><td>qdcfg.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>qdclr32.exe</td><td>{A899867D-FAEC-415A-9400-4391283D03F4}</td><td>QUALCOMM1</td><td>8</td><td/><td>qdclr32.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>qdclr64.exe</td><td>{DBE2DD6B-9162-4316-9887-0E7F348377E8}</td><td>QUALCOMM1</td><td>8</td><td/><td>qdclr64.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>qdclrARM.exe</td><td>{18994A5A-00D6-4DC7-A1FF-8DCB381B89C4}</td><td>QUALCOMM1</td><td>8</td><td/><td>qdclrarm.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
+		<row><td>qdclrARM64.exe</td><td>{A7A88051-FC2B-48B4-B04C-B9805E215EDE}</td><td>QUALCOMM1</td><td>8</td><td/><td>qdclrarm64.exe</td><td>17</td><td/><td/><td/><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td><td>/LogFile=</td></row>
 	</table>
 
 	<table name="Condition">
@@ -1060,25 +1071,25 @@
 	<table name="CreateFolder">
 		<col key="yes" def="s72">Directory_</col>
 		<col key="yes" def="s72">Component_</col>
-		<row><td>AMD649</td><td>AllOtherFiles40</td></row>
-		<row><td>DIFXAPI</td><td>AllOtherFiles38</td></row>
 		<row><td>DRIVERPACKAGE</td><td>AllOtherFiles</td></row>
 		<row><td>FILTER</td><td>AllOtherFiles5</td></row>
-		<row><td>FILTER1</td><td>AllOtherFiles22</td></row>
+		<row><td>FILTER1</td><td>AllOtherFiles28</td></row>
 		<row><td>FRE</td><td>AllOtherFiles2</td></row>
-		<row><td>I3869</td><td>AllOtherFiles39</td></row>
-		<row><td>NDIS</td><td>AllOtherFiles8</td></row>
-		<row><td>NDIS1</td><td>AllOtherFiles25</td></row>
-		<row><td>QDSS</td><td>AllOtherFiles15</td></row>
-		<row><td>QDSS1</td><td>AllOtherFiles32</td></row>
+		<row><td>NDIS</td><td>AllOtherFiles10</td></row>
+		<row><td>NDIS1</td><td>AllOtherFiles33</td></row>
+		<row><td>QDSS</td><td>AllOtherFiles17</td></row>
+		<row><td>QDSS1</td><td>AllOtherFiles40</td></row>
 		<row><td>QUALCOMM1</td><td>AllOtherFiles1</td></row>
-		<row><td>SERIAL</td><td>AllOtherFiles18</td></row>
-		<row><td>SERIAL1</td><td>AllOtherFiles35</td></row>
+		<row><td>QUALCOMM1</td><td>DriverInstaller64.exe</td></row>
+		<row><td>QUALCOMM1</td><td>DriverInstaller64.exe1</td></row>
+		<row><td>SERIAL</td><td>AllOtherFiles22</td></row>
+		<row><td>SERIAL1</td><td>AllOtherFiles45</td></row>
 		<row><td>TOOLS</td><td>AllOtherFiles3</td></row>
-		<row><td>_.1</td><td>AllOtherFiles9</td></row>
-		<row><td>_.11</td><td>AllOtherFiles26</td></row>
-		<row><td>_.2</td><td>AllOtherFiles12</td></row>
-		<row><td>_.21</td><td>AllOtherFiles29</td></row>
+		<row><td>TOOLS</td><td>logReader.exe</td></row>
+		<row><td>_.1</td><td>AllOtherFiles11</td></row>
+		<row><td>_.11</td><td>AllOtherFiles34</td></row>
+		<row><td>_.2</td><td>AllOtherFiles14</td></row>
+		<row><td>_.21</td><td>AllOtherFiles37</td></row>
 	</table>
 
 	<table name="CustomAction">
@@ -1169,7 +1180,6 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>ALLUSERSPROFILE</td><td>TARGETDIR</td><td>.:ALLUSE~1|All Users</td><td/><td>0</td><td/></row>
 		<row><td>AMD64</td><td>FILTER</td><td>amd64</td><td/><td>0</td><td/></row>
 		<row><td>AMD641</td><td>_.1</td><td>amd64</td><td/><td>0</td><td/></row>
-		<row><td>AMD6410</td><td>SERIAL1</td><td>amd64</td><td/><td>0</td><td/></row>
 		<row><td>AMD642</td><td>_.2</td><td>amd64</td><td/><td>0</td><td/></row>
 		<row><td>AMD643</td><td>QDSS</td><td>amd64</td><td/><td>0</td><td/></row>
 		<row><td>AMD644</td><td>SERIAL</td><td>amd64</td><td/><td>0</td><td/></row>
@@ -1177,25 +1187,35 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>AMD646</td><td>_.11</td><td>amd64</td><td/><td>0</td><td/></row>
 		<row><td>AMD647</td><td>_.21</td><td>amd64</td><td/><td>0</td><td/></row>
 		<row><td>AMD648</td><td>QDSS1</td><td>amd64</td><td/><td>0</td><td/></row>
-		<row><td>AMD649</td><td>DIFXAPI</td><td>amd64</td><td/><td>0</td><td/></row>
+		<row><td>AMD649</td><td>SERIAL1</td><td>amd64</td><td/><td>0</td><td/></row>
+		<row><td>ARM</td><td>FILTER</td><td>arm</td><td/><td>0</td><td/></row>
+		<row><td>ARM1</td><td>QDSS</td><td>arm</td><td/><td>0</td><td/></row>
+		<row><td>ARM2</td><td>SERIAL</td><td>arm</td><td/><td>0</td><td/></row>
+		<row><td>ARM3</td><td>FILTER1</td><td>arm</td><td/><td>0</td><td/></row>
+		<row><td>ARM4</td><td>QDSS1</td><td>arm</td><td/><td>0</td><td/></row>
+		<row><td>ARM5</td><td>SERIAL1</td><td>arm</td><td/><td>0</td><td/></row>
+		<row><td>ARM64</td><td>FILTER</td><td>arm64</td><td/><td>0</td><td/></row>
+		<row><td>ARM641</td><td>QDSS</td><td>arm64</td><td/><td>0</td><td/></row>
+		<row><td>ARM642</td><td>SERIAL</td><td>arm64</td><td/><td>0</td><td/></row>
+		<row><td>ARM643</td><td>FILTER1</td><td>arm64</td><td/><td>0</td><td/></row>
+		<row><td>ARM644</td><td>QDSS1</td><td>arm64</td><td/><td>0</td><td/></row>
+		<row><td>ARM645</td><td>SERIAL1</td><td>arm64</td><td/><td>0</td><td/></row>
 		<row><td>AdminToolsFolder</td><td>TARGETDIR</td><td>.:Admint~1|AdminTools</td><td/><td>0</td><td/></row>
 		<row><td>AppDataFolder</td><td>TARGETDIR</td><td>.:APPLIC~1|Application Data</td><td/><td>0</td><td/></row>
 		<row><td>CommonAppDataFolder</td><td>TARGETDIR</td><td>.:Common~1|CommonAppData</td><td/><td>0</td><td/></row>
 		<row><td>CommonFiles64Folder</td><td>TARGETDIR</td><td>.:Common64</td><td/><td>0</td><td/></row>
 		<row><td>CommonFilesFolder</td><td>TARGETDIR</td><td>.:Common</td><td/><td>0</td><td/></row>
 		<row><td>DATABASEDIR</td><td>ISYourDataBaseDir</td><td>.</td><td/><td>0</td><td/></row>
-		<row><td>DIFXAPI</td><td>QUALCOMM1</td><td>Difxapi</td><td/><td>0</td><td/></row>
 		<row><td>DRIVERPACKAGE</td><td>INSTALLDIR</td><td>DRIVER~1|DriverPackage</td><td/><td>0</td><td/></row>
 		<row><td>DesktopFolder</td><td>TARGETDIR</td><td>.:Desktop</td><td/><td>3</td><td/></row>
-		<row><td>FILTER</td><td>WINDOWS10</td><td>filter</td><td/><td>0</td><td/></row>
-		<row><td>FILTER1</td><td>WINDOWS7</td><td>filter</td><td/><td>0</td><td/></row>
+		<row><td>FILTER</td><td>WINDOWS7</td><td>filter</td><td/><td>0</td><td/></row>
+		<row><td>FILTER1</td><td>WINDOWS10</td><td>filter</td><td/><td>0</td><td/></row>
 		<row><td>FRE</td><td>QUALCOMM1</td><td>fre</td><td/><td>0</td><td/></row>
 		<row><td>FavoritesFolder</td><td>TARGETDIR</td><td>.:FAVORI~1|Favorites</td><td/><td>0</td><td/></row>
 		<row><td>FontsFolder</td><td>TARGETDIR</td><td>.:Fonts</td><td/><td>0</td><td/></row>
 		<row><td>GlobalAssemblyCache</td><td>TARGETDIR</td><td>.:Global~1|GlobalAssemblyCache</td><td/><td>0</td><td/></row>
 		<row><td>I386</td><td>FILTER</td><td>i386</td><td/><td>0</td><td/></row>
 		<row><td>I3861</td><td>_.1</td><td>i386</td><td/><td>0</td><td/></row>
-		<row><td>I38610</td><td>SERIAL1</td><td>i386</td><td/><td>0</td><td/></row>
 		<row><td>I3862</td><td>_.2</td><td>i386</td><td/><td>0</td><td/></row>
 		<row><td>I3863</td><td>QDSS</td><td>i386</td><td/><td>0</td><td/></row>
 		<row><td>I3864</td><td>SERIAL</td><td>i386</td><td/><td>0</td><td/></row>
@@ -1203,7 +1223,7 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>I3866</td><td>_.11</td><td>i386</td><td/><td>0</td><td/></row>
 		<row><td>I3867</td><td>_.21</td><td>i386</td><td/><td>0</td><td/></row>
 		<row><td>I3868</td><td>QDSS1</td><td>i386</td><td/><td>0</td><td/></row>
-		<row><td>I3869</td><td>DIFXAPI</td><td>i386</td><td/><td>0</td><td/></row>
+		<row><td>I3869</td><td>SERIAL1</td><td>i386</td><td/><td>0</td><td/></row>
 		<row><td>INSTALLDIR</td><td>QUALCOMM_USB_DRIVERS_FOR_WINDOWS</td><td>.</td><td/><td>0</td><td/></row>
 		<row><td>ISCommonFilesFolder</td><td>CommonFilesFolder</td><td>Instal~1|InstallShield</td><td/><td>0</td><td/></row>
 		<row><td>ISMyCompanyDir</td><td>ProgramFilesFolder</td><td>MYCOMP~1|My Company Name</td><td/><td>0</td><td/></row>
@@ -1211,20 +1231,20 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>ISYourDataBaseDir</td><td>INSTALLDIR</td><td>Database</td><td/><td>0</td><td/></row>
 		<row><td>LocalAppDataFolder</td><td>TARGETDIR</td><td>.:LocalA~1|LocalAppData</td><td/><td>0</td><td/></row>
 		<row><td>MyPicturesFolder</td><td>TARGETDIR</td><td>.:MyPict~1|MyPictures</td><td/><td>0</td><td/></row>
-		<row><td>NDIS</td><td>WINDOWS10</td><td>ndis</td><td/><td>0</td><td/></row>
-		<row><td>NDIS1</td><td>WINDOWS7</td><td>ndis</td><td/><td>0</td><td/></row>
+		<row><td>NDIS</td><td>WINDOWS7</td><td>ndis</td><td/><td>0</td><td/></row>
+		<row><td>NDIS1</td><td>WINDOWS10</td><td>ndis</td><td/><td>0</td><td/></row>
 		<row><td>PersonalFolder</td><td>TARGETDIR</td><td>.:Personal</td><td/><td>0</td><td/></row>
 		<row><td>PrimaryVolumePath</td><td>TARGETDIR</td><td>.:Primar~1|PrimaryVolumePath</td><td/><td>0</td><td/></row>
 		<row><td>ProgramFiles64Folder</td><td>TARGETDIR</td><td>.:Prog64~1|Program Files 64</td><td/><td>0</td><td/></row>
 		<row><td>ProgramFilesFolder</td><td>TARGETDIR</td><td>.:PROGRA~1|program files</td><td/><td>0</td><td/></row>
 		<row><td>ProgramMenuFolder</td><td>TARGETDIR</td><td>.:Programs</td><td/><td>3</td><td/></row>
-		<row><td>QDSS</td><td>WINDOWS10</td><td>qdss</td><td/><td>0</td><td/></row>
-		<row><td>QDSS1</td><td>WINDOWS7</td><td>qdss</td><td/><td>0</td><td/></row>
+		<row><td>QDSS</td><td>WINDOWS7</td><td>qdss</td><td/><td>0</td><td/></row>
+		<row><td>QDSS1</td><td>WINDOWS10</td><td>qdss</td><td/><td>0</td><td/></row>
 		<row><td>QUALCOMM1</td><td>DRIVERPACKAGE</td><td>Qualcomm</td><td/><td>0</td><td/></row>
 		<row><td>QUALCOMM_INCORPORATED</td><td>ProgramFilesFolder</td><td>QUALCO~1|QUALCOMM Incorporated</td><td/><td>0</td><td/></row>
 		<row><td>QUALCOMM_USB_DRIVERS_FOR_WINDOWS</td><td>QUALCOMM_INCORPORATED</td><td>QUALCO~1|Qualcomm USB Drivers For Windows</td><td/><td>0</td><td/></row>
-		<row><td>SERIAL</td><td>WINDOWS10</td><td>serial</td><td/><td>0</td><td/></row>
-		<row><td>SERIAL1</td><td>WINDOWS7</td><td>serial</td><td/><td>0</td><td/></row>
+		<row><td>SERIAL</td><td>WINDOWS7</td><td>serial</td><td/><td>0</td><td/></row>
+		<row><td>SERIAL1</td><td>WINDOWS10</td><td>serial</td><td/><td>0</td><td/></row>
 		<row><td>SendToFolder</td><td>TARGETDIR</td><td>.:SendTo</td><td/><td>3</td><td/></row>
 		<row><td>StartMenuFolder</td><td>TARGETDIR</td><td>.:STARTM~1|Start Menu</td><td/><td>3</td><td/></row>
 		<row><td>StartupFolder</td><td>TARGETDIR</td><td>.:StartUp</td><td/><td>3</td><td/></row>
@@ -1973,23 +1993,34 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<row><td>DefaultFeature</td><td>AllOtherFiles39</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles4</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles40</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles41</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles42</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles43</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles44</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles45</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles46</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles47</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles48</td></row>
+		<row><td>DefaultFeature</td><td>AllOtherFiles49</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles5</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles50</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles6</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles7</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles8</td></row>
 		<row><td>DefaultFeature</td><td>AllOtherFiles9</td></row>
-		<row><td>DefaultFeature</td><td>DIFxAPI.dll</td></row>
-		<row><td>DefaultFeature</td><td>DIFxAPI.dll1</td></row>
 		<row><td>DefaultFeature</td><td>DriverInstaller64.exe</td></row>
+		<row><td>DefaultFeature</td><td>DriverInstaller64.exe1</td></row>
+		<row><td>DefaultFeature</td><td>DriverInstaller64.exe2</td></row>
 		<row><td>DefaultFeature</td><td>DriversInstallerCA.dll</td></row>
 		<row><td>DefaultFeature</td><td>WdfCoInstaller01009.dll</td></row>
 		<row><td>DefaultFeature</td><td>WdfCoInstaller01009.dll1</td></row>
-		<row><td>DefaultFeature</td><td>WdfCoInstaller01009.dll2</td></row>
-		<row><td>DefaultFeature</td><td>WdfCoInstaller01009.dll3</td></row>
 		<row><td>DefaultFeature</td><td>logReader.exe</td></row>
 		<row><td>DefaultFeature</td><td>qcmtusvc.exe</td></row>
 		<row><td>DefaultFeature</td><td>qdcfg.exe</td></row>
+		<row><td>DefaultFeature</td><td>qdclr32.exe</td></row>
+		<row><td>DefaultFeature</td><td>qdclr64.exe</td></row>
+		<row><td>DefaultFeature</td><td>qdclrARM.exe</td></row>
+		<row><td>DefaultFeature</td><td>qdclrARM64.exe</td></row>
 	</table>
 
 	<table name="File">
@@ -2004,80 +2035,103 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<col def="S255">ISBuildSourcePath</col>
 		<col def="I4">ISAttributes</col>
 		<col def="S72">ISComponentSubFolder_</col>
-		<row><td>difxapi.dll</td><td>DIFxAPI.dll</td><td>DIFxAPI.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\Shared\DIFxAPI\amd64\DIFxAPI.dll</td><td>1</td><td/></row>
-		<row><td>difxapi.dll1</td><td>DIFxAPI.dll1</td><td>DIFxAPI.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\Shared\DIFxAPI\x86\DIFxAPI.dll</td><td>1</td><td/></row>
-		<row><td>driverinstaller64.exe</td><td>DriverInstaller64.exe</td><td>DRIVER~1.EXE|DriverInstaller64.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\DriverInstaller64\x64\Release\DriverInstaller64.exe</td><td>1</td><td/></row>
+		<row><td>driverinstaller64.exe1</td><td>DriverInstaller64.exe2</td><td>DRIVER~1.EXE|DriverInstaller64.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\DriverInstaller64\Release\DriverInstaller64.exe</td><td>1</td><td/></row>
 		<row><td>driversinstallerca.dll</td><td>DriversInstallerCA.dll</td><td>DRIVER~1.DLL|DriversInstallerCA.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\CustomActions\Release\DriversInstallerCA.dll</td><td>1</td><td/></row>
-		<row><td>logreader.exe</td><td>logReader.exe</td><td>LOGREA~1.EXE|logReader.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\Tools\x86\logReader.exe</td><td>1</td><td/></row>
-		<row><td>qcfilter.cat</td><td>AllOtherFiles4</td><td>qcfilter.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcfilter.cat</td><td>1</td><td/></row>
-		<row><td>qcfilter.cat1</td><td>AllOtherFiles21</td><td>qcfilter.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcfilter.cat</td><td>1</td><td/></row>
-		<row><td>qcfilter.inf</td><td>AllOtherFiles4</td><td>qcfilter.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcfilter.inf</td><td>1</td><td/></row>
-		<row><td>qcfilter.inf1</td><td>AllOtherFiles21</td><td>qcfilter.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcfilter.inf</td><td>1</td><td/></row>
-		<row><td>qcmdm.inf</td><td>AllOtherFiles4</td><td>qcmdm.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcmdm.inf</td><td>1</td><td/></row>
-		<row><td>qcmdm.inf1</td><td>AllOtherFiles21</td><td>qcmdm.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcmdm.inf</td><td>1</td><td/></row>
+		<row><td>qcfilter.cat</td><td>AllOtherFiles4</td><td>qcfilter.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcfilter.cat</td><td>1</td><td/></row>
+		<row><td>qcfilter.cat1</td><td>AllOtherFiles27</td><td>qcfilter.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcfilter.cat</td><td>1</td><td/></row>
+		<row><td>qcfilter.inf</td><td>AllOtherFiles4</td><td>qcfilter.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcfilter.inf</td><td>1</td><td/></row>
+		<row><td>qcfilter.inf1</td><td>AllOtherFiles27</td><td>qcfilter.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcfilter.inf</td><td>1</td><td/></row>
+		<row><td>qcmdm.inf</td><td>AllOtherFiles4</td><td>qcmdm.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcmdm.inf</td><td>1</td><td/></row>
+		<row><td>qcmdm.inf1</td><td>AllOtherFiles27</td><td>qcmdm.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcmdm.inf</td><td>1</td><td/></row>
 		<row><td>qcmtusvc.exe</td><td>qcmtusvc.exe</td><td>qcmtusvc.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\Tools\x86\qcmtusvc.exe</td><td>1</td><td/></row>
-		<row><td>qcnet.cat</td><td>AllOtherFiles4</td><td>qcnet.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcnet.cat</td><td>1</td><td/></row>
-		<row><td>qcnet.cat1</td><td>AllOtherFiles21</td><td>qcnet.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcnet.cat</td><td>1</td><td/></row>
-		<row><td>qcnet.inf</td><td>AllOtherFiles4</td><td>qcnet.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcnet.inf</td><td>1</td><td/></row>
-		<row><td>qcnet.inf1</td><td>AllOtherFiles21</td><td>qcnet.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcnet.inf</td><td>1</td><td/></row>
-		<row><td>qcser.cat</td><td>AllOtherFiles4</td><td>qcser.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcser.cat</td><td>1</td><td/></row>
-		<row><td>qcser.cat1</td><td>AllOtherFiles21</td><td>qcser.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcser.cat</td><td>1</td><td/></row>
-		<row><td>qcser.inf</td><td>AllOtherFiles4</td><td>qcser.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcser.inf</td><td>1</td><td/></row>
-		<row><td>qcser.inf1</td><td>AllOtherFiles21</td><td>qcser.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcser.inf</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.pdb</td><td>AllOtherFiles6</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\amd64\qcusbfilter.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.pdb1</td><td>AllOtherFiles7</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\i386\qcusbfilter.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.pdb2</td><td>AllOtherFiles23</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\amd64\qcusbfilter.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.pdb3</td><td>AllOtherFiles24</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\i386\qcusbfilter.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.sys</td><td>AllOtherFiles6</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\amd64\qcusbfilter.sys</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.sys1</td><td>AllOtherFiles7</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\i386\qcusbfilter.sys</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.sys2</td><td>AllOtherFiles23</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\amd64\qcusbfilter.sys</td><td>1</td><td/></row>
-		<row><td>qcusbfilter.sys3</td><td>AllOtherFiles24</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\i386\qcusbfilter.sys</td><td>1</td><td/></row>
-		<row><td>qcusbnet.pdb</td><td>AllOtherFiles10</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\amd64\qcusbnet.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbnet.pdb1</td><td>AllOtherFiles11</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\i386\qcusbnet.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbnet.pdb2</td><td>AllOtherFiles27</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\amd64\qcusbnet.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbnet.pdb3</td><td>AllOtherFiles28</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\i386\qcusbnet.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbnet.sys</td><td>AllOtherFiles10</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\amd64\qcusbnet.sys</td><td>1</td><td/></row>
-		<row><td>qcusbnet.sys1</td><td>AllOtherFiles11</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\i386\qcusbnet.sys</td><td>1</td><td/></row>
-		<row><td>qcusbnet.sys2</td><td>AllOtherFiles27</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\amd64\qcusbnet.sys</td><td>1</td><td/></row>
-		<row><td>qcusbnet.sys3</td><td>AllOtherFiles28</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\i386\qcusbnet.sys</td><td>1</td><td/></row>
-		<row><td>qcusbser.pdb</td><td>AllOtherFiles19</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\amd64\qcusbser.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbser.pdb1</td><td>AllOtherFiles20</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\i386\qcusbser.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbser.pdb2</td><td>AllOtherFiles36</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\amd64\qcusbser.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbser.pdb3</td><td>AllOtherFiles37</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\i386\qcusbser.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbser.sys</td><td>AllOtherFiles19</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\amd64\qcusbser.sys</td><td>1</td><td/></row>
-		<row><td>qcusbser.sys1</td><td>AllOtherFiles20</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\i386\qcusbser.sys</td><td>1</td><td/></row>
-		<row><td>qcusbser.sys2</td><td>AllOtherFiles36</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\amd64\qcusbser.sys</td><td>1</td><td/></row>
-		<row><td>qcusbser.sys3</td><td>AllOtherFiles37</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\i386\qcusbser.sys</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.pdb</td><td>AllOtherFiles13</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\amd64\qcusbwwan.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.pdb1</td><td>AllOtherFiles14</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\i386\qcusbwwan.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.pdb2</td><td>AllOtherFiles30</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.pdb3</td><td>AllOtherFiles31</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\i386\qcusbwwan.pdb</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.sys</td><td>AllOtherFiles13</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\amd64\qcusbwwan.sys</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.sys1</td><td>AllOtherFiles14</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\i386\qcusbwwan.sys</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.sys2</td><td>AllOtherFiles30</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.sys</td><td>1</td><td/></row>
-		<row><td>qcusbwwan.sys3</td><td>AllOtherFiles31</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\i386\qcusbwwan.sys</td><td>1</td><td/></row>
-		<row><td>qcwwan.cat</td><td>AllOtherFiles4</td><td>qcwwan.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcwwan.cat</td><td>1</td><td/></row>
-		<row><td>qcwwan.cat1</td><td>AllOtherFiles21</td><td>qcwwan.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcwwan.cat</td><td>1</td><td/></row>
-		<row><td>qcwwan.inf</td><td>AllOtherFiles4</td><td>qcwwan.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcwwan.inf</td><td>1</td><td/></row>
-		<row><td>qcwwan.inf1</td><td>AllOtherFiles21</td><td>qcwwan.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcwwan.inf</td><td>1</td><td/></row>
-		<row><td>qdbusb.cat</td><td>AllOtherFiles4</td><td>qdbusb.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdbusb.cat</td><td>1</td><td/></row>
-		<row><td>qdbusb.cat1</td><td>AllOtherFiles21</td><td>qdbusb.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdbusb.cat</td><td>1</td><td/></row>
-		<row><td>qdbusb.inf</td><td>AllOtherFiles4</td><td>qdbusb.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdbusb.inf</td><td>1</td><td/></row>
-		<row><td>qdbusb.inf1</td><td>AllOtherFiles21</td><td>qdbusb.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdbusb.inf</td><td>1</td><td/></row>
-		<row><td>qdbusb.pdb</td><td>AllOtherFiles16</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\qdbusb.pdb</td><td>1</td><td/></row>
-		<row><td>qdbusb.pdb1</td><td>AllOtherFiles17</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\i386\qdbusb.pdb</td><td>1</td><td/></row>
-		<row><td>qdbusb.pdb2</td><td>AllOtherFiles33</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\qdbusb.pdb</td><td>1</td><td/></row>
-		<row><td>qdbusb.pdb3</td><td>AllOtherFiles34</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\i386\qdbusb.pdb</td><td>1</td><td/></row>
-		<row><td>qdbusb.sys</td><td>AllOtherFiles16</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\qdbusb.sys</td><td>1</td><td/></row>
-		<row><td>qdbusb.sys1</td><td>AllOtherFiles17</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\i386\qdbusb.sys</td><td>1</td><td/></row>
-		<row><td>qdbusb.sys2</td><td>AllOtherFiles33</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\qdbusb.sys</td><td>1</td><td/></row>
-		<row><td>qdbusb.sys3</td><td>AllOtherFiles34</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\i386\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qcnet.cat</td><td>AllOtherFiles4</td><td>qcnet.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcnet.cat</td><td>1</td><td/></row>
+		<row><td>qcnet.cat1</td><td>AllOtherFiles27</td><td>qcnet.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcnet.cat</td><td>1</td><td/></row>
+		<row><td>qcnet.inf</td><td>AllOtherFiles4</td><td>qcnet.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcnet.inf</td><td>1</td><td/></row>
+		<row><td>qcnet.inf1</td><td>AllOtherFiles27</td><td>qcnet.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcnet.inf</td><td>1</td><td/></row>
+		<row><td>qcser.cat</td><td>AllOtherFiles4</td><td>qcser.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcser.cat</td><td>1</td><td/></row>
+		<row><td>qcser.cat1</td><td>AllOtherFiles27</td><td>qcser.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcser.cat</td><td>1</td><td/></row>
+		<row><td>qcser.inf</td><td>AllOtherFiles4</td><td>qcser.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcser.inf</td><td>1</td><td/></row>
+		<row><td>qcser.inf1</td><td>AllOtherFiles27</td><td>qcser.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcser.inf</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb</td><td>AllOtherFiles6</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\amd64\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb1</td><td>AllOtherFiles7</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\arm\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb2</td><td>AllOtherFiles8</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\arm64\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb3</td><td>AllOtherFiles9</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\i386\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb4</td><td>AllOtherFiles29</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\amd64\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb5</td><td>AllOtherFiles30</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\arm\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb6</td><td>AllOtherFiles31</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\arm64\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.pdb7</td><td>AllOtherFiles32</td><td>QCUSBF~1.PDB|qcusbfilter.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\i386\qcusbfilter.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys</td><td>AllOtherFiles6</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\amd64\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys1</td><td>AllOtherFiles7</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\arm\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys2</td><td>AllOtherFiles8</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\arm64\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys3</td><td>AllOtherFiles9</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\filter\i386\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys4</td><td>AllOtherFiles29</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\amd64\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys5</td><td>AllOtherFiles30</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\arm\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys6</td><td>AllOtherFiles31</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\arm64\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbfilter.sys7</td><td>AllOtherFiles32</td><td>QCUSBF~1.SYS|qcusbfilter.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\filter\i386\qcusbfilter.sys</td><td>1</td><td/></row>
+		<row><td>qcusbnet.pdb</td><td>AllOtherFiles12</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\amd64\qcusbnet.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbnet.pdb1</td><td>AllOtherFiles13</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\i386\qcusbnet.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbnet.pdb2</td><td>AllOtherFiles35</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\amd64\qcusbnet.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbnet.pdb3</td><td>AllOtherFiles36</td><td>qcusbnet.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\i386\qcusbnet.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbnet.sys</td><td>AllOtherFiles12</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\amd64\qcusbnet.sys</td><td>1</td><td/></row>
+		<row><td>qcusbnet.sys1</td><td>AllOtherFiles13</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\5.1\i386\qcusbnet.sys</td><td>1</td><td/></row>
+		<row><td>qcusbnet.sys2</td><td>AllOtherFiles35</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\amd64\qcusbnet.sys</td><td>1</td><td/></row>
+		<row><td>qcusbnet.sys3</td><td>AllOtherFiles36</td><td>qcusbnet.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\5.1\i386\qcusbnet.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb</td><td>AllOtherFiles23</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\amd64\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb1</td><td>AllOtherFiles24</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\arm\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb2</td><td>AllOtherFiles25</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\arm64\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb3</td><td>AllOtherFiles26</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\i386\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb4</td><td>AllOtherFiles46</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\amd64\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb5</td><td>AllOtherFiles47</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\arm\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb6</td><td>AllOtherFiles48</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\arm64\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.pdb7</td><td>AllOtherFiles49</td><td>qcusbser.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\i386\qcusbser.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys</td><td>AllOtherFiles23</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\amd64\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys1</td><td>AllOtherFiles24</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\arm\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys2</td><td>AllOtherFiles25</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\arm64\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys3</td><td>AllOtherFiles26</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\serial\i386\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys4</td><td>AllOtherFiles46</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\amd64\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys5</td><td>AllOtherFiles47</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\arm\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys6</td><td>AllOtherFiles48</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\arm64\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbser.sys7</td><td>AllOtherFiles49</td><td>qcusbser.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\serial\i386\qcusbser.sys</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.pdb</td><td>AllOtherFiles15</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.pdb1</td><td>AllOtherFiles16</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\i386\qcusbwwan.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.pdb2</td><td>AllOtherFiles38</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\amd64\qcusbwwan.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.pdb3</td><td>AllOtherFiles39</td><td>QCUSBW~1.PDB|qcusbwwan.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\i386\qcusbwwan.pdb</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.sys</td><td>AllOtherFiles15</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\amd64\qcusbwwan.sys</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.sys1</td><td>AllOtherFiles16</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\ndis\6.2\i386\qcusbwwan.sys</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.sys2</td><td>AllOtherFiles38</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\amd64\qcusbwwan.sys</td><td>1</td><td/></row>
+		<row><td>qcusbwwan.sys3</td><td>AllOtherFiles39</td><td>QCUSBW~1.SYS|qcusbwwan.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\ndis\6.2\i386\qcusbwwan.sys</td><td>1</td><td/></row>
+		<row><td>qcwwan.cat</td><td>AllOtherFiles4</td><td>qcwwan.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcwwan.cat</td><td>1</td><td/></row>
+		<row><td>qcwwan.cat1</td><td>AllOtherFiles27</td><td>qcwwan.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcwwan.cat</td><td>1</td><td/></row>
+		<row><td>qcwwan.inf</td><td>AllOtherFiles4</td><td>qcwwan.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qcwwan.inf</td><td>1</td><td/></row>
+		<row><td>qcwwan.inf1</td><td>AllOtherFiles27</td><td>qcwwan.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qcwwan.inf</td><td>1</td><td/></row>
+		<row><td>qdbusb.cat</td><td>AllOtherFiles4</td><td>qdbusb.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdbusb.cat</td><td>1</td><td/></row>
+		<row><td>qdbusb.cat1</td><td>AllOtherFiles27</td><td>qdbusb.cat</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdbusb.cat</td><td>1</td><td/></row>
+		<row><td>qdbusb.inf</td><td>AllOtherFiles4</td><td>qdbusb.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdbusb.inf</td><td>1</td><td/></row>
+		<row><td>qdbusb.inf1</td><td>AllOtherFiles27</td><td>qdbusb.inf</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdbusb.inf</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb</td><td>AllOtherFiles18</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb1</td><td>AllOtherFiles19</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\arm\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb2</td><td>AllOtherFiles20</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\arm64\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb3</td><td>AllOtherFiles21</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\i386\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb4</td><td>AllOtherFiles41</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb5</td><td>AllOtherFiles42</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\arm\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb6</td><td>AllOtherFiles43</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\arm64\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.pdb7</td><td>AllOtherFiles44</td><td>qdbusb.pdb</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\i386\qdbusb.pdb</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys</td><td>AllOtherFiles18</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys1</td><td>AllOtherFiles19</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\arm\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys2</td><td>AllOtherFiles20</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\arm64\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys3</td><td>AllOtherFiles21</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\i386\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys4</td><td>AllOtherFiles41</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys5</td><td>AllOtherFiles42</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\arm\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys6</td><td>AllOtherFiles43</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\arm64\qdbusb.sys</td><td>1</td><td/></row>
+		<row><td>qdbusb.sys7</td><td>AllOtherFiles44</td><td>qdbusb.sys</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\i386\qdbusb.sys</td><td>1</td><td/></row>
 		<row><td>qdcfg.exe</td><td>qdcfg.exe</td><td>qdcfg.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\Tools\x86\qdcfg.exe</td><td>1</td><td/></row>
+		<row><td>qdclr32.exe</td><td>qdclr32.exe</td><td>qdclr32.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\qdclr\Release\qdclr32.exe</td><td>1</td><td/></row>
+		<row><td>qdclr64.exe</td><td>qdclr64.exe</td><td>qdclr64.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\qdclr\x64\Release\qdclr64.exe</td><td>1</td><td/></row>
+		<row><td>qdclrarm.exe</td><td>qdclrARM.exe</td><td>qdclrARM.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\qdclr\ARM\Release\qdclrARM.exe</td><td>1</td><td/></row>
+		<row><td>qdclrarm64.exe</td><td>qdclrARM64.exe</td><td>QDCLRA~1.EXE|qdclrARM64.exe</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\qdclr\ARM64\Release\qdclrARM64.exe</td><td>1</td><td/></row>
 		<row><td>readme.txt</td><td>AllOtherFiles50</td><td>ReadMe.txt</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\ReadMe.txt</td><td>1</td><td/></row>
-		<row><td>wdfcoinstaller01009.dll</td><td>WdfCoInstaller01009.dll</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\amd64\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
-		<row><td>wdfcoinstaller01009.dll1</td><td>WdfCoInstaller01009.dll1</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows10\qdss\i386\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
-		<row><td>wdfcoinstaller01009.dll2</td><td>WdfCoInstaller01009.dll2</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
-		<row><td>wdfcoinstaller01009.dll3</td><td>WdfCoInstaller01009.dll3</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\i386\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
+		<row><td>wdfcoinstaller01009.dll</td><td>WdfCoInstaller01009.dll</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\amd64\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
+		<row><td>wdfcoinstaller01009.dll1</td><td>WdfCoInstaller01009.dll1</td><td>WDFCOI~1.DLL|WdfCoInstaller01009.dll</td><td>0</td><td/><td/><td/><td>1</td><td>&lt;ISProjectFolder&gt;\drivers\Qualcomm\target\fre\Windows7\qdss\i386\WdfCoInstaller01009.dll</td><td>1</td><td/></row>
 	</table>
 
 	<table name="FileSFPCatalog">
@@ -2340,57 +2394,68 @@ objResult = objShell.Run cmd /c rmdir /q /s [INSTALLDIR]
 		<col def="S0">Miscellaneous</col>
 		<row><td>AllOtherFiles</td><td/><td/><td>_1820F63C_4CA3_4CE6_992D_D9711C3762C2_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles1</td><td/><td/><td>_957FBABA_26D5_46B2_ACB6_9684BFC23402_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles10</td><td/><td/><td>_C3189268_02E9_4F19_BCCA_96C2AFE17278_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles11</td><td/><td/><td>_09578861_B82F_4313_8A16_3BFB7C56D995_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles12</td><td/><td/><td>_4081A635_E467_449C_930D_4F17112CA492_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles13</td><td/><td/><td>_3685F4DA_7557_479C_9D6D_4DE00E50B679_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles14</td><td/><td/><td>_AAF5A25B_997B_4FD4_AAE7_BB9B10A73B45_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles15</td><td/><td/><td>_6655B16E_8A0A_4962_B656_4AA2D1394722_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles16</td><td/><td/><td>_51C80E0F_772E_4B74_8A7F_655C6F09BD8F_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles17</td><td/><td/><td>_98D0D9B3_592A_495B_994D_4D0C0D76ECE7_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles18</td><td/><td/><td>_F55C8299_1AB8_43B1_B37E_9881A3AA0DD0_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles19</td><td/><td/><td>_ED67D7E2_8A9F_4ED4_B120_A286F87FEC17_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles10</td><td/><td/><td>_F535B761_92F1_486D_AB31_80DAD578CF77_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles11</td><td/><td/><td>_5B39A96A_E889_4C47_8B0A_36A37185C015_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles12</td><td/><td/><td>_C697EF8C_4024_4FC8_8A58_69EAC3DA2E6F_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles13</td><td/><td/><td>_9492B592_F6A4_4AE7_9F74_39513039ED0B_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles14</td><td/><td/><td>_B69E3DC0_5BE4_48F4_938C_AB1657B40607_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles15</td><td/><td/><td>_70C04AF4_FCDE_4760_BCC6_0303204E50A9_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles16</td><td/><td/><td>_9053F9CB_2415_400C_A891_66B7AF876372_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles17</td><td/><td/><td>_92A487AA_6A43_4EF2_B3BF_67BF2483296E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles18</td><td/><td/><td>_1F0EEF51_9ED1_4903_A9D7_DCF1F9CD379D_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles19</td><td/><td/><td>_ED2613B6_C978_4F3C_8ACD_8EFB58C58AF1_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles2</td><td/><td/><td>_39414FA5_BBFC_483A_B1A2_61A01683C21B_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles20</td><td/><td/><td>_3C9F9AE9_00AD_421B_B397_634B06600C83_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles21</td><td/><td/><td>_68E946BF_82F0_46C0_BF0F_7BBB57444A54_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles22</td><td/><td/><td>_F4C91F57_B197_4EC9_8BF4_D4D7E2B69A40_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles23</td><td/><td/><td>_8776CD48_937C_4BF0_B4B0_348CC13D546D_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles24</td><td/><td/><td>_02AEF360_4859_4465_BF84_B7E81268EF66_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles25</td><td/><td/><td>_848D74B4_6EC8_4BC9_ABE1_1B33A00A7735_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles26</td><td/><td/><td>_EFE7BB63_4C51_4FFF_BB5D_391F01A1BA45_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles27</td><td/><td/><td>_AB1EEAA2_95A2_4E91_915C_DDA7B8E32AE6_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles28</td><td/><td/><td>_6DAF545F_4409_44B4_8FE0_6CE19410C91C_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles29</td><td/><td/><td>_E35A7F62_A2F4_484F_B6DF_0C21E5C6403D_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles20</td><td/><td/><td>_7FEDBB73_5FBD_48CA_A29F_3CDF1580D576_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles21</td><td/><td/><td>_8D123530_A294_4328_80E1_C8C97F40F2ED_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles22</td><td/><td/><td>_4C8754E2_92A6_4A73_9A4B_0E71CBEF5F51_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles23</td><td/><td/><td>_DCCCC0F9_CB6E_4DA3_81D5_D54707FA6E6E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles24</td><td/><td/><td>_315035B6_9E35_4613_BD0D_1CA0865D91B4_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles25</td><td/><td/><td>_5FF89D1D_678D_4762_AEFA_2D81221CBF66_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles26</td><td/><td/><td>_A29DC61E_B88D_4277_892C_C94318E9103E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles27</td><td/><td/><td>_50599668_D3EC_425D_B340_51641E455D08_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles28</td><td/><td/><td>_17B4554A_039A_4F0D_951D_96A7BE0C84AF_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles29</td><td/><td/><td>_021B53CD_C673_403E_ADA6_04D60DA8983D_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles3</td><td/><td/><td>_9A38BF23_7F11_4D6D_89AC_48EE03A88DA7_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles30</td><td/><td/><td>_D1D49635_C489_4DD1_A482_CD0CC35C1E5F_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles31</td><td/><td/><td>_C024D757_2DEB_4735_9861_023978A2F260_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles32</td><td/><td/><td>_D6B1A81E_4EC6_4132_8A83_03CCCBE0F804_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles33</td><td/><td/><td>_4801B433_3D75_40EB_BDF3_F63E0E195E0E_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles34</td><td/><td/><td>_FA5741C6_22EF_4D28_B53F_4289310F3B43_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles35</td><td/><td/><td>_73F4CECA_6643_410C_98B9_5C0EC267451F_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles36</td><td/><td/><td>_81D1E9CA_5B90_45EC_8382_E43C2E53664D_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles37</td><td/><td/><td>_32289C98_DA2B_4F0C_ABF8_C2F05B705B4D_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles38</td><td/><td/><td>_F0458B84_6CF1_4D05_9AF6_3D1124C2908D_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles39</td><td/><td/><td>_0F0C846F_EF7E_4144_9951_DF74BE8541C8_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles4</td><td/><td/><td>_DBCC0FE2_BE62_44CD_ABB4_9F004BAD64C1_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles40</td><td/><td/><td>_FAD014EA_853D_4DB4_B2BA_10DD4515A79B_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles5</td><td/><td/><td>_7F3EF926_EDBB_4DE8_B98D_A502BF161776_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles30</td><td/><td/><td>_71096F1B_ECA7_4DDD_860A_FD6C064302A2_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles31</td><td/><td/><td>_6816646B_0517_47E9_89ED_1083D171967E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles32</td><td/><td/><td>_E7C345D0_8ADD_4194_A209_708607B043E3_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles33</td><td/><td/><td>_82E52F8A_F643_4433_9636_AE0598310A56_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles34</td><td/><td/><td>_CAF69EED_BB73_4C67_8673_DF2CC6E3E167_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles35</td><td/><td/><td>_1BBAE1F8_7A65_4642_A9BB_141794E0C1B1_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles36</td><td/><td/><td>_38342C1E_5BFC_42CF_9005_E60C35B5310E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles37</td><td/><td/><td>_6C3C8CF4_2F72_421D_9A08_021E5192D364_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles38</td><td/><td/><td>_3B6E94B2_C0D9_4B72_9FA2_7541B78FEDC8_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles39</td><td/><td/><td>_58EBD8EF_F5AB_4DF8_9C68_06426110F38E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles4</td><td/><td/><td>_C4EAB3E6_576F_4FE6_9B5F_999387DBEE4A_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles40</td><td/><td/><td>_75C2300D_CFA9_497D_B167_ABFF1F89EB86_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles41</td><td/><td/><td>_5896462A_8ECC_49A9_9521_49B484A31D81_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles42</td><td/><td/><td>_3E326BB8_FBAA_405E_8641_414E6011CEBD_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles43</td><td/><td/><td>_5DE88D2F_1AAD_4E21_AEB7_97D74FC1866B_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles44</td><td/><td/><td>_CF8ED819_D96F_4AF5_9B9B_8BC4310D0A36_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles45</td><td/><td/><td>_A19906E2_14AE_46A5_8E59_1C048FA80421_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles46</td><td/><td/><td>_F2770ECC_13B8_49C3_8D9B_825BAF814A9F_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles47</td><td/><td/><td>_856F794B_6C31_4F35_B417_2E4F92BA96CB_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles48</td><td/><td/><td>_05C43A4B_860E_47F1_B931_8B43165B0F94_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles49</td><td/><td/><td>_82D34A3B_97B9_4737_A124_B5BF707BBD1F_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles5</td><td/><td/><td>_020E3944_E361_478D_B3CC_A2324A016F70_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>AllOtherFiles50</td><td/><td/><td>_9BA6A909_D6EE_4F38_BC81_DF21A7C1195E_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles6</td><td/><td/><td>_84FD82DC_37E5_4F10_B8C0_747B871B54EF_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles7</td><td/><td/><td>_D6FB4EB2_8DB3_4B8A_999E_F326B678D916_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles8</td><td/><td/><td>_EFFFD467_EA96_4139_B3C2_63BCF25C50EF_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>AllOtherFiles9</td><td/><td/><td>_94BF9AF9_3E43_40E3_AC6B_048938CEDA35_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>DIFxAPI.dll</td><td/><td/><td>_05B70EE7_A50E_48F1_88C9_340761C9199F_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>DIFxAPI.dll1</td><td/><td/><td>_A6875424_0907_4784_82D7_D8403FC70C86_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles6</td><td/><td/><td>_08F84BFD_951A_4B27_8025_493C1EFD679E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles7</td><td/><td/><td>_9A8DB8C3_0D5C_437E_BEC9_B26A667FCE69_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles8</td><td/><td/><td>_0D238C0C_623A_42A3_BACA_93287F48FCAB_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>AllOtherFiles9</td><td/><td/><td>_1FDAC614_1318_4433_8D3D_6189BE98EA6C_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>DriverInstaller64.exe</td><td/><td/><td>_18FB518A_EC83_4546_8191_41C510435AC4_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>DriverInstaller64.exe1</td><td/><td/><td>_44AAF681_B30B_447B_A230_1F5B971F52FF_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>DriverInstaller64.exe2</td><td/><td/><td>_549979BF_0B5E_4B5C_B960_6B4B365E02B9_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>DriversInstallerCA.dll</td><td/><td/><td>_E7157D09_7432_4FF9_96AC_1B165C582B6D_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>WdfCoInstaller01009.dll</td><td/><td/><td>_7CA7C5FE_4EAA_4606_8F3F_3E09490CE7BA_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>WdfCoInstaller01009.dll1</td><td/><td/><td>_C2D58400_5EE8_46CD_9869_E01C8A212ABF_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>WdfCoInstaller01009.dll2</td><td/><td/><td>_A7F82B31_68FE_4E96_966D_1B9BFFB9FE34_FILTER</td><td/><td/><td/><td/></row>
-		<row><td>WdfCoInstaller01009.dll3</td><td/><td/><td>_A431C722_7FAF_439B_8330_0958F4A90BA0_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>WdfCoInstaller01009.dll</td><td/><td/><td>_50378DED_6880_4475_B291_C4942C47655F_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>WdfCoInstaller01009.dll1</td><td/><td/><td>_5DD1F496_7395_4A61_B810_F7862E968747_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>logReader.exe</td><td/><td/><td>_94A4D5CD_6756_44B6_A566_BE7B1E607AC1_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>qcmtusvc.exe</td><td/><td/><td>_E0217642_ECB1_4FC4_BF4C_9A3CF825DE5A_FILTER</td><td/><td/><td/><td/></row>
 		<row><td>qdcfg.exe</td><td/><td/><td>_9C761E7A_18E9_4C2F_AF33_B058CF19F270_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>qdclr32.exe</td><td/><td/><td>_8C940F4E_2071_4D7B_8281_3028356CBC3E_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>qdclr64.exe</td><td/><td/><td>_F69C67BA_FDFA_471D_A34F_46AE3F242430_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>qdclrARM.exe</td><td/><td/><td>_DB23E7D5_092E_4CD5_A8C5_85ADB2FE3D3D_FILTER</td><td/><td/><td/><td/></row>
+		<row><td>qdclrARM64.exe</td><td/><td/><td>_CA5B636C_FCC8_4776_91A1_1C43AE2B87B0_FILTER</td><td/><td/><td/><td/></row>
 	</table>
 
 	<table name="ISCustomActionReference">
@@ -4753,7 +4818,7 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>ProductID</td><td>none</td><td/></row>
 		<row><td>ProductLanguage</td><td>1033</td><td/></row>
 		<row><td>ProductName</td><td>Qualcomm USB Drivers For Windows</td><td/></row>
-		<row><td>ProductVersion</td><td>1.00.58</td><td/></row>
+		<row><td>ProductVersion</td><td>1.00.60</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>
@@ -5063,22 +5128,22 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>AdminExecuteSequence</td><td>Action</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of action to invoke, either in the engine or the handler DLL.</td></row>
 		<row><td>AdminExecuteSequence</td><td>Condition</td><td>Y</td><td/><td/><td/><td/><td>Condition</td><td/><td>Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.</td></row>
 		<row><td>AdminExecuteSequence</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>This is used to store MM Custom Action Types</td></row>
-		<row><td>AdminExecuteSequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments on this Sequence.</td></row>
+		<row><td>AdminExecuteSequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments on this Sequence.</td></row>
 		<row><td>AdminExecuteSequence</td><td>Sequence</td><td>Y</td><td>-4</td><td>32767</td><td/><td/><td/><td/><td>Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.</td></row>
 		<row><td>AdminUISequence</td><td>Action</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of action to invoke, either in the engine or the handler DLL.</td></row>
 		<row><td>AdminUISequence</td><td>Condition</td><td>Y</td><td/><td/><td/><td/><td>Condition</td><td/><td>Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.</td></row>
 		<row><td>AdminUISequence</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>This is used to store MM Custom Action Types</td></row>
-		<row><td>AdminUISequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments on this Sequence.</td></row>
+		<row><td>AdminUISequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments on this Sequence.</td></row>
 		<row><td>AdminUISequence</td><td>Sequence</td><td>Y</td><td>-4</td><td>32767</td><td/><td/><td/><td/><td>Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.</td></row>
 		<row><td>AdvtExecuteSequence</td><td>Action</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of action to invoke, either in the engine or the handler DLL.</td></row>
 		<row><td>AdvtExecuteSequence</td><td>Condition</td><td>Y</td><td/><td/><td/><td/><td>Condition</td><td/><td>Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.</td></row>
 		<row><td>AdvtExecuteSequence</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>This is used to store MM Custom Action Types</td></row>
-		<row><td>AdvtExecuteSequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments on this Sequence.</td></row>
+		<row><td>AdvtExecuteSequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments on this Sequence.</td></row>
 		<row><td>AdvtExecuteSequence</td><td>Sequence</td><td>Y</td><td>-4</td><td>32767</td><td/><td/><td/><td/><td>Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.</td></row>
 		<row><td>AdvtUISequence</td><td>Action</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of action to invoke, either in the engine or the handler DLL.</td></row>
 		<row><td>AdvtUISequence</td><td>Condition</td><td>Y</td><td/><td/><td/><td/><td>Condition</td><td/><td>Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.</td></row>
 		<row><td>AdvtUISequence</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>This is used to store MM Custom Action Types</td></row>
-		<row><td>AdvtUISequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments on this Sequence.</td></row>
+		<row><td>AdvtUISequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments on this Sequence.</td></row>
 		<row><td>AdvtUISequence</td><td>Sequence</td><td>Y</td><td>-4</td><td>32767</td><td/><td/><td/><td/><td>Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.</td></row>
 		<row><td>AppId</td><td>ActivateAtStorage</td><td>Y</td><td>0</td><td>1</td><td/><td/><td/><td/><td/></row>
 		<row><td>AppId</td><td>AppId</td><td>N</td><td/><td/><td/><td/><td>Guid</td><td/><td/></row>
@@ -5179,7 +5244,7 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>CreateFolder</td><td>Directory_</td><td>N</td><td/><td/><td>Directory</td><td>1</td><td>Identifier</td><td/><td>Primary key, could be foreign key into the Directory table.</td></row>
 		<row><td>CustomAction</td><td>Action</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Primary key, name of action, normally appears in sequence table unless private use.</td></row>
 		<row><td>CustomAction</td><td>ExtendedType</td><td>Y</td><td>0</td><td>2147483647</td><td/><td/><td/><td/><td>The numeric custom action type info flags.</td></row>
-		<row><td>CustomAction</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments for this custom action.</td></row>
+		<row><td>CustomAction</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments for this custom action.</td></row>
 		<row><td>CustomAction</td><td>Source</td><td>Y</td><td/><td/><td/><td/><td>CustomSource</td><td/><td>The table reference of the source of the code.</td></row>
 		<row><td>CustomAction</td><td>Target</td><td>Y</td><td/><td/><td>ISDLLWrapper;ISInstallScriptAction</td><td>1</td><td>Formatted</td><td/><td>Excecution parameter, depends on the type of custom action</td></row>
 		<row><td>CustomAction</td><td>Type</td><td>N</td><td>1</td><td>32767</td><td/><td/><td/><td/><td>The numeric custom action type, consisting of source location, code type, entry, option flags.</td></row>
@@ -5190,7 +5255,7 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>Dialog</td><td>Dialog</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of the dialog.</td></row>
 		<row><td>Dialog</td><td>HCentering</td><td>N</td><td>0</td><td>100</td><td/><td/><td/><td/><td>Horizontal position of the dialog on a 0-100 scale. 0 means left end, 100 means right end of the screen, 50 center.</td></row>
 		<row><td>Dialog</td><td>Height</td><td>N</td><td>0</td><td>32767</td><td/><td/><td/><td/><td>Height of the bounding rectangle of the dialog.</td></row>
-		<row><td>Dialog</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments for this dialog.</td></row>
+		<row><td>Dialog</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments for this dialog.</td></row>
 		<row><td>Dialog</td><td>ISResourceId</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>A Number the Specifies the Dialog ID to be used in Dialog Export</td></row>
 		<row><td>Dialog</td><td>ISWindowStyle</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>A 32-bit word that specifies non-MSI window styles to be applied to this control. This is only used in Script Based Setups.</td></row>
 		<row><td>Dialog</td><td>TextStyle_</td><td>Y</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Foreign Key into TextStyle table, only used in Script Based Projects.</td></row>
@@ -5902,14 +5967,14 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>InstallExecuteSequence</td><td>Action</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of action to invoke, either in the engine or the handler DLL.</td></row>
 		<row><td>InstallExecuteSequence</td><td>Condition</td><td>Y</td><td/><td/><td/><td/><td>Condition</td><td/><td>Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.</td></row>
 		<row><td>InstallExecuteSequence</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>This is used to store MM Custom Action Types</td></row>
-		<row><td>InstallExecuteSequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments on this Sequence.</td></row>
+		<row><td>InstallExecuteSequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments on this Sequence.</td></row>
 		<row><td>InstallExecuteSequence</td><td>Sequence</td><td>Y</td><td>-4</td><td>32767</td><td/><td/><td/><td/><td>Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.</td></row>
 		<row><td>InstallShield</td><td>Property</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of property, uppercase if settable by launcher or loader.</td></row>
 		<row><td>InstallShield</td><td>Value</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>String value for property.</td></row>
 		<row><td>InstallUISequence</td><td>Action</td><td>N</td><td/><td/><td/><td/><td>Identifier</td><td/><td>Name of action to invoke, either in the engine or the handler DLL.</td></row>
 		<row><td>InstallUISequence</td><td>Condition</td><td>Y</td><td/><td/><td/><td/><td>Condition</td><td/><td>Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.</td></row>
 		<row><td>InstallUISequence</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>This is used to store MM Custom Action Types</td></row>
-		<row><td>InstallUISequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments on this Sequence.</td></row>
+		<row><td>InstallUISequence</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments on this Sequence.</td></row>
 		<row><td>InstallUISequence</td><td>Sequence</td><td>Y</td><td>-4</td><td>32767</td><td/><td/><td/><td/><td>Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.</td></row>
 		<row><td>IsolatedComponent</td><td>Component_Application</td><td>N</td><td/><td/><td>Component</td><td>1</td><td>Identifier</td><td/><td>Key to Component table item for application</td></row>
 		<row><td>IsolatedComponent</td><td>Component_Shared</td><td>N</td><td/><td/><td>Component</td><td>1</td><td>Identifier</td><td/><td>Key to Component table item to be isolated</td></row>
@@ -6146,7 +6211,7 @@ UgBlAGwAZQBhAHMAZQABAEQAZQBmAGEAdQBsAHQAIABDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuAA==
 		<row><td>Shortcut</td><td>DisplayResourceId</td><td>Y</td><td>0</td><td>32767</td><td/><td/><td/><td/><td>The display name index for the shortcut.</td></row>
 		<row><td>Shortcut</td><td>Hotkey</td><td>Y</td><td>0</td><td>32767</td><td/><td/><td/><td/><td>The hotkey for the shortcut. It has the virtual-key code for the key in the low-order byte, and the modifier flags in the high-order byte.</td></row>
 		<row><td>Shortcut</td><td>ISAttributes</td><td>Y</td><td/><td/><td/><td/><td/><td/><td>This is used to store Installshield custom properties of a shortcut.  Mainly used in pro project types.</td></row>
-		<row><td>Shortcut</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Authorâ€™s comments on this Shortcut.</td></row>
+		<row><td>Shortcut</td><td>ISComments</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>Author鑺掗埀顑藉妷s comments on this Shortcut.</td></row>
 		<row><td>Shortcut</td><td>ISShortcutName</td><td>Y</td><td/><td/><td/><td/><td>Text</td><td/><td>A non-unique name for the shortcut.  Mainly used by pro pro project types.</td></row>
 		<row><td>Shortcut</td><td>IconIndex</td><td>Y</td><td>-32767</td><td>32767</td><td/><td/><td/><td/><td>The icon index for the shortcut.</td></row>
 		<row><td>Shortcut</td><td>Icon_</td><td>Y</td><td/><td/><td>Icon</td><td>1</td><td>Identifier</td><td/><td>Foreign key into the File table denoting the external icon file for the shortcut.</td></row>

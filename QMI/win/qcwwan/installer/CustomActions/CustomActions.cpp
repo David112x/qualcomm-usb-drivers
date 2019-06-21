@@ -25,6 +25,9 @@ GENERAL DESCRIPTION
 #include "DB2TextFile.h"
 //#define DBG_ERROR_MESSAGE_BOX 1
 
+void PnpUtilInstallDrivers(CString installPath);
+void PnpUtilUnInstallDrivers(CString installPath);
+
 //---------------------------------------------------------------------------
 // Definitions
 //---------------------------------------------------------------------------
@@ -478,6 +481,7 @@ UINT __stdcall Install( MSIHANDLE hMSI )
    }
 
    driversPath += _T('\\');
+#if 0
    if (bIs64 == false)
    {
 #if 0
@@ -528,6 +532,7 @@ UINT __stdcall Install( MSIHANDLE hMSI )
       }
    }
    else if (bIs64 == true)
+#endif
    {
 #if 0
       // Driver installation cannot be done from a 32-bit process (MsiExec)
@@ -799,6 +804,7 @@ UINT __stdcall Uninstall( MSIHANDLE hMSI )
 	  driversPath += L"Windows7";
 	  checkedVersionPath += L"XP-Vista";
    }
+#if 0
    if (bIs64 == false)
    {
       dm.RemoveDevices();
@@ -811,6 +817,7 @@ UINT __stdcall Uninstall( MSIHANDLE hMSI )
       bUninstall = dmChecked.UninstallDrivers(checkedVersionPath,false,bIswin7orlater);
    }
    else if (bIs64 == true)
+#endif
    {
       // Driver installation cannot be done from a 32-bit process (MsiExec)
       // on a 64-bit OS so we spawn a native process to handle this task

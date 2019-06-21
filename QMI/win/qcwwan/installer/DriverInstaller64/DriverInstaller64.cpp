@@ -343,7 +343,7 @@ BOOL CDriverInstaller64App::InitInstance()
 #ifdef _WIN64
 	   bool bInstall = dm.InstallDrivers(cmdInfo.CommandInstallPath(), true, cmdInfo.IsWin7(), cmdInfo.IsLegacyEthernetDriver());
 #else
-	   bool bInstall = dm.InstallDrivers(cmdInfo.CommandInstallPath(), false, cmdInfo.IsWin7(), cmdInfo.IsLegacyEthernetDriver());
+	   bool bInstall = dm.InstallDrivers(cmdInfo.CommandInstallPath(), true, cmdInfo.IsWin7(), cmdInfo.IsLegacyEthernetDriver());
 #endif
       
       if (bInstall == true)
@@ -360,7 +360,7 @@ BOOL CDriverInstaller64App::InitInstance()
 #ifdef _WIN64
 	  bool bUninstall = dm.UninstallDrivers(cmdInfo.CommandInstallPath(), true, cmdInfo.IsWin7());
 #else
-	  bool bUninstall = dm.UninstallDrivers(cmdInfo.CommandInstallPath(), false, cmdInfo.IsWin7());
+	  bool bUninstall = dm.UninstallDrivers(cmdInfo.CommandInstallPath(), true, cmdInfo.IsWin7());
 #endif
       
       if (bUninstall == true)
