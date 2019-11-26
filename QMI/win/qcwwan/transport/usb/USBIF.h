@@ -188,4 +188,6 @@ PIRP GetAdapterReadDataItemIrp(PVOID pDevExt1, UCHAR MuxId, PVOID *pReturnDevExt
 
 BOOLEAN IsEmptyAllReadQueue(PVOID pDevExt1);
 
+NTSTATUS USBIF_UpdateSSR(PDEVICE_OBJECT UsbFDO, ULONG State);
+
 #endif // USBIF_H

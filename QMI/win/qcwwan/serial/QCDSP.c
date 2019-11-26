@@ -2752,8 +2752,8 @@ NTSTATUS QCDSP_Dispatch
                break;
             }
             case IRP_MN_REMOVE_DEVICE:  // PASSIVE_LEVEL
-               QCPNP_SetFunctionProtocol(pDevExt, 0);
-               QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, FALSE);
+               // QCPNP_SetFunctionProtocol(pDevExt, 0);
+               // QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, FALSE);
                if (pDevExt->RefCount <= 1)
                {
                   InterlockedDecrement(&(pDevExt->RefCount));

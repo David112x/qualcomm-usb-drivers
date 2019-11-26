@@ -293,6 +293,8 @@ VOID MPIOC_SetStopState
    BOOLEAN     TerminateAll
 );
 
+VOID MPIOC_InvalidateClients(PMP_ADAPTER pAdapter);
+
 // Event Notification Support
 NTSTATUS MPIOC_CacheNotificationIrp(PMPIOC_DEV_INFO pIocDev, PIRP pIrp, ULONG Type);
 
@@ -347,5 +349,7 @@ NTSTATUS MPIOC_GetPeerDeviceName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen);
 PMP_ADAPTER GetPrimaryAdapter(PMP_ADAPTER pAdapter);
 
 NTSTATUS MPIOC_GetPrimaryAdapterName(PMP_ADAPTER pAdapter, PIRP Irp, ULONG BufLen);
+
+BOOLEAN MPIOC_IsIrpInQueue(PMPIOC_DEV_INFO pIocDev, PIRP WriteIrp, INT QueueFlag);
 
 #endif // MPIOC_H

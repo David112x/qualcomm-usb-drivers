@@ -641,30 +641,58 @@ sub CreateInstallDirs
 
          Run(qq($WDKPath\\Inf2Cat /driver:$OSDir /os:$MakeCatOSList ));
 
-         # Signing 
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ $OSDir\\ cat));
+         if ($OS ne "Win10")
+         {
+            # Signing 
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ $OSDir\\ cat sha1));
 
-         #Signing sys file
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\amd64\\ $OSDir\\filter\\amd64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm\\ $OSDir\\filter\\arm\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm64\\ $OSDir\\filter\\arm64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\i386\\ $OSDir\\filter\\i386\\ sys));
+            #Signing sys file
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\amd64\\ $OSDir\\filter\\amd64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm\\ $OSDir\\filter\\arm\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm64\\ $OSDir\\filter\\arm64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\i386\\ $OSDir\\filter\\i386\\ sys sha1));
 
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\amd64\\ $OSDir\\ndis\\5.1\\amd64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\i386\\ $OSDir\\ndis\\5.1\\i386\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\amd64\\ $OSDir\\ndis\\6.2\\amd64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\i386\\ $OSDir\\ndis\\6.2\\i386\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\amd64\\ $OSDir\\ndis\\5.1\\amd64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\i386\\ $OSDir\\ndis\\5.1\\i386\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\amd64\\ $OSDir\\ndis\\6.2\\amd64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\i386\\ $OSDir\\ndis\\6.2\\i386\\ sys sha1));
 
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\amd64\\ $OSDir\\qdss\\amd64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm\\ $OSDir\\qdss\\arm\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm64\\ $OSDir\\qdss\\arm64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\i386\\ $OSDir\\qdss\\i386\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\amd64\\ $OSDir\\qdss\\amd64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm\\ $OSDir\\qdss\\arm\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm64\\ $OSDir\\qdss\\arm64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\i386\\ $OSDir\\qdss\\i386\\ sys sha1));
 
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\amd64\\ $OSDir\\serial\\amd64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm\\ $OSDir\\serial\\arm\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm64\\ $OSDir\\serial\\arm64\\ sys));
-         Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\i386\\ $OSDir\\serial\\i386\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\amd64\\ $OSDir\\serial\\amd64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm\\ $OSDir\\serial\\arm\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm64\\ $OSDir\\serial\\arm64\\ sys sha1));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\i386\\ $OSDir\\serial\\i386\\ sys sha1));
+         }
+         else
+         {
+            # Signing 
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ $OSDir\\ cat));
 
+            #Signing sys file
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\amd64\\ $OSDir\\filter\\amd64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm\\ $OSDir\\filter\\arm\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\arm64\\ $OSDir\\filter\\arm64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\filter\\i386\\ $OSDir\\filter\\i386\\ sys));
+
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\amd64\\ $OSDir\\ndis\\5.1\\amd64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\5.1\\i386\\ $OSDir\\ndis\\5.1\\i386\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\amd64\\ $OSDir\\ndis\\6.2\\amd64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\ndis\\6.2\\i386\\ $OSDir\\ndis\\6.2\\i386\\ sys));
+
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\amd64\\ $OSDir\\qdss\\amd64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm\\ $OSDir\\qdss\\arm\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\arm64\\ $OSDir\\qdss\\arm64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\qdss\\i386\\ $OSDir\\qdss\\i386\\ sys));
+
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\amd64\\ $OSDir\\serial\\amd64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm\\ $OSDir\\serial\\arm\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\arm64\\ $OSDir\\serial\\arm64\\ sys));
+            Run(qq(perl $DriversDir\\build\\tcLocal.pl $OSDir\\serial\\i386\\ $OSDir\\serial\\i386\\ sys));
+         }
       }
       # remove all .inf, .cat, and driver directories from target since they are in OS dir now
       Run(qq(del *.inf));

@@ -2192,8 +2192,8 @@ NTSTATUS USBDSP_Dispatch
                // USBIF_Close(DeviceObject);
                clearDevState(DEVICE_STATE_PRESENT_AND_STARTED);
                setDevState(DEVICE_STATE_DEVICE_REMOVED0);
-               QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
-               QCPNP_SetFunctionProtocol(pDevExt, 0);
+               // QCPNP_SetStamp(pDevExt->PhysicalDeviceObject, 0, 0);
+               // QCPNP_SetFunctionProtocol(pDevExt, 0);
                pDevExt->bDeviceRemoved = TRUE;
                pDevExt->bDeviceSurpriseRemoved = TRUE;
 

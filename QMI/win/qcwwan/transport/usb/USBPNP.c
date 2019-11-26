@@ -724,6 +724,60 @@ NTSTATUS QCPNP_SetFunctionProtocol(PDEVICE_EXTENSION pDevExt, ULONG ProtocolCode
    return ntStatus;
 }  // QCPNP_SetFunctionProtocol
 
+NTSTATUS QCPNP_UpdateSSR(PDEVICE_EXTENSION pDevExt, ULONG State)
+{
+   NTSTATUS       ntStatus;
+   UNICODE_STRING ucValueName;
+   HANDLE         hRegKey;
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> --> _UpdateSSR 0x%x\n", pDevExt->PortName, State)
+   );
+
+   ntStatus = IoOpenDeviceRegistryKey
+              (
+                 pDevExt->PhysicalDeviceObject,
+                 PLUGPLAY_REGKEY_DRIVER,
+                 KEY_ALL_ACCESS,
+                 &hRegKey
+              );
+   if (!NT_SUCCESS(ntStatus))
+   {
+      QCUSB_DbgPrint
+      (
+         QCUSB_DBG_MASK_CONTROL,
+         QCUSB_DBG_LEVEL_ERROR,
+         ("<%s> <-- _UpdateSSR: failed to open registry 0x%x\n", pDevExt->PortName, ntStatus)
+      );
+      return ntStatus;
+   }
+
+   RtlInitUnicodeString(&ucValueName, VEN_DEV_SSR);
+   ntStatus = ZwSetValueKey
+              (
+                 hRegKey,
+                 &ucValueName,
+                 0,
+                 REG_DWORD,
+                 (PVOID)&State,
+                 sizeof(ULONG)
+              );
+   ZwClose(hRegKey);
+
+   QCUSB_DbgPrint
+   (
+      QCUSB_DBG_MASK_CONTROL,
+      QCUSB_DBG_LEVEL_DETAIL,
+      ("<%s> <-- _UpdateSSR 0x%x ST 0x%x\n", pDevExt->PortName, State, ntStatus)
+   );
+
+   return ntStatus;
+
+} // QCPNP_UpdateSSR
+
 NTSTATUS QCPNP_GenericCompletion
 (
    PDEVICE_OBJECT pDO,
@@ -1977,6 +2031,7 @@ NTSTATUS USBPNP_SelectInterfaces
             );
 
             QCPNP_SetFunctionProtocol(pDevExt, pDevExt->IfProtocol);
+            QCPNP_UpdateSSR(pDevExt, 0);  // reset to default -- no SSR
          }
 
          if (x >= MAX_INTERFACE)
@@ -2226,7 +2281,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->usCommClassInterface]
                             ->Pipes[pDevExt->InterruptPipe].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.5.8");
+             DbgPrint("Driver Version %s\n", "4.0.6.1");
              DbgPrint("   |============================|\n");
              #endif // QCNET_WHQL
           }
@@ -2247,7 +2302,7 @@ NTSTATUS USBPNP_SelectInterfaces
                          pDevExt->Interface[pDevExt->DataInterface]
                             ->Pipes[pDevExt->BulkPipeOutput].EndpointAddress,
                          pDevExt->HighSpeedUsbOk, pDevExt->bmAttributes);
-             DbgPrint("Driver Version %s\n", "4.0.5.8");
+             DbgPrint("Driver Version %s\n", "4.0.6.1");
              DbgPrint("   |===============================|\n");
              #endif // QCNET_WHQL
           }

@@ -15,9 +15,10 @@ GENERAL DESCRIPTION
 #include "USBMAIN.h"
 
 #define VEN_DEV_TIME        L"QCDeviceStamp"
-#define VEN_DEV_SERNUM L"QCDeviceSerialNumber"
-#define VEN_DEV_MSM_SERNUM L"QCDeviceMsmSerialNumber"
-#define VEN_DEV_PROTOC L"QCDeviceProtocol"
+#define VEN_DEV_SERNUM      L"QCDeviceSerialNumber"
+#define VEN_DEV_MSM_SERNUM  L"QCDeviceMsmSerialNumber"
+#define VEN_DEV_PROTOC      L"QCDeviceProtocol"
+#define VEN_DEV_SSR         L"QCDeviceSSR"
 
 NTSTATUS USBPNP_AddDevice
 (
@@ -107,5 +108,7 @@ NTSTATUS QCPNP_GetStringDescriptor
 );
 
 NTSTATUS QCPNP_SetFunctionProtocol(PDEVICE_EXTENSION pDevExt, ULONG ProtocolCode);
+
+NTSTATUS QCPNP_UpdateSSR(PDEVICE_EXTENSION pDevExt, ULONG State);
 
 #endif // USBPNP_H

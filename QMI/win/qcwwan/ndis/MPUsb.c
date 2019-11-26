@@ -6200,6 +6200,12 @@ VOID IncrementAllQmiSync(PMP_ADAPTER pAdapter)
    PDEVICE_EXTENSION pTempDevExt;
    PDEVICE_EXTENSION pDevExt = (PDEVICE_EXTENSION)pAdapter->USBDo->DeviceExtension;
 
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_READ,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> -->IncrementAllQmiSync 0x%p\n", pAdapter->PortName, pAdapter)
+   );
    NdisAcquireSpinLock(&GlobalData.Lock);
    if (!IsListEmpty(&GlobalData.AdapterList))
    {
@@ -6219,12 +6225,36 @@ VOID IncrementAllQmiSync(PMP_ADAPTER pAdapter)
              (pDevExt->MuxInterface.FilterDeviceObj == pTempDevExt->MuxInterface.FilterDeviceObj))
          {
             if (pTempAdapter->QmiSyncNeeded == 0)
+            {
                InterlockedIncrement(&pTempAdapter->QmiSyncNeeded);
+               QCNET_DbgPrint
+               (
+                  MP_DBG_MASK_READ,
+                  MP_DBG_LEVEL_DETAIL,
+                  ("<%s> IncrementAllQmiSync 0x%p: %d\n", pAdapter->PortName, pTempAdapter, pTempAdapter->QmiSyncNeeded)
+               );
+            }
          }
          peekEntry = peekEntry->Flink;
+      }
+   }
+   else
+   {
+      QCNET_DbgPrint
+      (
+         MP_DBG_MASK_READ,
+         MP_DBG_LEVEL_DETAIL,
+         ("<%s> IncrementAllQmiSync: adapter list empty\n", pAdapter->PortName)
+      );
    }
    NdisReleaseSpinLock(&GlobalData.Lock);
-   }
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_READ,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> <--IncrementAllQmiSync 0x%p\n", pAdapter->PortName, pAdapter)
+   );
 }
 
 BOOLEAN DisconnectedAllAdapters(PMP_ADAPTER pAdapter, PMP_ADAPTER* returnAdapter)

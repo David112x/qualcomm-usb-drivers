@@ -3034,6 +3034,7 @@ BOOLEAN MPMAIN_InitializeQMI(PMP_ADAPTER pAdapter, INT QmiRetries)
    {
       pAdapter->QmiInitialized = TRUE;
       MoveQMIRequests(pAdapter);
+      USBIF_UpdateSSR(pAdapter->USBDo, 0);
    }
    
    #endif // QCQMI_SUPPORT
@@ -3156,6 +3157,7 @@ else
       // Is QMI working
       pAdapter->IsQmiWorking = TRUE;
       pAdapter->QmiInitialized = TRUE;
+      USBIF_UpdateSSR(pAdapter->USBDo, 0);
    }   
    }
 #endif /* QCMP_DISABLE_QMI */              
@@ -3951,6 +3953,13 @@ VOID MPMAIN_MPThread(PVOID Context)
             else
             {
                ++numTimeouts;
+
+               QCNET_DbgPrint
+               (
+                  MP_DBG_MASK_CONTROL,
+                  MP_DBG_LEVEL_DETAIL,
+                  ("<%s> MPth: TO %d Flags 0x%x\n", pAdapter->PortName, numTimeouts, pAdapter->Flags)
+               );
             }
             if ((pAdapter->Flags & fMP_ANY_FLAGS) == 0)
             {
@@ -3965,8 +3974,10 @@ VOID MPMAIN_MPThread(PVOID Context)
                   KeSetEvent(&pAdapter->MPThreadInitQmiEvent, IO_NO_INCREMENT, FALSE);
                   break;
                }
-               else if (pAdapter->ClientId[QMUX_TYPE_WDS] != 0)
+               else // if (pAdapter->ClientId[QMUX_TYPE_WDS] != 0)
                {
+                  if (pAdapter->QmiSyncNeeded > 0)
+                  {
                      QCNET_DbgPrint
                      (
                         MP_DBG_MASK_CONTROL,
@@ -3975,18 +3986,16 @@ VOID MPMAIN_MPThread(PVOID Context)
                           pAdapter->QmiSyncNeeded, pAdapter->IsQMIOutOfService)
                      );
 
-                  if (pAdapter->QmiSyncNeeded > 0)
-                    {
-                       QCNET_DbgPrint
-                       (
-                          MP_DBG_MASK_CONTROL,
-                          MP_DBG_LEVEL_DETAIL,
-                          ("<%s> MPth: sync needed, init QMI\n", pAdapter->PortName)
-                       );
-                       MPMAIN_DisconnectNotification(pAdapter);
-                       KeSetEvent(&pAdapter->MPThreadInitQmiEvent, IO_NO_INCREMENT, FALSE);
-                       InterlockedDecrement(&pAdapter->QmiSyncNeeded);
-                 }
+                      QCNET_DbgPrint
+                      (
+                         MP_DBG_MASK_CONTROL,
+                         MP_DBG_LEVEL_DETAIL,
+                         ("<%s> MPth: sync needed, init QMI\n", pAdapter->PortName)
+                      );
+                      MPMAIN_DisconnectNotification(pAdapter);
+                      KeSetEvent(&pAdapter->MPThreadInitQmiEvent, IO_NO_INCREMENT, FALSE);
+                      InterlockedDecrement(&pAdapter->QmiSyncNeeded);
+                  }
                }
 
                if ((pAdapter->WdsMediaConnected == TRUE) &&
@@ -4032,7 +4041,8 @@ VOID MPMAIN_MPThread(PVOID Context)
                      (
                         MP_DBG_MASK_CONTROL,
                         MP_DBG_LEVEL_ERROR,
-                        ("<%s> MPth: TX queue empty\n", pAdapter->PortName)
+                        ("<%s> MPth: TX queue empty, TO %d SyncNeeded %d WDS %d\n", pAdapter->PortName,
+                          numTimeouts, pAdapter->QmiSyncNeeded, pAdapter->ClientId[QMUX_TYPE_WDS])
                      );
                   }
                   NdisReleaseSpinLock(&pAdapter->TxLock);
@@ -4702,9 +4712,21 @@ VOID MPMAIN_MediaDisconnect(PMP_ADAPTER pAdapter, BOOLEAN DisconnectAll)
    KeSetEvent(&pAdapter->IPV6MtuReceivedEvent, IO_NO_INCREMENT, FALSE);
 }  // MPMAIN_MediaDisconnect
 
+/***
+MPMAIN_DisconnectNotification is called when: 1) SSR happens; 2) QMI_SYNC received
+***/
 VOID MPMAIN_DisconnectNotification(PMP_ADAPTER pAdapter)
 {
    PMP_ADAPTER returnAdapter;
+
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> -->MPMAIN_DisconnectNotification: 0x%x  WDS 0x%x\n", pAdapter->PortName,
+        pAdapter->ulMediaConnectStatus, pAdapter->ClientId[QMUX_TYPE_WDS])
+   );
+
    if (pAdapter->ulMediaConnectStatus == NdisMediaStateConnected)
    {
       pAdapter->IPV6Connected = pAdapter->IPV4Connected = FALSE;
@@ -4733,6 +4755,12 @@ VOID MPMAIN_DisconnectNotification(PMP_ADAPTER pAdapter)
       }
    }
 
+   QCNET_DbgPrint
+   (
+      MP_DBG_MASK_CONTROL,
+      MP_DBG_LEVEL_DETAIL,
+      ("<%s> MPMAIN_DisconnectNotification: clear clients\n", pAdapter->PortName)
+   );
    // Release internal client id
    //pAdapter->QMIType  = 0;
    //pAdapter->ClientId = 0;
@@ -4748,6 +4776,13 @@ VOID MPMAIN_DisconnectNotification(PMP_ADAPTER pAdapter)
 
    // stop the IPv6 client
    MPIP_CancelWdsIpClient(pAdapter);
+
+   // reset QMI initialization
+   pAdapter->QmiInitialized = FALSE;
+   pAdapter->IsQmiWorking = FALSE;
+
+   MPIOC_InvalidateClients(pAdapter);
+
 } // MPMAIN_DisconnectNotification
 
 #ifdef NDIS620_MINIPORT

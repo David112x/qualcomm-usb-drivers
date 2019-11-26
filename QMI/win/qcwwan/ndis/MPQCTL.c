@@ -2568,7 +2568,7 @@ VOID MPQCTL_HandleSyncInd
    (
       MP_DBG_MASK_CONTROL,
       MP_DBG_LEVEL_DETAIL,
-      ("<%s> SyncInd: restarting with SYNC_REQ\n", pAdapter->PortName)
+      ("<%s> SyncInd: restarting with SYNC_REQ Mux %d\n", pAdapter->PortName, pDevExt->MuxInterface.MuxEnabled)
    );
 
    pAdapter->IsQMIOutOfService = FALSE;

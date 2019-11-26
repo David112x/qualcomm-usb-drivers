@@ -1,7 +1,7 @@
 use IO::Socket::INET;
 use strict;
 
-my ($PathToCat, $PathToResult, $FileExt) = @ARGV;
+my ($PathToCat, $PathToResult, $FileExt, $Algorithm) = @ARGV;
 
 # Example:
 #
@@ -127,7 +127,14 @@ sub SignFiles
          print "Signing command to copy <$signingcommand>\n";
 
          # Instruct server to sign
-         SendToServer($socket, "SIGN_FILES", 1);
+         if ($Algorithm eq "sha1")
+         {
+            SendToServer($socket, "SIGN_FILES_SHA1", 1);
+         }
+         else
+         {
+            SendToServer($socket, "SIGN_FILES", 1);
+         }
 
          # get back signed files
          my $rsp = "";

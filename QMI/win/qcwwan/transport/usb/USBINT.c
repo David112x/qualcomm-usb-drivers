@@ -14,6 +14,7 @@ GENERAL DESCRIPTION
 #include "USBUTL.h"
 #include "USBRD.h"
 #include "USBPWR.h"
+#include "USBPNP.h"
 
 // EVENT_TRACING
 #ifdef EVENT_TRACING
@@ -1299,9 +1300,11 @@ VOID USBINT_HandleNetworkConnectionNotification(PDEVICE_EXTENSION pDevExt)
    {
       // Disconnected
       USBIF_NotifyLinkDown(pDevExt->MyDeviceObject);
+      QCPNP_UpdateSSR(pDevExt, 1);  // SSR happens
    }
    else
    {
+      QCPNP_UpdateSSR(pDevExt, 0);  // no SSR
       // Connected
    }
 }  // USBINT_HandleNetworkConnectionNotification

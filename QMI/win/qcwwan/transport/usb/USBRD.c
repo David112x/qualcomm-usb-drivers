@@ -2636,6 +2636,7 @@ DbgPrint("<qnetxxx> IPO RDQ: removed from loopback, IRP 0x%p\n", pIrp);
             QCUSB_DBG_LEVEL_ERROR,
             ("<%s> IPO: LPBK: RIC2 RIRP 0x%p: Cxl\n", pDevExt->PortName, pIrp)
          );
+         QcReleaseSpinLock(&pDevExt->ReadSpinLock, levelOrHandle);
          return ntStatus;
       }
 

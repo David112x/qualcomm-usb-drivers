@@ -27,6 +27,8 @@ GENERAL DESCRIPTION
 
 #endif   // EVENT_TRACING
 
+#define DEV_MODEL_ID_NONE      "    "
+
 #if NDIS620_MINIPORT
 
 //Carrier ID Map
@@ -535,7 +537,10 @@ VOID MPQMI_ProcessInboundQMUX
    {
       bToOID = TRUE;
          pIocDev = NULL;
-         pIocDev = MPIOC_FindIoDevice(pAdapter, NULL, qmi, pIocDev, NULL, 0);
+         if (pAdapter->IsQmiWorking == TRUE)
+         {
+            pIocDev = MPIOC_FindIoDevice(pAdapter, NULL, qmi, pIocDev, NULL, 0);
+         }
          if (pIocDev == NULL)
          {
            QCNET_DbgPrint
@@ -699,7 +704,15 @@ VOID MPQMI_SendQMUXToExternalClient
          bDone = TRUE;
       }
 
-      pIocDev = MPIOC_FindIoDevice(pAdapter, NULL, qmi, pIocDev, NULL, 0); // based on QMIType & ClientId
+      if (pAdapter->IsQmiWorking == TRUE)
+      {
+         pIocDev = MPIOC_FindIoDevice(pAdapter, NULL, qmi, pIocDev, NULL, 0); // based on QMIType & ClientId
+      }
+      else
+      {
+         pIocDev = NULL;
+      }
+
       if (pIocDev == NULL)
       {
          QCNET_DbgPrint
@@ -769,8 +782,8 @@ VOID MPQMI_SendQMUXToExternalClient
          (
             MP_DBG_MASK_OID_QMI,
             MP_DBG_LEVEL_DETAIL,
-            ("<%s> _SendQMUXToExternalClient: CType %d QMIType %d CID %d/%d\n", pAdapter->PortName,
-              pIocDev->Type, pIocDev->QMIType, pIocDev->ClientId, pIocDev->ClientIdV6)
+            ("<%s> _SendQMUXToExternalClient: CType %d QMIType %d CID %d/%d IOC 0x%p\n", pAdapter->PortName,
+              pIocDev->Type, pIocDev->QMIType, pIocDev->ClientId, pIocDev->ClientIdV6, pIocDev)
          );
 
          // fill a read IRP
@@ -830,7 +843,6 @@ VOID MPQMI_SendQMUXToExternalClient
             }
             else
             {
-               // ignore the IRP which is in cancellation
                QCNET_DbgPrint
                (
                   MP_DBG_MASK_OID_QMI,
@@ -838,8 +850,11 @@ VOID MPQMI_SendQMUXToExternalClient
                   ("<%s> QMUX: read IRP in cancallation 0x%p\n", pAdapter->PortName, pIrp)
                );
 
-               // ????????? Multiple completion ?????????
-               // InsertHeadList(&pIocDev->IrpCompletionQueue, &pIrp->Tail.Overlay.ListEntry);
+               // we should continue IRP completion as the CancelRoutine does not proceed when IRP is not in queue
+               pIrp->IoStatus.Status = STATUS_CANCELLED;
+               pIrp->IoStatus.Information = 0;
+               InsertTailList(&pIocDev->IrpCompletionQueue, &pIrp->Tail.Overlay.ListEntry);
+               KeSetEvent(&pIocDev->EmptyCompletionQueueEvent, IO_NO_INCREMENT, FALSE);
 
                // Go around the loop to get the next read IRP
             }
@@ -4812,6 +4827,10 @@ ULONG MPQMUX_ProcessDmsGetDeviceModelIDResp
            qmux_msg->GetDeviceModeIdRsp.QMUXResult,
            qmux_msg->GetDeviceModeIdRsp.QMUXError)
          );
+      if (pAdapter->DeviceModelID == NULL)
+      {
+         pAdapter->DeviceModelID = DEV_MODEL_ID_NONE;
+      }
    }
    else
    {
@@ -4895,6 +4914,12 @@ ULONG MPQMUX_ProcessDmsGetDeviceModelIDResp
          break;
       }
    }
+
+   if (pAdapter->DeviceModelID == DEV_MODEL_ID_NONE)
+   {
+      pAdapter->DeviceModelID = NULL;
+   }
+
    return 0;
 }
 

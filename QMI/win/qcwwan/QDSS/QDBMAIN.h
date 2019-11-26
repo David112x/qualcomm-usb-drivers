@@ -141,6 +141,8 @@ typedef struct _QCQMAP_STRUCT
    USHORT PacketLen;
 } QCQMAP_STRUCT, *PQCQMAP_STRUCT;
 
+#pragma pack(pop)
+
 typedef struct _QDB_STATS
 {
    LONG  OutstandingRx;  // buffers not returned to app
@@ -150,8 +152,6 @@ typedef struct _QDB_STATS
    ULONG PacketsDrained; // reserved -- debug only
    ULONG IoFailureCount; // debug only
 } QDB_STATS, *PQDB_STATS; 
-
-#pragma pack(pop)
 
 typedef struct _DEVICE_CONTEXT
 {

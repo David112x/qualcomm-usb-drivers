@@ -2598,4 +2598,12 @@ BOOLEAN IsEmptyAllReadQueue(PVOID pDevExt1)
    return returnval;
 }
 
+NTSTATUS USBIF_UpdateSSR(PDEVICE_OBJECT UsbFDO, ULONG State)
+{
+   PDEVICE_EXTENSION pDevExt;
+
+   pDevExt = (PDEVICE_EXTENSION)UsbFDO->DeviceExtension;
+
+   return QCPNP_UpdateSSR(pDevExt, State);
+}  // USBIF_UpdateSSR
 
